@@ -1,0 +1,22 @@
+# Environment Variables
+.env
+.env.local
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json # Optional: Remove if you want to commit your lock file
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+.pytest_cache/
+
+# OS Generated Files
+.DS_Store
+Thumbs.db

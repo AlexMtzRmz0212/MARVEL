@@ -1,0 +1,38 @@
+[
+  {
+    "title": "Iron Man",
+    "year": 2008,
+    "type": "Movie",
+    "boxOffice": 585000000,
+    "rating": 7.9,
+    "releaseDate": "2008-05-02",
+    "phase": "Phase 1"
+  },
+  {
+    "title": "The Avengers",
+    "year": 2012,
+    "type": "Movie",
+    "boxOffice": 1518000000,
+    "rating": 8.0,
+    "releaseDate": "2012-05-04",
+    "phase": "Phase 1"
+  },
+  {
+    "title": "WandaVision",
+    "year": 2021,
+    "type": "TV Show",
+    "boxOffice": 0,
+    "rating": 7.9,
+    "releaseDate": "2021-01-15",
+    "phase": "Phase 4"
+  },
+  {
+    "title": "Spider-Man: No Way Home",
+    "year": 2021,
+    "type": "Movie",
+    "boxOffice": 1921000000,
+    "rating": 8.2,
+    "releaseDate": "2021-12-17",
+    "phase": "Phase 4"
+  }
+]
