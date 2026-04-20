@@ -1,38 +1,162 @@
 [
   {
-    "title": "Iron Man",
-    "year": 2008,
+    "title": "Ultimate Avengers 2",
+    "releaseDate": "2006-08-08",
+    "phase": "Non-MCU",
     "type": "Movie",
-    "boxOffice": 585000000,
-    "rating": 7.9,
-    "releaseDate": "2008-05-02",
-    "phase": "Phase 1"
+    "boxOffice": 0,
+    "rating": 6.6
+  },
+  {
+    "title": "Ghost Rider",
+    "releaseDate": "2007-01-15",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 228738393,
+    "rating": 5.3
+  },
+  {
+    "title": "The Invincible Iron Man",
+    "releaseDate": "2007-01-23",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 0,
+    "rating": 5.9
+  },
+  {
+    "title": "Spider-Man 3",
+    "releaseDate": "2007-05-01",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 894983373,
+    "rating": 6.3
+  },
+  {
+    "title": "Jack Kirby: Story Teller",
+    "releaseDate": "2007-06-05",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 0,
+    "rating": 6.5
+  },
+  {
+    "title": "Fantastic Four: Rise of the Silver Surfer",
+    "releaseDate": "2007-06-13",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 301913131,
+    "rating": 5.6
+  },
+  {
+    "title": "Doctor Strange",
+    "releaseDate": "2007-08-14",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 0,
+    "rating": 6.7
+  },
+  {
+    "title": "Iron Man",
+    "releaseDate": "2008-04-30",
+    "phase": "Phase 1",
+    "type": "Movie",
+    "boxOffice": 585174222,
+    "rating": 7.9
+  },
+  {
+    "title": "The Incredible Hulk",
+    "releaseDate": "2008-06-12",
+    "phase": "Phase 1",
+    "type": "Movie",
+    "boxOffice": 264770996,
+    "rating": 6.6
+  },
+  {
+    "title": "Next Avengers: Heroes of Tomorrow",
+    "releaseDate": "2008-09-02",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 3800000,
+    "rating": 6.3
+  },
+  {
+    "title": "Punisher: War Zone",
+    "releaseDate": "2008-12-05",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 10089373,
+    "rating": 5.9
+  },
+  {
+    "title": "Hulk vs. Thor",
+    "releaseDate": "2009-01-27",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 0,
+    "rating": 0
+  },
+  {
+    "title": "Hulk vs. Wolverine",
+    "releaseDate": "2009-01-27",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 0,
+    "rating": 0
+  },
+  {
+    "title": "Iron Man 2",
+    "releaseDate": "2010-04-28",
+    "phase": "Phase 1",
+    "type": "Movie",
+    "boxOffice": 623933331,
+    "rating": 6.9
+  },
+  {
+    "title": "Thor",
+    "releaseDate": "2011-04-21",
+    "phase": "Phase 1",
+    "type": "Movie",
+    "boxOffice": 449326618,
+    "rating": 7.0
+  },
+  {
+    "title": "Captain America: The First Avenger",
+    "releaseDate": "2011-07-22",
+    "phase": "Phase 1",
+    "type": "Movie",
+    "boxOffice": 370569774,
+    "rating": 6.9
+  },
+  {
+    "title": "Marvel One-Shot: The Consultant",
+    "releaseDate": "2011-09-13",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 0,
+    "rating": 6.6
+  },
+  {
+    "title": "Marvel One-Shot: A Funny Thing Happened on the Way to Thor's Hammer",
+    "releaseDate": "2011-10-25",
+    "phase": "Non-MCU",
+    "type": "Movie",
+    "boxOffice": 0,
+    "rating": 7.3
   },
   {
     "title": "The Avengers",
-    "year": 2012,
+    "releaseDate": "2012-04-25",
+    "phase": "Phase 1",
     "type": "Movie",
-    "boxOffice": 1518000000,
-    "rating": 8.0,
-    "releaseDate": "2012-05-04",
-    "phase": "Phase 1"
+    "boxOffice": 1518815515,
+    "rating": 8.0
   },
   {
-    "title": "WandaVision",
-    "year": 2021,
-    "type": "TV Show",
+    "title": "Marvel One-Shot: Item 47",
+    "releaseDate": "2012-08-29",
+    "phase": "Non-MCU",
+    "type": "Movie",
     "boxOffice": 0,
-    "rating": 7.9,
-    "releaseDate": "2021-01-15",
-    "phase": "Phase 4"
-  },
-  {
-    "title": "Spider-Man: No Way Home",
-    "year": 2021,
-    "type": "Movie",
-    "boxOffice": 1921000000,
-    "rating": 8.2,
-    "releaseDate": "2021-12-17",
-    "phase": "Phase 4"
+    "rating": 6.7
   }
 ]
