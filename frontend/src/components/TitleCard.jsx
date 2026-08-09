@@ -19,7 +19,7 @@ export function TitleCard({ movie, index }) {
   const watched = isWatched(progress, movie.id)
   const accent = accentFor(movie)
   const runtime = formatRuntime(movie.runtime_min)
-  const isAdjacent = movie.universe && movie.universe !== 'mcu'
+  const isAdjacent = movie.tier === 'adjacent'
 
   return (
     <Link

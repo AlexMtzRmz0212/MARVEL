@@ -51,17 +51,15 @@ export const TIER_LABEL = {
   adjacent: 'Adjacent',
 }
 
-export const UNIVERSE_LABEL = {
-  mcu: 'MCU',
-  sony: 'Sony',
-  fox: 'Fox',
-  netflix: 'Netflix',
-  abc: 'ABC',
-}
+/**
+ * Marvel Comics Earth designations are already display-ready strings (e.g.
+ * "Earth-616", "Multiverse / TVA"), so there is no separate label table to
+ * keep in sync -- `movie.universe` is rendered as-is.
+ */
 
 /** Saga drives the accent colour everywhere: cards, graph nodes, progress. */
 export function accentFor(movie) {
-  if (movie.universe && movie.universe !== 'mcu') return 'var(--color-adjacent)'
+  if (movie.tier === 'adjacent') return 'var(--color-adjacent)'
   if (movie.saga === 'multiverse') return 'var(--color-multiverse)'
   if (movie.saga === 'infinity') return 'var(--color-infinity)'
   return 'var(--color-adjacent)'

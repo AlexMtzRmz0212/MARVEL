@@ -83,13 +83,13 @@ def test_films_have_a_runtime_and_series_runtimes_are_season_totals():
 
 def test_mcu_titles_all_carry_a_phase():
     for movie in CATALOG.movies:
-        if movie.universe.value == "mcu":
+        if movie.tier.value != "adjacent":
             assert movie.phase is not None, f"{movie.id} has no phase"
 
 
 def test_phase_and_saga_agree():
     for movie in CATALOG.movies:
-        if movie.universe.value != "mcu" or movie.phase is None:
+        if movie.tier.value == "adjacent" or movie.phase is None:
             continue
         expected = "infinity" if movie.phase <= 3 else "multiverse"
         assert movie.saga.value == expected, f"{movie.id}: phase {movie.phase} vs {movie.saga}"

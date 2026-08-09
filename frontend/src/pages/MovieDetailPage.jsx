@@ -9,7 +9,6 @@ import {
   MEDIA_LABEL,
   SAGA_LABEL,
   TIER_LABEL,
-  UNIVERSE_LABEL,
   accentFor,
   formatDate,
   formatRuntime,
@@ -125,12 +124,12 @@ export function MovieDetailPage() {
             <dt className="sr-only">Tier</dt>
             <dd>{TIER_LABEL[movie.tier]}</dd>
           </div>
-          {movie.universe !== 'mcu' && (
+          {movie.universe !== 'Earth-616' && (
             <>
               <span aria-hidden="true">·</span>
               <div>
                 <dt className="sr-only">Universe</dt>
-                <dd>{UNIVERSE_LABEL[movie.universe]}</dd>
+                <dd>{movie.universe}</dd>
               </div>
             </>
           )}

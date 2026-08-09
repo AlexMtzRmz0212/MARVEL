@@ -234,7 +234,7 @@ def seed_draft(source: dict | None) -> None:
     ss.draft_has_phase = bool(s.get("phase"))
     ss.draft_phase = int(s["phase"]) if s.get("phase") else 1
     ss.draft_saga = s.get("saga", "multiverse")
-    ss.draft_universe = s.get("universe", "mcu")
+    ss.draft_universe = s.get("universe", "Earth-616")
     ss.draft_media_type = s.get("media_type", "film")
     ss.draft_tier = s.get("tier", "core")
     ss.draft_runtime = int(s["runtime_min"]) if s.get("runtime_min") else 0
@@ -468,7 +468,7 @@ def render_card(movie: dict) -> None:
             unsafe_allow_html=True,
         )
     badges = [f"P{movie['phase']}" if movie.get("phase") else None, movie["tier"]]
-    if movie["universe"] != "mcu":
+    if movie["universe"] != "Earth-616":
         badges.append(movie["universe"])
     badge_text = " · ".join(b for b in badges if b)
     st.markdown(f"**{movie['title']}**  \n{year_of(movie)} · {badge_text}")

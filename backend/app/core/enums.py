@@ -20,18 +20,26 @@ class Saga(StrEnum):
 
 
 class Universe(StrEnum):
-    """Which production continuity a title belongs to."""
+    """Marvel Comics Earth designations."""
 
-    MCU = "mcu"
-    SONY = "sony"  # Raimi/Webb Spider-Man, Venom, Morbius
-    FOX = "fox"  # X-Men, Deadpool, Fantastic Four
-    NETFLIX = "netflix"  # Daredevil, Jessica Jones, the Defenders
-    # Agents of S.H.I.E.L.D., Inhumans. Note that Agent Carter is filed under
-    # MCU rather than here: `include_adjacent=False` hides everything that is
-    # not `MCU`, and Agent Carter sits inside the main narrative continuity even
-    # though ABC produced it. This axis is really about which studio's continuity
-    # a title belongs to, and the Marvel Television shows straddle that line.
-    ABC = "abc"
+    EARTH_616 = "Earth-616"
+    EARTH_10005 = "Earth-10005"
+    EARTH_12070 = "Earth-12070"
+    MULTIVERSE_TVA = "Multiverse / TVA"
+    EARTH_10005_AND_616 = "Earth-10005 & 616"
+    EARTH_TRN554 = "Earth-TRN554"
+    EARTH_616_BRANCH = "Earth-616 (Branch)"
+    EARTH_92131 = "Earth-92131"
+    EARTH_1610 = "Earth-1610"
+    NON_CANON = "Non-Canon"
+    EARTH_688 = "Earth-688"
+    ANIMATED_MULTIVERSE = "Animated Multiverse"
+    EARTH_121698 = "Earth-121698"
+    EARTH_96283 = "Earth-96283"
+    MULTIVERSE_EARTH_616 = "Multiverse / Earth-616"
+    ALTERNATE_EARTH_616 = "Alternate Earth / 616"
+    EARTH_616_EARTH_838 = "Earth-616 / Earth-838"
+    EARTH_10005_2029 = "Earth-10005 (2029)"
 
 
 class MediaType(StrEnum):
