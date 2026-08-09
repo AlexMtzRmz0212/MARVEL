@@ -1,4 +1,4 @@
-"""Fill poster art, synopses and runtimes into the curated catalog from TMDb.
+"""Fill poster art, synopses, runtimes and release dates into the curated catalog from TMDb.
 
     python scripts/enrich_tmdb.py --dry-run
     python scripts/enrich_tmdb.py
@@ -7,8 +7,8 @@
 This is a developer tool, run occasionally and by hand. It is deliberately NOT
 part of the seed path: the curated file is authoritative for everything that
 matters -- ids, phases, sagas, tiers, chronology and above all the prerequisite
-edges -- and TMDb is only trusted for the four cosmetic fields it is actually
-good at. The predecessor of this script derived phases from release years and
+edges -- and TMDb is only trusted for metadata fields (poster, synopsis,
+runtime, release date, and TMDb id). The predecessor of this script derived phases from release years and
 fetched a single page of results, which is exactly the class of mistake that
 arrangement prevents.
 
@@ -53,7 +53,7 @@ SEED_PATH = REPO_ROOT / "backend" / "app" / "seed" / "data" / "mcu.json"
 
 TMDB = "https://api.themoviedb.org/3"
 POSTER_BASE = "https://image.tmdb.org/t/p/w500"
-ENRICHED_FIELDS = ("tmdb_id", "poster_url", "synopsis", "runtime_min")
+ENRICHED_FIELDS = ("tmdb_id", "poster_url", "synopsis", "runtime_min", "release_date")
 
 
 class TmdbError(RuntimeError):
@@ -87,7 +87,7 @@ def search_endpoints(media_type: str) -> list[str]:
 
 
 def search(
-    session: requests.Session, api_key: str, kind: str, title: str, year: int
+    session: requests.Session, api_key: str, kind: str, title: str, year: int | None
 ) -> int | None:
     """Search one index by title and year.
 
@@ -95,10 +95,35 @@ def search(
     2007 animated Doctor Strange, for instance -- which the search endpoint
     otherwise returns first.
     """
-    year_param = {"first_air_date_year": year} if kind == "tv" else {"year": year}
-    payload = get(session, f"/search/{kind}", api_key, query=title, **year_param)
+    params: dict[str, Any] = {"query": title}
+    if year is not None:
+        params.update({"first_air_date_year": year} if kind == "tv" else {"year": year})
+    payload = get(session, f"/search/{kind}", api_key, **params)
     results = payload.get("results") or []
     return results[0]["id"] if results else None
+
+
+def title_candidates(title: str) -> list[str]:
+    """Potential TMDb query variants for a curated title."""
+    candidates = [title]
+
+    # Strip common branding prefixes that TMDb omits.
+    marvel_prefix = "Marvel's "
+    if title.startswith(marvel_prefix):
+        candidates.append(title[len(marvel_prefix) :])
+
+    # TMDb often files these without the branding prefix.
+    one_shot_prefix = "Marvel One-Shot: "
+    if title.startswith(one_shot_prefix):
+        candidates.append(title[len(one_shot_prefix) :])
+
+    seen: set[str] = set()
+    unique: list[str] = []
+    for candidate in candidates:
+        if candidate not in seen:
+            seen.add(candidate)
+            unique.append(candidate)
+    return unique
 
 
 def resolve(
@@ -110,17 +135,48 @@ def resolve(
         # Search for the show, not the season -- "Loki: Season 2" matches nothing.
         base = season_match.group("base")
         season = int(season_match.group("season"))
-        # A later season's year will not match the show's first-air year.
-        show_id = search(session, api_key, "tv", base, year) or search(
-            session, api_key, "tv", base, None
-        )
-        return ("tv", show_id, season) if show_id else None
+        for candidate_title in title_candidates(base):
+            # A later season's year will not match the show's first-air year.
+            show_id = search(session, api_key, "tv", candidate_title, year) or search(
+                session, api_key, "tv", candidate_title, None
+            )
+            if show_id:
+                return ("tv", show_id, season)
+        return None
 
-    for kind in search_endpoints(media_type):
-        found = search(session, api_key, kind, title, year)
-        if found:
-            return (kind, found, None)
+    for candidate_title in title_candidates(title):
+        for kind in search_endpoints(media_type):
+            # Try strict first, then adjacent years, then no year filter.
+            candidate_years = (None,) if year is None else (year, year + 1, year - 1, None)
+            for candidate_year in candidate_years:
+                found = search(session, api_key, kind, candidate_title, candidate_year)
+                if found:
+                    return (kind, found, None)
     return None
+
+
+ISO_DATE_PREFIX = re.compile(r"^(\d{4}-\d{2}-\d{2})")
+
+
+def normalize_release_date(value: Any) -> str | None:
+    """Return YYYY-MM-DD when possible; otherwise None."""
+    if not isinstance(value, str):
+        return None
+    match = ISO_DATE_PREFIX.match(value)
+    return match.group(1) if match else None
+
+
+def extract_year(value: Any) -> int | None:
+    """Return a four-digit year from a local date string when possible."""
+    if not isinstance(value, str):
+        return None
+    match = ISO_DATE_PREFIX.match(value)
+    if not match:
+        return None
+    try:
+        return int(match.group(1)[:4])
+    except ValueError:
+        return None
 
 
 def fetch_details(
@@ -137,17 +193,42 @@ def fetch_details(
         payload = get(session, f"/{kind}/{tmdb_id}", api_key)
 
     poster_path = payload.get("poster_path")
+
+    # TMDb uses different date fields per endpoint.
+    if season is not None:
+        tmdb_release_date = payload.get("air_date")
+    elif kind == "tv":
+        tmdb_release_date = payload.get("first_air_date")
+    else:
+        tmdb_release_date = payload.get("release_date")
+
+    runtime_value = payload.get("runtime")
+    runtime_min = None
+    if isinstance(runtime_value, (int, float)) and runtime_value > 0:
+        runtime_min = int(runtime_value)
+
     details: dict[str, Any] = {
         "tmdb_id": tmdb_id,
         "poster_url": f"{POSTER_BASE}{poster_path}" if poster_path else None,
         "synopsis": payload.get("overview") or None,
+        "release_date": normalize_release_date(tmdb_release_date),
     }
 
-    # Keyed on our own media_type rather than the endpoint that answered: a
-    # series has per-episode runtimes, which is not the same thing as a single
-    # runtime, so the curated file leaves those null on purpose.
-    if media_type != "series":
-        details["runtime_min"] = payload.get("runtime") or None
+    # For series, sum the runtimes of the episodes in the season. For other
+    # types, use the single value from TMDb.
+    if media_type == "series":
+        if season is not None:
+            episodes = payload.get("episodes")
+            if isinstance(episodes, list):
+                total_runtime = sum(
+                    e.get("runtime") or 0
+                    for e in episodes
+                    if isinstance(e.get("runtime"), int)
+                )
+                if total_runtime > 0:
+                    details["runtime_min"] = total_runtime
+    elif runtime_min:
+        details["runtime_min"] = runtime_min
 
     return details
 
@@ -166,7 +247,7 @@ def enrich(
         if already_done and not force:
             continue
 
-        year = int(movie["release_date"][:4])
+        year = extract_year(movie.get("release_date"))
 
         try:
             resolved = resolve(session, api_key, movie["title"], year, movie["media_type"])

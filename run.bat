@@ -2,6 +2,11 @@
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
+REM Dev runner:
+REM - Validates the seed catalog before startup.
+REM - Starts backend and frontend in this same terminal window.
+REM - Opens the app in a browser and keeps this window alive for logs.
+
 echo.
 echo   Marvel Watch Order - local development
 echo   -------------------------------------
@@ -51,11 +56,11 @@ popd
 echo.
 
 REM ---------------------------------------------------------------- launch --
-echo   [*] Starting the API on http://localhost:8000
-start "Marvel API" cmd /k "cd /d "%~dp0backend" && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000"
+echo   [*] Starting the API on http://localhost:8000 (same window)
+start "" /b cmd /c "cd /d "%~dp0backend" && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000"
 
-echo   [*] Starting the web app on http://localhost:5173
-start "Marvel Web" cmd /k "cd /d "%~dp0frontend" && npm run dev"
+echo   [*] Starting the web app on http://localhost:5173 (same window)
+start "" /b cmd /c "cd /d "%~dp0frontend" && npm run dev"
 
 echo.
 echo   Waiting for the servers to come up...
@@ -68,7 +73,11 @@ echo   Running.
 echo     web   http://localhost:5173
 echo     api   http://localhost:8000/api/docs
 echo.
-echo   Two terminal windows opened, one per server. Close them to stop.
-echo   Both reload automatically when you edit code.
+echo   Both servers are running in this terminal window.
+echo   Press Ctrl+C in this window to stop them.
 echo.
-timeout /t 4 /nobreak >nul
+
+REM Keep this console alive while both background jobs stream logs.
+:wait_loop
+timeout /t 3600 >nul
+goto wait_loop

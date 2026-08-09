@@ -30,7 +30,7 @@
       "release_date": "2011-07-22",
       "phase": 1,
       "saga": "infinity",
-      "universe": "mcu",
+      "universe": "earth-616",
       "media_type": "film",
       "tier": "core",
       "runtime_min": 124,
@@ -40,12 +40,57 @@
       "synopsis": "During World War II, Steve Rogers is a sickly man from Brooklyn who's transformed into super-soldier Captain America to aid in the war effort. Rogers must stop the Red Skull – Adolf Hitler's ruthless head of weaponry, and the leader of an organization that intends to use a mysterious device of untold powers for world domination."
     },
     {
+      "id": "agent-carter-one-shot",
+      "title": "Marvel One-Shot: Agent Carter",
+      "release_date": "2013-10-04",
+      "phase": 1,
+      "saga": "infinity",
+      "universe": "earth-616",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 15,
+      "prerequisites": [],
+      "tmdb_id": 211387,
+      "poster_url": "https://image.tmdb.org/t/p/w500/4vFKKWPvCVDJTOWiwReBfpAMScP.jpg",
+      "synopsis": "Agent Peggy Carter is relegated to a desk job and frustrated at her male boss and comrades' sexist dismissal of her place in the SSR. Ordered to work late one night, Carter gets an alert that the villain Zodiac has been spotted and decides to take care of it herself."
+    },
+    {
+      "id": "agent-carter-season-one",
+      "title": "Marvel's Agent Carter: Season 1",
+      "release_date": "2015-01-06",
+      "phase": 1,
+      "saga": "infinity",
+      "universe": "earth-616",
+      "media_type": "series",
+      "tier": "core",
+      "runtime_min": 343,
+      "prerequisites": [],
+      "tmdb_id": 61550,
+      "poster_url": "https://image.tmdb.org/t/p/w500/gqyjmfFOrKY8iouNTXWj9KW7cC5.jpg",
+      "synopsis": "Years before Agent Phil Coulson and his S.H.I.E.L.D. team swore to protect those who cannot protect themselves from threats they cannot conceive, there was Agent Peggy Carter, who pledged the same oath but lived in a different time, when women weren't recognized as being as smart or as tough as their male counterparts. But no one should ever underestimate Peggy."
+    },
+    {
+      "id": "agent-carter-season-two",
+      "title": "Marvel's Agent Carter: Season 2",
+      "release_date": "2016-01-19",
+      "phase": 1,
+      "saga": "infinity",
+      "universe": "earth-616",
+      "media_type": "series",
+      "tier": "core",
+      "runtime_min": 434,
+      "prerequisites": [],
+      "tmdb_id": 61550,
+      "poster_url": "https://image.tmdb.org/t/p/w500/h3yPRRiWZk6HrFD2oo3xqpLt6bc.jpg",
+      "synopsis": "Dedicated to the fight against new Atomic Age threats in the wake of World War II, Peggy must now journey from New York City to Los Angeles and she's about to find out that the bright lights of the post-war Hollywood mask a more sinister threat to everyone she is sworn to protect."
+    },
+    {
       "id": "captain-marvel",
       "title": "Captain Marvel",
-      "release_date": "2019-03-08",
+      "release_date": "2019-03-06",
       "phase": 3,
       "saga": "infinity",
-      "universe": "mcu",
+      "universe": "earth-616",
       "media_type": "film",
       "tier": "core",
       "runtime_min": 124,
@@ -57,7 +102,7 @@
     {
       "id": "iron-man",
       "title": "Iron Man",
-      "release_date": "2008-05-02",
+      "release_date": "2008-04-30",
       "phase": 1,
       "saga": "infinity",
       "universe": "mcu",
@@ -72,7 +117,7 @@
     {
       "id": "the-incredible-hulk",
       "title": "The Incredible Hulk",
-      "release_date": "2008-06-13",
+      "release_date": "2008-06-12",
       "phase": 1,
       "saga": "infinity",
       "universe": "mcu",
@@ -87,7 +132,7 @@
     {
       "id": "iron-man-2",
       "title": "Iron Man 2",
-      "release_date": "2010-05-07",
+      "release_date": "2010-04-28",
       "phase": 1,
       "saga": "infinity",
       "universe": "mcu",
@@ -108,7 +153,7 @@
     {
       "id": "thor",
       "title": "Thor",
-      "release_date": "2011-05-06",
+      "release_date": "2011-04-21",
       "phase": 1,
       "saga": "infinity",
       "universe": "mcu",
@@ -123,7 +168,7 @@
     {
       "id": "the-avengers",
       "title": "The Avengers",
-      "release_date": "2012-05-04",
+      "release_date": "2012-04-25",
       "phase": 1,
       "saga": "infinity",
       "universe": "mcu",
@@ -159,7 +204,7 @@
     {
       "id": "iron-man-3",
       "title": "Iron Man 3",
-      "release_date": "2013-05-03",
+      "release_date": "2013-04-18",
       "phase": 2,
       "saga": "infinity",
       "universe": "mcu",
@@ -180,7 +225,7 @@
     {
       "id": "thor-the-dark-world",
       "title": "Thor: The Dark World",
-      "release_date": "2013-11-08",
+      "release_date": "2013-10-30",
       "phase": 2,
       "saga": "infinity",
       "universe": "mcu",
@@ -201,7 +246,7 @@
     {
       "id": "captain-america-the-winter-soldier",
       "title": "Captain America: The Winter Soldier",
-      "release_date": "2014-04-04",
+      "release_date": "2014-03-20",
       "phase": 2,
       "saga": "infinity",
       "universe": "mcu",
@@ -222,7 +267,7 @@
     {
       "id": "guardians-of-the-galaxy",
       "title": "Guardians of the Galaxy",
-      "release_date": "2014-08-01",
+      "release_date": "2014-07-30",
       "phase": 2,
       "saga": "infinity",
       "universe": "mcu",
@@ -243,7 +288,7 @@
     {
       "id": "guardians-of-the-galaxy-vol-2",
       "title": "Guardians of the Galaxy Vol. 2",
-      "release_date": "2017-05-05",
+      "release_date": "2017-04-25",
       "phase": 3,
       "saga": "infinity",
       "universe": "mcu",
@@ -264,7 +309,7 @@
     {
       "id": "avengers-age-of-ultron",
       "title": "Avengers: Age of Ultron",
-      "release_date": "2015-05-01",
+      "release_date": "2015-04-22",
       "phase": 2,
       "saga": "infinity",
       "universe": "mcu",
@@ -290,7 +335,7 @@
     {
       "id": "ant-man",
       "title": "Ant-Man",
-      "release_date": "2015-07-17",
+      "release_date": "2015-07-14",
       "phase": 2,
       "saga": "infinity",
       "universe": "mcu",
@@ -311,7 +356,7 @@
     {
       "id": "captain-america-civil-war",
       "title": "Captain America: Civil War",
-      "release_date": "2016-05-06",
+      "release_date": "2016-04-27",
       "phase": 3,
       "saga": "infinity",
       "universe": "mcu",
@@ -337,7 +382,7 @@
     {
       "id": "black-widow",
       "title": "Black Widow",
-      "release_date": "2021-07-09",
+      "release_date": "2021-07-07",
       "phase": 4,
       "saga": "multiverse",
       "universe": "mcu",
@@ -358,7 +403,7 @@
     {
       "id": "black-panther",
       "title": "Black Panther",
-      "release_date": "2018-02-16",
+      "release_date": "2018-02-13",
       "phase": 3,
       "saga": "infinity",
       "universe": "mcu",
@@ -379,7 +424,7 @@
     {
       "id": "spider-man-homecoming",
       "title": "Spider-Man: Homecoming",
-      "release_date": "2017-07-07",
+      "release_date": "2017-07-05",
       "phase": 3,
       "saga": "infinity",
       "universe": "mcu",
@@ -400,7 +445,7 @@
     {
       "id": "doctor-strange",
       "title": "Doctor Strange",
-      "release_date": "2016-11-04",
+      "release_date": "2016-10-25",
       "phase": 3,
       "saga": "infinity",
       "universe": "mcu",
@@ -415,7 +460,7 @@
     {
       "id": "thor-ragnarok",
       "title": "Thor: Ragnarok",
-      "release_date": "2017-11-03",
+      "release_date": "2017-10-02",
       "phase": 3,
       "saga": "infinity",
       "universe": "mcu",
@@ -446,7 +491,7 @@
     {
       "id": "ant-man-and-the-wasp",
       "title": "Ant-Man and the Wasp",
-      "release_date": "2018-07-06",
+      "release_date": "2018-07-04",
       "phase": 3,
       "saga": "infinity",
       "universe": "mcu",
@@ -472,7 +517,7 @@
     {
       "id": "avengers-infinity-war",
       "title": "Avengers: Infinity War",
-      "release_date": "2018-04-27",
+      "release_date": "2018-04-25",
       "phase": 3,
       "saga": "infinity",
       "universe": "mcu",
@@ -513,7 +558,7 @@
     {
       "id": "avengers-endgame",
       "title": "Avengers: Endgame",
-      "release_date": "2019-04-26",
+      "release_date": "2019-04-24",
       "phase": 3,
       "saga": "infinity",
       "universe": "mcu",
@@ -633,7 +678,7 @@
     {
       "id": "shang-chi-and-the-legend-of-the-ten-rings",
       "title": "Shang-Chi and the Legend of the Ten Rings",
-      "release_date": "2021-09-03",
+      "release_date": "2021-09-01",
       "phase": 4,
       "saga": "multiverse",
       "universe": "mcu",
@@ -654,7 +699,7 @@
     {
       "id": "eternals",
       "title": "Eternals",
-      "release_date": "2021-11-05",
+      "release_date": "2021-11-03",
       "phase": 4,
       "saga": "multiverse",
       "universe": "mcu",
@@ -675,7 +720,7 @@
     {
       "id": "spider-man-far-from-home",
       "title": "Spider-Man: Far From Home",
-      "release_date": "2019-07-02",
+      "release_date": "2019-06-28",
       "phase": 3,
       "saga": "infinity",
       "universe": "mcu",
@@ -696,7 +741,7 @@
     {
       "id": "spider-man-no-way-home",
       "title": "Spider-Man: No Way Home",
-      "release_date": "2021-12-17",
+      "release_date": "2021-12-15",
       "phase": 4,
       "saga": "multiverse",
       "universe": "mcu",
@@ -758,7 +803,7 @@
     {
       "id": "doctor-strange-in-the-multiverse-of-madness",
       "title": "Doctor Strange in the Multiverse of Madness",
-      "release_date": "2022-05-06",
+      "release_date": "2022-05-04",
       "phase": 4,
       "saga": "multiverse",
       "universe": "mcu",
@@ -815,7 +860,7 @@
     {
       "id": "thor-love-and-thunder",
       "title": "Thor: Love and Thunder",
-      "release_date": "2022-07-08",
+      "release_date": "2022-07-06",
       "phase": 4,
       "saga": "multiverse",
       "universe": "mcu",
@@ -862,7 +907,7 @@
     {
       "id": "werewolf-by-night",
       "title": "Werewolf by Night",
-      "release_date": "2022-10-07",
+      "release_date": "2022-09-25",
       "phase": 4,
       "saga": "multiverse",
       "universe": "mcu",
@@ -877,7 +922,7 @@
     {
       "id": "black-panther-wakanda-forever",
       "title": "Black Panther: Wakanda Forever",
-      "release_date": "2022-11-11",
+      "release_date": "2022-11-09",
       "phase": 4,
       "saga": "multiverse",
       "universe": "mcu",
@@ -903,7 +948,7 @@
     {
       "id": "the-guardians-of-the-galaxy-holiday-special",
       "title": "The Guardians of the Galaxy Holiday Special",
-      "release_date": "2022-11-25",
+      "release_date": "2022-11-24",
       "phase": 4,
       "saga": "multiverse",
       "universe": "mcu",
@@ -929,7 +974,7 @@
     {
       "id": "ant-man-and-the-wasp-quantumania",
       "title": "Ant-Man and the Wasp: Quantumania",
-      "release_date": "2023-02-17",
+      "release_date": "2023-02-15",
       "phase": 5,
       "saga": "multiverse",
       "universe": "mcu",
@@ -960,7 +1005,7 @@
     {
       "id": "guardians-of-the-galaxy-vol-3",
       "title": "Guardians of the Galaxy Vol. 3",
-      "release_date": "2023-05-05",
+      "release_date": "2023-05-03",
       "phase": 5,
       "saga": "multiverse",
       "universe": "mcu",
@@ -1013,7 +1058,7 @@
       "universe": "mcu",
       "media_type": "series",
       "tier": "core",
-      "runtime_min": null,
+      "runtime_min": 313,
       "prerequisites": [
         {
           "id": "loki",
@@ -1054,7 +1099,7 @@
     {
       "id": "the-marvels",
       "title": "The Marvels",
-      "release_date": "2023-11-10",
+      "release_date": "2023-11-08",
       "phase": 5,
       "saga": "multiverse",
       "universe": "mcu",
@@ -1106,7 +1151,7 @@
     {
       "id": "deadpool-and-wolverine",
       "title": "Deadpool & Wolverine",
-      "release_date": "2024-07-26",
+      "release_date": "2024-07-24",
       "phase": 5,
       "saga": "multiverse",
       "universe": "mcu",
@@ -1132,7 +1177,7 @@
     {
       "id": "captain-america-brave-new-world",
       "title": "Captain America: Brave New World",
-      "release_date": "2025-02-14",
+      "release_date": "2025-02-12",
       "phase": 5,
       "saga": "multiverse",
       "universe": "mcu",
@@ -1189,7 +1234,7 @@
     {
       "id": "thunderbolts",
       "title": "Thunderbolts*",
-      "release_date": "2025-05-02",
+      "release_date": "2025-04-30",
       "phase": 5,
       "saga": "multiverse",
       "universe": "mcu",
@@ -1246,7 +1291,7 @@
     {
       "id": "the-fantastic-four-first-steps",
       "title": "The Fantastic Four: First Steps",
-      "release_date": "2025-07-25",
+      "release_date": "2025-07-23",
       "phase": 6,
       "saga": "multiverse",
       "universe": "mcu",
