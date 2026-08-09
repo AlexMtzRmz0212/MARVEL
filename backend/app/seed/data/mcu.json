@@ -85,6 +85,36 @@
       "synopsis": "Dedicated to the fight against new Atomic Age threats in the wake of World War II, Peggy must now journey from New York City to Los Angeles and she's about to find out that the bright lights of the post-war Hollywood mask a more sinister threat to everyone she is sworn to protect."
     },
     {
+      "id": "x-men-first-class",
+      "title": "X-Men: First Classs",
+      "release_date": "2011-06-01",
+      "phase": null,
+      "saga": "none",
+      "universe": "fox",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 132,
+      "prerequisites": [],
+      "tmdb_id": 49538,
+      "poster_url": "https://image.tmdb.org/t/p/w500/hNEokmUke0dazoBhttFN0o3L7Xv.jpg",
+      "synopsis": "Before Charles Xavier and Erik Lensherr took the names Professor X and Magneto, they were two young men discovering their powers for the first time. Before they were arch-enemies, they were closest of friends, working together with other mutants (some familiar, some new), to stop the greatest threat the world has ever known."
+    },
+    {
+      "id": "the-fantastic-four-first-steps",
+      "title": "The Fantastic Four: First Steps",
+      "release_date": "2025-07-23",
+      "phase": 6,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 115,
+      "prerequisites": [],
+      "tmdb_id": 617126,
+      "poster_url": "https://image.tmdb.org/t/p/w500/nf5qaSEvyYSNeFH0YhSs5EsBLX9.jpg",
+      "synopsis": "Against the vibrant backdrop of a 1960s-inspired, retro-futuristic world, Marvel's First Family is forced to balance their roles as heroes with the strength of their family bond, while defending Earth from a ravenous space god called Galactus and his enigmatic Herald, Silver Surfer."
+    },
+    {
       "id": "captain-marvel",
       "title": "Captain Marvel",
       "release_date": "2019-03-06",
@@ -1287,21 +1317,6 @@
       "tmdb_id": 114471,
       "poster_url": "https://image.tmdb.org/t/p/w500/dOh6MJpdlQhYpLBhzhNQeYGKTZ5.jpg",
       "synopsis": "After the events of Black Panther: Wakanda Forever, technology is pitted against magic when Riri Williams, a young, genius inventor determined to make her mark on the world, returns to her hometown of Chicago. Her unique take on building iron suits is brilliant, but in pursuit of her ambitions, she finds herself wrapped up with the mysterious yet charming Parker Robbins aka \"The Hood.\""
-    },
-    {
-      "id": "the-fantastic-four-first-steps",
-      "title": "The Fantastic Four: First Steps",
-      "release_date": "2025-07-23",
-      "phase": 6,
-      "saga": "multiverse",
-      "universe": "mcu",
-      "media_type": "film",
-      "tier": "core",
-      "runtime_min": 115,
-      "prerequisites": [],
-      "tmdb_id": 617126,
-      "poster_url": "https://image.tmdb.org/t/p/w500/nf5qaSEvyYSNeFH0YhSs5EsBLX9.jpg",
-      "synopsis": "Against the vibrant backdrop of a 1960s-inspired, retro-futuristic world, Marvel's First Family is forced to balance their roles as heroes with the strength of their family bond, while defending Earth from a ravenous space god called Galactus and his enigmatic Herald, Silver Surfer."
     },
     {
       "id": "wonder-man",

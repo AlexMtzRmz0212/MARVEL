@@ -29,6 +29,10 @@ dev = [
     # Verifies TLS against the OS trust store, so HTTPS-inspecting antivirus
     # and corporate proxies do not break the enrichment script.
     "truststore>=0.10",
+    # Local-only GUI for editing the curated catalog (scripts/catalog_editor.py).
+    # A developer tool, never shipped to the serverless function.
+    "streamlit>=1.40",
+    "streamlit-sortables>=0.3",
     "ruff>=0.9",
 ]
 

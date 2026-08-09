@@ -1,36 +1,26 @@
-"""Fill poster art, synopses, runtimes and release dates into the curated catalog from TMDb.
+"""TMDb metadata toolkit for the curated catalog.
 
-    python scripts/enrich_tmdb.py --dry-run
-    python scripts/enrich_tmdb.py
-    python scripts/enrich_tmdb.py --force        # re-fetch titles already filled in
+Trusted only for metadata fields -- poster, synopsis, runtime, release date, and
+TMDb id -- never for the fields the curated file owns: ids, phases, sagas, tiers,
+chronology and above all the prerequisite edges.
 
-This is a developer tool, run occasionally and by hand. It is deliberately NOT
-part of the seed path: the curated file is authoritative for everything that
-matters -- ids, phases, sagas, tiers, chronology and above all the prerequisite
-edges -- and TMDb is only trusted for metadata fields (poster, synopsis,
-runtime, release date, and TMDb id). The predecessor of this script derived
-phases from release years and fetched a single page of results, which is exactly
-the class of mistake that arrangement prevents.
+This module is a library, imported by the Streamlit catalog editor
+(`scripts/catalog_editor.py`). The editor drives it interactively: it calls
+`search_candidates` to show the human every TMDb match for a title, and
+`fetch_details` to pull one chosen title's metadata. That human-in-the-loop step
+is what keeps a title like "X-Men: First Class" from silently matching a
+making-of special instead of the film.
 
-Writes back into the same JSON file, preserving its structure and comments, so
-the result is reviewable as a diff before it ever reaches a database.
-
-Needs TMDB_API_KEY in the repo-root .env.
+Needs TMDB_API_KEY in the repo-root .env (the editor loads it).
 """
 
 from __future__ import annotations
 
-import argparse
-import json
-import os
 import re
-import sys
-import time
 from pathlib import Path
 from typing import Any
 
 import requests
-from dotenv import load_dotenv
 
 try:
     # Verify certificates against the operating system's trust store rather than
@@ -86,21 +76,60 @@ def search_endpoints(media_type: str) -> list[str]:
     return ["movie", "tv"]
 
 
-def search(
-    session: requests.Session, api_key: str, kind: str, title: str, year: int | None
-) -> int | None:
-    """Search one index by title and year.
+def search_candidates(
+    session: requests.Session,
+    api_key: str,
+    kind: str,
+    title: str,
+    year: int | None,
+    limit: int = 8,
+) -> list[dict[str, Any]]:
+    """Every TMDb match for a title, newest-relevant first, as picker-ready rows.
 
-    Year matters because several titles share a name with something older -- a
-    2007 animated Doctor Strange, for instance -- which the search endpoint
-    otherwise returns first.
+    This is the function the editor drives: instead of committing to the top hit
+    it hands the human all of them -- title, year, poster, overview -- so a query
+    like "X-Men: First Class" that returns both the film and a making-of special
+    can be disambiguated by eye rather than by luck.
+
+    Year still narrows the query when supplied (several titles share a name with
+    something older -- a 2007 animated Doctor Strange, say), but it is a filter on
+    the request, not a guarantee, so the caller always sees what came back.
     """
     params: dict[str, Any] = {"query": title}
     if year is not None:
         params.update({"first_air_date_year": year} if kind == "tv" else {"year": year})
     payload = get(session, f"/search/{kind}", api_key, **params)
     results = payload.get("results") or []
-    return results[0]["id"] if results else None
+
+    candidates: list[dict[str, Any]] = []
+    for result in results[:limit]:
+        # TMDb names the title and date fields differently for movie vs tv.
+        name = result.get("title") or result.get("name") or "(untitled)"
+        date_value = result.get("release_date") or result.get("first_air_date")
+        candidates.append(
+            {
+                "id": result["id"],
+                "kind": kind,
+                "title": name,
+                "year": extract_year(date_value),
+                "poster_path": result.get("poster_path"),
+                "overview": result.get("overview") or "",
+            }
+        )
+    return candidates
+
+
+def search(
+    session: requests.Session, api_key: str, kind: str, title: str, year: int | None
+) -> int | None:
+    """The single best-guess TMDb id for a title, or None.
+
+    A thin convenience over :func:`search_candidates` for callers that want the
+    top hit without a human in the loop (e.g. :func:`resolve`). Anything
+    interactive should call ``search_candidates`` and let the user choose.
+    """
+    candidates = search_candidates(session, api_key, kind, title, year, limit=1)
+    return candidates[0]["id"] if candidates else None
 
 
 def title_candidates(title: str) -> list[str]:
@@ -233,93 +262,16 @@ def fetch_details(
     return details
 
 
-def enrich(
-    movies: list[dict[str, Any]], api_key: str, *, force: bool, verbose: bool
-) -> tuple[int, list[str]]:
-    session = requests.Session()
-    changed = 0
-    failures: list[str] = []
+def details_diff(movie: dict[str, Any], details: dict[str, Any]) -> dict[str, Any]:
+    """The subset of freshly fetched TMDb fields that would actually change `movie`.
 
-    for movie in movies:
-        already_done = all(
-            movie.get(field) for field in ("tmdb_id", "poster_url", "synopsis")
-        )
-        if already_done and not force:
-            continue
-
-        year = extract_year(movie.get("release_date"))
-
-        try:
-            resolved = resolve(session, api_key, movie["title"], year, movie["media_type"])
-            if resolved is None:
-                failures.append(f"{movie['id']}: no TMDb match for {movie['title']!r} ({year})")
-                continue
-
-            kind, tmdb_id, season = resolved
-            details = fetch_details(
-                session, api_key, kind, tmdb_id, season, movie["media_type"]
-            )
-        except (TmdbError, requests.RequestException) as exc:
-            failures.append(f"{movie['id']}: {exc}")
-            continue
-
-        updated = False
-        for field, value in details.items():
-            # Never clobber a curated value with nothing.
-            if value is not None and movie.get(field) != value:
-                movie[field] = value
-                updated = True
-
-        if updated:
-            changed += 1
-            if verbose:
-                print(f"  {movie['id']} -> tmdb {details['tmdb_id']}")
-
-        time.sleep(0.1)  # stay well inside TMDb's rate limit
-
-    return changed, failures
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--file", type=Path, default=SEED_PATH)
-    parser.add_argument("--dry-run", action="store_true", help="fetch but do not write")
-    parser.add_argument(
-        "--force", action="store_true", help="re-fetch titles that already have data"
-    )
-    parser.add_argument("-v", "--verbose", action="store_true")
-    args = parser.parse_args(argv)
-
-    load_dotenv(REPO_ROOT / ".env")
-    api_key = os.environ.get("TMDB_API_KEY")
-    if not api_key:
-        print("TMDB_API_KEY is not set. Copy .env.example to .env first.", file=sys.stderr)
-        return 1
-
-    document = json.loads(args.file.read_text(encoding="utf-8"))
-    movies = document["movies"]
-    print(f"{args.file.name}: {len(movies)} titles")
-
-    changed, failures = enrich(movies, api_key, force=args.force, verbose=args.verbose)
-
-    for failure in failures:
-        print(f"  warning: {failure}", file=sys.stderr)
-
-    if args.dry_run:
-        print(f"Would update {changed} title(s). Nothing written.")
-        return 0
-
-    if changed:
-        args.file.write_text(
-            json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-        )
-        print(f"Updated {changed} title(s) in {args.file.name}.")
-        print("Review the diff, then run: python -m app.seed.loader")
-    else:
-        print("Nothing to update.")
-
-    return 1 if failures else 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+    Mirrors the old bulk enricher's "never clobber a curated value with nothing"
+    rule: a null from TMDb never overwrites something already in the file. The
+    editor uses this to show the user exactly what a chosen match would alter
+    before it is applied.
+    """
+    return {
+        field: value
+        for field, value in details.items()
+        if value is not None and movie.get(field) != value
+    }

@@ -25,6 +25,13 @@ env/
 # Deploy
 .vercel/
 
+# Claude Code
+.claude/
+
+# Catalog editor backups
+*.bak
+mcu.json.*.bak
+
 # OS Generated Files
 .DS_Store
 Thumbs.db

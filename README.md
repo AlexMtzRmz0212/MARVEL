@@ -90,15 +90,16 @@ server.py         production entrypoint: API + built SPA in one process
 
 The catalog is authoritative for ids, phases, sagas, tiers, chronology and the
 dependency edges — the things APIs get wrong. TMDb fills in only posters,
-synopses, runtimes and its own id:
+synopses, runtimes and its own id.
 
-```bash
-cd backend
-.venv/Scripts/python.exe scripts/enrich_tmdb.py --dry-run
-```
+Edit the catalog with the local editor (`catalog.bat` at the repo root, or
+`streamlit run scripts/catalog_editor.py` from `backend`). It organises and
+edits `app/seed/data/mcu.json`, validates with the same checks as
+`app.seed.loader --check` before writing, and has a TMDb picker that shows every
+match so you choose the right one rather than trusting a blind first hit.
 
-Needs `TMDB_API_KEY` in the root `.env` (see `.env.example`). It writes back into
-the JSON so the result is reviewable as a diff.
+Needs `TMDB_API_KEY` in the root `.env` (see `.env.example`) for the picker. The
+editor writes back into the JSON so the result is reviewable as a diff.
 
 ## Deploying
 
