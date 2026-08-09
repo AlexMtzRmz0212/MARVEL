@@ -61,19 +61,27 @@ export function PrereqGraphPage() {
             <Stat label="Depth" value={stats.max_depth} accent="var(--color-ink-dim)" />
           </div>
 
-          <button
-            type="button"
-            onClick={() => setEssentialOnly((value) => !value)}
-            aria-pressed={essentialOnly}
-            className={[
-              'meta border px-3 py-1.5 transition-colors',
-              essentialOnly
-                ? 'border-transparent bg-ink text-base'
-                : 'border-hairline-strong text-ink-dim hover:text-ink',
-            ].join(' ')}
-          >
-            Essential only
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setEssentialOnly((value) => !value)}
+              aria-pressed={essentialOnly}
+              className={[
+                'meta border px-3 py-1.5 transition-colors',
+                essentialOnly
+                  ? 'border-transparent bg-ink text-base'
+                  : 'border-hairline-strong text-ink-dim hover:text-ink',
+              ].join(' ')}
+            >
+              Essential only
+            </button>
+            <Link
+              to={`/orders/new?start=${movieId}&name=${encodeURIComponent(`Watching ${movie.title}`)}`}
+              className="meta border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+            >
+              Build an order from this
+            </Link>
+          </div>
         </div>
       </header>
 

@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate } from 'react-router'
 
 import { AppShell } from './components/AppShell'
 import { CatalogPage } from './features/catalog/CatalogPage'
+import { OrderBuilderPage } from './features/builder/OrderBuilderPage'
+import { OrdersPage } from './features/builder/OrdersPage'
 import { PrereqGraphPage } from './features/prereq/PrereqGraphPage'
 import { MovieDetailPage } from './pages/MovieDetailPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -14,6 +16,9 @@ export const router = createBrowserRouter([
       { path: 'catalog', element: <CatalogPage /> },
       { path: 'movies/:movieId', element: <MovieDetailPage /> },
       { path: 'movies/:movieId/prereqs', element: <PrereqGraphPage /> },
+      { path: 'orders', element: <OrdersPage /> },
+      { path: 'orders/new', element: <OrderBuilderPage /> },
+      { path: 'orders/:orderId', element: <OrderBuilderPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
