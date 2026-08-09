@@ -1,0 +1,1283 @@
+{
+  "$comment": [
+    "Curated catalog. This file is the source of truth for structure; TMDb is",
+    "only ever allowed to fill in poster_url, synopsis, runtime_min and tmdb_id",
+    "via backend/scripts/enrich_tmdb.py. Phases, sagas, tiers and above all the",
+    "dependency edges are editorial judgements no API can supply.",
+    "",
+    "ARRAY ORDER IS THE CHRONOLOGICAL ORDER. chrono_order is assigned from array",
+    "position and release_order is derived from release_date, so neither is",
+    "hand-written and neither can drift. Re-ordering the in-universe timeline is",
+    "a cut-and-paste in this file.",
+    "",
+    "The loader asserts that this array order is itself a valid topological sort",
+    "of the edges below -- that single check catches most authoring mistakes.",
+    "",
+    "Edges are kept transitively reduced: if A requires B and B requires C, the",
+    "A->C edge is omitted. Redundant edges clutter the graph visualisation, and",
+    "the loader warns about them.",
+    "",
+    "Tier A (this file today): MCU live-action films, Disney+ series and",
+    "specials, plus What If...?. Tier B -- Sony, Fox, Netflix, ABC and the",
+    "animated spin-offs -- appends to the same array with universe set",
+    "accordingly and tier 'adjacent'."
+  ],
+  "version": 1,
+  "movies": [
+    {
+      "id": "captain-america-the-first-avenger",
+      "title": "Captain America: The First Avenger",
+      "release_date": "2011-07-22",
+      "phase": 1,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 124,
+      "prerequisites": [],
+      "tmdb_id": 1771,
+      "poster_url": "https://image.tmdb.org/t/p/w500/vSNxAJTlD0r02V9sPYpOjqDZXUK.jpg",
+      "synopsis": "During World War II, Steve Rogers is a sickly man from Brooklyn who's transformed into super-soldier Captain America to aid in the war effort. Rogers must stop the Red Skull – Adolf Hitler's ruthless head of weaponry, and the leader of an organization that intends to use a mysterious device of untold powers for world domination."
+    },
+    {
+      "id": "captain-marvel",
+      "title": "Captain Marvel",
+      "release_date": "2019-03-08",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 124,
+      "prerequisites": [],
+      "tmdb_id": 299537,
+      "poster_url": "https://image.tmdb.org/t/p/w500/AtsgWhDnHTq68L0lLsUrCnM7TjG.jpg",
+      "synopsis": "The story follows Carol Danvers as she becomes one of the universe’s most powerful heroes when Earth is caught in the middle of a galactic war between two alien races. Set in the 1990s, Captain Marvel is an all-new adventure from a previously unseen period in the history of the Marvel Cinematic Universe."
+    },
+    {
+      "id": "iron-man",
+      "title": "Iron Man",
+      "release_date": "2008-05-02",
+      "phase": 1,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 126,
+      "prerequisites": [],
+      "tmdb_id": 1726,
+      "poster_url": "https://image.tmdb.org/t/p/w500/78lPtwv72eTNqFW9COBYI0dWDJa.jpg",
+      "synopsis": "After being held captive in an Afghan cave, billionaire engineer Tony Stark creates a unique weaponized suit of armor to fight evil."
+    },
+    {
+      "id": "the-incredible-hulk",
+      "title": "The Incredible Hulk",
+      "release_date": "2008-06-13",
+      "phase": 1,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 114,
+      "prerequisites": [],
+      "tmdb_id": 1724,
+      "poster_url": "https://image.tmdb.org/t/p/w500/gKzYx79y0AQTL4UAk1cBQJ3nvrm.jpg",
+      "synopsis": "Scientist Bruce Banner scours the planet for an antidote to the unbridled force of rage within him: the Hulk. But when the military masterminds who dream of exploiting his powers force him back to civilization, he finds himself coming face to face with a new, deadly foe."
+    },
+    {
+      "id": "iron-man-2",
+      "title": "Iron Man 2",
+      "release_date": "2010-05-07",
+      "phase": 1,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 124,
+      "prerequisites": [
+        {
+          "id": "iron-man",
+          "strength": "essential",
+          "note": "Picks up directly from Tony's public reveal"
+        }
+      ],
+      "tmdb_id": 10138,
+      "poster_url": "https://image.tmdb.org/t/p/w500/6WBeq4fCfn7AN0o21W9qNcRF2l9.jpg",
+      "synopsis": "With the world now aware of his dual life as the armored superhero Iron Man, billionaire inventor Tony Stark faces pressure from the government, the press and the public to share his technology with the military. Unwilling to let go of his invention, Stark, with Pepper Potts and James 'Rhodey' Rhodes at his side, must forge new alliances – and confront powerful enemies."
+    },
+    {
+      "id": "thor",
+      "title": "Thor",
+      "release_date": "2011-05-06",
+      "phase": 1,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 115,
+      "prerequisites": [],
+      "tmdb_id": 10195,
+      "poster_url": "https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg",
+      "synopsis": "Against his father Odin's will, The Mighty Thor - a powerful but arrogant warrior god - recklessly reignites an ancient war. Thor is cast down to Earth and forced to live among humans as punishment. Once here, Thor learns what it takes to be a true hero when the most dangerous villain of his world sends the darkest forces of Asgard to invade Earth."
+    },
+    {
+      "id": "the-avengers",
+      "title": "The Avengers",
+      "release_date": "2012-05-04",
+      "phase": 1,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 143,
+      "prerequisites": [
+        {
+          "id": "iron-man-2",
+          "strength": "essential",
+          "note": "Sets up Black Widow, Fury and the Avengers Initiative"
+        },
+        {
+          "id": "thor",
+          "strength": "essential",
+          "note": "Establishes Loki's grievance and the Tesseract"
+        },
+        {
+          "id": "captain-america-the-first-avenger",
+          "strength": "essential",
+          "note": "Steve Rogers, and where the Tesseract came from"
+        },
+        {
+          "id": "the-incredible-hulk",
+          "strength": "recommended",
+          "note": "Introduces Banner on the run, though he is recast here"
+        }
+      ],
+      "tmdb_id": 24428,
+      "poster_url": "https://image.tmdb.org/t/p/w500/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg",
+      "synopsis": "When an unexpected enemy emerges and threatens global safety and security, Nick Fury, director of the international peacekeeping agency known as S.H.I.E.L.D., finds himself in need of a team to pull the world back from the brink of disaster. Spanning the globe, a daring recruitment effort begins!"
+    },
+    {
+      "id": "iron-man-3",
+      "title": "Iron Man 3",
+      "release_date": "2013-05-03",
+      "phase": 2,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 130,
+      "prerequisites": [
+        {
+          "id": "the-avengers",
+          "strength": "essential",
+          "note": "The whole film is about Tony's panic attacks after New York"
+        }
+      ],
+      "tmdb_id": 68721,
+      "poster_url": "https://image.tmdb.org/t/p/w500/qhPtAc1TKbMPqNvcdXSOn9Bn7hZ.jpg",
+      "synopsis": "When Tony Stark's world is torn apart by a formidable terrorist called the Mandarin, he starts an odyssey of rebuilding and retribution."
+    },
+    {
+      "id": "thor-the-dark-world",
+      "title": "Thor: The Dark World",
+      "release_date": "2013-11-08",
+      "phase": 2,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 112,
+      "prerequisites": [
+        {
+          "id": "the-avengers",
+          "strength": "essential",
+          "note": "Opens with Loki imprisoned for the invasion"
+        }
+      ],
+      "tmdb_id": 76338,
+      "poster_url": "https://image.tmdb.org/t/p/w500/wp6OxE4poJ4G7c0U2ZIXasTSMR7.jpg",
+      "synopsis": "Thor fights to restore order across the cosmos… but an ancient race led by the vengeful Malekith returns to plunge the universe back into darkness. Faced with an enemy that even Odin and Asgard cannot withstand, Thor must embark on his most perilous and personal journey yet, one that will reunite him with Jane Foster and force him to sacrifice everything to save us all."
+    },
+    {
+      "id": "captain-america-the-winter-soldier",
+      "title": "Captain America: The Winter Soldier",
+      "release_date": "2014-04-04",
+      "phase": 2,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 136,
+      "prerequisites": [
+        {
+          "id": "the-avengers",
+          "strength": "essential",
+          "note": "S.H.I.E.L.D.'s expansion after New York is the premise"
+        }
+      ],
+      "tmdb_id": 100402,
+      "poster_url": "https://image.tmdb.org/t/p/w500/tVFRpFw3xTedgPGqxW0AOI8Qhh0.jpg",
+      "synopsis": "After the cataclysmic events in New York with The Avengers, Steve Rogers, aka Captain America is living quietly in Washington, D.C. and trying to adjust to the modern world. But when a S.H.I.E.L.D. colleague comes under attack, Steve becomes embroiled in a web of intrigue that threatens to put the world at risk. Joining forces with the Black Widow, Captain America struggles to expose the ever-widening conspiracy while fighting off professional assassins sent to silence him at every turn. When the full scope of the villainous plot is revealed, Captain America and the Black Widow enlist the help of a new ally, the Falcon. However, they soon find themselves up against an unexpected and formidable enemy—the Winter Soldier."
+    },
+    {
+      "id": "guardians-of-the-galaxy",
+      "title": "Guardians of the Galaxy",
+      "release_date": "2014-08-01",
+      "phase": 2,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 121,
+      "prerequisites": [
+        {
+          "id": "thor-the-dark-world",
+          "strength": "recommended",
+          "note": "Introduces the Collector and the Infinity Stones as objects"
+        }
+      ],
+      "tmdb_id": 118340,
+      "poster_url": "https://image.tmdb.org/t/p/w500/r7vmZjiyZw9rpJMQJdXpjgiCOk9.jpg",
+      "synopsis": "Light years from Earth, 26 years after being abducted, Peter Quill finds himself the prime target of a manhunt after discovering an orb wanted by Ronan the Accuser."
+    },
+    {
+      "id": "guardians-of-the-galaxy-vol-2",
+      "title": "Guardians of the Galaxy Vol. 2",
+      "release_date": "2017-05-05",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 137,
+      "prerequisites": [
+        {
+          "id": "guardians-of-the-galaxy",
+          "strength": "essential",
+          "note": "Direct continuation, months later"
+        }
+      ],
+      "tmdb_id": 283995,
+      "poster_url": "https://image.tmdb.org/t/p/w500/y4MBh0EjBlMuOzv9axM4qJlmhzz.jpg",
+      "synopsis": "The Guardians must fight to keep their newfound family together as they unravel the mysteries of Peter Quill's true parentage."
+    },
+    {
+      "id": "avengers-age-of-ultron",
+      "title": "Avengers: Age of Ultron",
+      "release_date": "2015-05-01",
+      "phase": 2,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 141,
+      "prerequisites": [
+        {
+          "id": "captain-america-the-winter-soldier",
+          "strength": "essential",
+          "note": "The Avengers are hunting HYDRA because S.H.I.E.L.D. fell"
+        },
+        {
+          "id": "iron-man-3",
+          "strength": "recommended",
+          "note": "Tony's fear of failing the world drives Ultron"
+        }
+      ],
+      "tmdb_id": 99861,
+      "poster_url": "https://image.tmdb.org/t/p/w500/4ssDuvEDkSArWEdyBl2X5EHvYKU.jpg",
+      "synopsis": "When Tony Stark tries to jumpstart a dormant peacekeeping program, things go awry and Earth’s Mightiest Heroes are put to the ultimate test as the fate of the planet hangs in the balance. As the villainous Ultron emerges, it is up to The Avengers to stop him from enacting his terrible plans, and soon uneasy alliances and unexpected action pave the way for an epic and unique global adventure."
+    },
+    {
+      "id": "ant-man",
+      "title": "Ant-Man",
+      "release_date": "2015-07-17",
+      "phase": 2,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 117,
+      "prerequisites": [
+        {
+          "id": "avengers-age-of-ultron",
+          "strength": "recommended",
+          "note": "The new Avengers compound, and Falcon's cameo"
+        }
+      ],
+      "tmdb_id": 102899,
+      "poster_url": "https://image.tmdb.org/t/p/w500/rQRnQfUl3kfp78nCWq8Ks04vnq1.jpg",
+      "synopsis": "Armed with the astonishing ability to shrink in scale but increase in strength, master thief Scott Lang must embrace his inner-hero and help his mentor, Doctor Hank Pym, protect the secret behind his spectacular Ant-Man suit from a new generation of towering threats. Against seemingly insurmountable obstacles, Pym and Lang must plan and pull off a heist that will save the world."
+    },
+    {
+      "id": "captain-america-civil-war",
+      "title": "Captain America: Civil War",
+      "release_date": "2016-05-06",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 147,
+      "prerequisites": [
+        {
+          "id": "avengers-age-of-ultron",
+          "strength": "essential",
+          "note": "Sokovia is the reason the Accords exist"
+        },
+        {
+          "id": "ant-man",
+          "strength": "recommended",
+          "note": "Scott Lang turns up on Cap's side out of nowhere otherwise"
+        }
+      ],
+      "tmdb_id": 271110,
+      "poster_url": "https://image.tmdb.org/t/p/w500/rAGiXaUfPzY7CDEyNKUofk3Kw2e.jpg",
+      "synopsis": "Following the events of Age of Ultron, the collective governments of the world pass an act designed to regulate all superhuman activity. This polarizes opinion amongst the Avengers, causing two factions to side with Iron Man or Captain America, which causes an epic battle between former allies."
+    },
+    {
+      "id": "black-widow",
+      "title": "Black Widow",
+      "release_date": "2021-07-09",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 134,
+      "prerequisites": [
+        {
+          "id": "captain-america-civil-war",
+          "strength": "essential",
+          "note": "Natasha is a fugitive from the Accords throughout"
+        }
+      ],
+      "tmdb_id": 497698,
+      "poster_url": "https://image.tmdb.org/t/p/w500/qAZ0pzat24kLdO3o8ejmbLxyOac.jpg",
+      "synopsis": "Natasha Romanoff, also known as Black Widow, confronts the darker parts of her ledger when a dangerous conspiracy with ties to her past arises. Pursued by a force that will stop at nothing to bring her down, Natasha must deal with her history as a spy and the broken relationships left in her wake long before she became an Avenger."
+    },
+    {
+      "id": "black-panther",
+      "title": "Black Panther",
+      "release_date": "2018-02-16",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 135,
+      "prerequisites": [
+        {
+          "id": "captain-america-civil-war",
+          "strength": "essential",
+          "note": "T'Challa takes the throne because of what happens there"
+        }
+      ],
+      "tmdb_id": 284054,
+      "poster_url": "https://image.tmdb.org/t/p/w500/uxzzxijgPIY7slzFvMotPv8wjKA.jpg",
+      "synopsis": "King T'Challa returns home to the reclusive, technologically advanced African nation of Wakanda to serve as his country's new leader. However, T'Challa soon finds that he is challenged for the throne by factions within his own country as well as without. Using powers reserved to Wakandan kings, T'Challa assumes the Black Panther mantle to join with ex-girlfriend Nakia, the queen-mother, his princess-kid sister, members of the Dora Milaje (the Wakandan 'special forces') and an American secret agent, to prevent Wakanda from being dragged into a world war."
+    },
+    {
+      "id": "spider-man-homecoming",
+      "title": "Spider-Man: Homecoming",
+      "release_date": "2017-07-07",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 133,
+      "prerequisites": [
+        {
+          "id": "captain-america-civil-war",
+          "strength": "essential",
+          "note": "Opens on Peter's recruitment and the airport fight"
+        }
+      ],
+      "tmdb_id": 315635,
+      "poster_url": "https://image.tmdb.org/t/p/w500/c24sv2weTHPsmDa7jEMN0m2P3RT.jpg",
+      "synopsis": "Following the events of Captain America: Civil War, Peter Parker, with the help of his mentor Tony Stark, tries to balance his life as an ordinary high school student in Queens, New York City, with fighting crime as his superhero alter ego Spider-Man as a new threat, the Vulture, emerges."
+    },
+    {
+      "id": "doctor-strange",
+      "title": "Doctor Strange",
+      "release_date": "2016-11-04",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 115,
+      "prerequisites": [],
+      "tmdb_id": 284052,
+      "poster_url": "https://image.tmdb.org/t/p/w500/uGBVj3bEbCoZbDjjl9wTxcygko1.jpg",
+      "synopsis": "After his career is destroyed, a brilliant but arrogant surgeon gets a new lease on life when a sorcerer takes him under her wing and trains him to defend the world against evil."
+    },
+    {
+      "id": "thor-ragnarok",
+      "title": "Thor: Ragnarok",
+      "release_date": "2017-11-03",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 131,
+      "prerequisites": [
+        {
+          "id": "thor-the-dark-world",
+          "strength": "essential",
+          "note": "Resolves who has actually been ruling Asgard"
+        },
+        {
+          "id": "avengers-age-of-ultron",
+          "strength": "essential",
+          "note": "Thor left to chase the vision this film pays off"
+        },
+        {
+          "id": "doctor-strange",
+          "strength": "recommended",
+          "note": "The Sanctum Sanctorum sequence assumes you know Strange"
+        }
+      ],
+      "tmdb_id": 284053,
+      "poster_url": "https://image.tmdb.org/t/p/w500/rzRwTcFvttcN1ZpX2xv4j3tSdJu.jpg",
+      "synopsis": "Thor is imprisoned on the other side of the universe and finds himself in a race against time to get back to Asgard to stop Ragnarok, the destruction of his home-world and the end of Asgardian civilization, at the hands of a powerful new threat, the ruthless Hela."
+    },
+    {
+      "id": "ant-man-and-the-wasp",
+      "title": "Ant-Man and the Wasp",
+      "release_date": "2018-07-06",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 119,
+      "prerequisites": [
+        {
+          "id": "ant-man",
+          "strength": "essential",
+          "note": "Continues Hank and Janet's story directly"
+        },
+        {
+          "id": "captain-america-civil-war",
+          "strength": "essential",
+          "note": "Scott is under house arrest for the airport fight"
+        }
+      ],
+      "tmdb_id": 363088,
+      "poster_url": "https://image.tmdb.org/t/p/w500/cFQEO687n1K6umXbInzocxcnAQz.jpg",
+      "synopsis": "Just when his time under house arrest is about to end, Scott Lang once again puts his freedom at risk to help Hope van Dyne and Dr. Hank Pym dive into the quantum realm and try to accomplish, against time and any chance of success, a very dangerous rescue mission."
+    },
+    {
+      "id": "avengers-infinity-war",
+      "title": "Avengers: Infinity War",
+      "release_date": "2018-04-27",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 149,
+      "prerequisites": [
+        {
+          "id": "thor-ragnarok",
+          "strength": "essential",
+          "note": "Opens moments after Ragnarok's final scene"
+        },
+        {
+          "id": "guardians-of-the-galaxy-vol-2",
+          "strength": "essential",
+          "note": "Gamora and Nebula's history with Thanos is the emotional core"
+        },
+        {
+          "id": "black-panther",
+          "strength": "essential",
+          "note": "The third act is the battle of Wakanda"
+        },
+        {
+          "id": "doctor-strange",
+          "strength": "essential",
+          "note": "The Time Stone and Strange's judgement drive the plot"
+        },
+        {
+          "id": "spider-man-homecoming",
+          "strength": "essential",
+          "note": "Peter's arc lands only if you have met him"
+        }
+      ],
+      "tmdb_id": 299536,
+      "poster_url": "https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
+      "synopsis": "As the Avengers and their allies have continued to protect the world from threats too large for any one hero to handle, a new danger has emerged from the cosmic shadows: Thanos. A despot of intergalactic infamy, his goal is to collect all six Infinity Stones, artifacts of unimaginable power, and use them to inflict his twisted will on all of reality. Everything the Avengers have fought for has led up to this moment - the fate of Earth and existence itself has never been more uncertain."
+    },
+    {
+      "id": "avengers-endgame",
+      "title": "Avengers: Endgame",
+      "release_date": "2019-04-26",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 181,
+      "prerequisites": [
+        {
+          "id": "avengers-infinity-war",
+          "strength": "essential",
+          "note": "Picks up in the immediate aftermath of the snap"
+        },
+        {
+          "id": "captain-marvel",
+          "strength": "essential",
+          "note": "Carol arrives in the first act with no introduction"
+        },
+        {
+          "id": "ant-man-and-the-wasp",
+          "strength": "essential",
+          "note": "The Quantum Realm cliffhanger is the entire plan"
+        }
+      ],
+      "tmdb_id": 299534,
+      "poster_url": "https://image.tmdb.org/t/p/w500/ulzhLuWrPK07P1YkdWQLZnQh1JL.jpg",
+      "synopsis": "After the devastating events of Avengers: Infinity War, the universe is in ruins due to the efforts of the Mad Titan, Thanos. With the help of remaining allies, the Avengers must assemble once more in order to undo Thanos' actions and restore order to the universe once and for all, no matter what consequences may be in store."
+    },
+    {
+      "id": "loki",
+      "title": "Loki",
+      "release_date": "2021-06-09",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "core",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Begins at the exact moment this Loki escapes with the Tesseract"
+        }
+      ],
+      "tmdb_id": 84958,
+      "poster_url": "https://image.tmdb.org/t/p/w500/rX1wQMTKFqF0gvZyS0DDQqgnQPB.jpg",
+      "synopsis": "After stealing the Tesseract during the events of “Avengers: Endgame,” an alternate version of Loki is brought to the mysterious Time Variance Authority, a bureaucratic organization that exists outside of time and space and monitors the timeline. They give Loki a choice: face being erased from existence due to being a “time variant” or help fix the timeline and stop a greater threat."
+    },
+    {
+      "id": "what-if",
+      "title": "What If...?",
+      "release_date": "2021-08-11",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "optional",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Every episode is a variation on something you are assumed to know"
+        },
+        {
+          "id": "loki",
+          "strength": "recommended",
+          "note": "Establishes the branching timelines these stories live in"
+        }
+      ],
+      "tmdb_id": 91363,
+      "poster_url": "https://image.tmdb.org/t/p/w500/zaqfFDUrSfIljdD0OBxSjcutX8n.jpg",
+      "synopsis": "Taking inspiration from the comic books of the same name, each episode of this animated anthology series questions, revisits and twists classic Marvel Cinematic moments."
+    },
+    {
+      "id": "wandavision",
+      "title": "WandaVision",
+      "release_date": "2021-01-15",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "core",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Wanda's grief for Vision is the premise"
+        }
+      ],
+      "tmdb_id": 85271,
+      "poster_url": "https://image.tmdb.org/t/p/w500/ijWWwINc8h71NQ8j1LTJMFSj5wr.jpg",
+      "synopsis": "Wanda Maximoff and Vision—two super-powered beings living idealized suburban lives—begin to suspect that everything is not as it seems."
+    },
+    {
+      "id": "the-falcon-and-the-winter-soldier",
+      "title": "The Falcon and the Winter Soldier",
+      "release_date": "2021-03-19",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "supporting",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Sam inherits the shield in the final scene"
+        }
+      ],
+      "tmdb_id": 88396,
+      "poster_url": "https://image.tmdb.org/t/p/w500/6kbAMLteGO8yyewYau6bJ683sw7.jpg",
+      "synopsis": "Following the events of “Avengers: Endgame”, the Falcon, Sam Wilson and the Winter Soldier, Bucky Barnes team up in a global adventure that tests their abilities, and their patience."
+    },
+    {
+      "id": "shang-chi-and-the-legend-of-the-ten-rings",
+      "title": "Shang-Chi and the Legend of the Ten Rings",
+      "release_date": "2021-09-03",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 132,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "recommended",
+          "note": "Mostly standalone; the Blip and the epilogue cameos assume it"
+        }
+      ],
+      "tmdb_id": 566525,
+      "poster_url": "https://image.tmdb.org/t/p/w500/9f2Q0U3IOsLgrI2HkvldwSABZy5.jpg",
+      "synopsis": "Shang-Chi must confront the past he thought he left behind when he is drawn into the web of the mysterious Ten Rings organization."
+    },
+    {
+      "id": "eternals",
+      "title": "Eternals",
+      "release_date": "2021-11-05",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 156,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "The return of half the population is the film's inciting event"
+        }
+      ],
+      "tmdb_id": 524434,
+      "poster_url": "https://image.tmdb.org/t/p/w500/lFByFSLV5WDJEv3KabbdAF959F2.jpg",
+      "synopsis": "The Eternals are a team of ancient aliens who have been living on Earth in secret for thousands of years. When an unexpected tragedy forces them out of the shadows, they are forced to reunite against mankind’s most ancient enemy, the Deviants."
+    },
+    {
+      "id": "spider-man-far-from-home",
+      "title": "Spider-Man: Far From Home",
+      "release_date": "2019-07-02",
+      "phase": 3,
+      "saga": "infinity",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 129,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Peter is grieving Tony and the world is coping with the Blip"
+        }
+      ],
+      "tmdb_id": 429617,
+      "poster_url": "https://image.tmdb.org/t/p/w500/4q2NNj4S5dG2RLF9CpXsej7yXl.jpg",
+      "synopsis": "Peter Parker and his friends go on a summer trip to Europe. However, they will hardly be able to rest - Peter will have to agree to help Nick Fury uncover the mystery of creatures that cause natural disasters and destruction throughout the continent."
+    },
+    {
+      "id": "spider-man-no-way-home",
+      "title": "Spider-Man: No Way Home",
+      "release_date": "2021-12-17",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 148,
+      "prerequisites": [
+        {
+          "id": "spider-man-far-from-home",
+          "strength": "essential",
+          "note": "Opens on the exact frame that film ended on"
+        }
+      ],
+      "tmdb_id": 634649,
+      "poster_url": "https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg",
+      "synopsis": "Peter Parker is unmasked and no longer able to separate his normal life from the high-stakes of being a super-hero. When he asks for help from Doctor Strange the stakes become even more dangerous, forcing him to discover what it truly means to be Spider-Man."
+    },
+    {
+      "id": "hawkeye",
+      "title": "Hawkeye",
+      "release_date": "2021-11-24",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "supporting",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Clint is processing Natasha's death and his Ronin years"
+        },
+        {
+          "id": "black-widow",
+          "strength": "essential",
+          "note": "Yelena's motive comes entirely from that post-credits scene"
+        }
+      ],
+      "tmdb_id": 88329,
+      "poster_url": "https://image.tmdb.org/t/p/w500/ct5pNE5dDHryHLDnxyZPYcqO1sz.jpg",
+      "synopsis": "Former Avenger Clint Barton has a seemingly simple mission: get back to his family for Christmas. Possible? Maybe with the help of Kate Bishop, a 22-year-old archer with dreams of becoming a superhero. The two are forced to work together when a presence from Barton’s past threatens to derail far more than the festive spirit."
+    },
+    {
+      "id": "moon-knight",
+      "title": "Moon Knight",
+      "release_date": "2022-03-30",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "optional",
+      "runtime_min": null,
+      "prerequisites": [],
+      "tmdb_id": 92749,
+      "poster_url": "https://image.tmdb.org/t/p/w500/x6FsYvt33846IQnDSFxla9j0RX8.jpg",
+      "synopsis": "When Steven Grant, a mild-mannered gift-shop employee, becomes plagued with blackouts and memories of another life, he discovers he has dissociative identity disorder and shares a body with mercenary Marc Spector. As Steven/Marc’s enemies converge upon them, they must navigate their complex identities while thrust into a deadly mystery among the powerful gods of Egypt."
+    },
+    {
+      "id": "doctor-strange-in-the-multiverse-of-madness",
+      "title": "Doctor Strange in the Multiverse of Madness",
+      "release_date": "2022-05-06",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 126,
+      "prerequisites": [
+        {
+          "id": "spider-man-no-way-home",
+          "strength": "essential",
+          "note": "Strange has already torn the multiverse open"
+        },
+        {
+          "id": "wandavision",
+          "strength": "essential",
+          "note": "Wanda's turn makes no sense without her arc there"
+        },
+        {
+          "id": "what-if",
+          "strength": "recommended",
+          "note": "The incursion rules and one major cameo are set up here"
+        }
+      ],
+      "tmdb_id": 453395,
+      "poster_url": "https://image.tmdb.org/t/p/w500/ddJcSKbcp4rKZTmuyWaMhuwcfMz.jpg",
+      "synopsis": "Doctor Strange, with the help of mystical allies both old and new, traverses the mind-bending and dangerous alternate realities of the Multiverse to confront a mysterious new adversary."
+    },
+    {
+      "id": "ms-marvel",
+      "title": "Ms. Marvel",
+      "release_date": "2022-06-08",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "supporting",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Kamala is a fan of Avengers you need to have met"
+        },
+        {
+          "id": "captain-marvel",
+          "strength": "essential",
+          "note": "Carol is Kamala's idol and the finale's payoff"
+        }
+      ],
+      "tmdb_id": 92782,
+      "poster_url": "https://image.tmdb.org/t/p/w500/3HWWh92kZbD7odwJX7nKmXNZsYo.jpg",
+      "synopsis": "A great student, avid gamer, and voracious fan-fic scribe, Kamala Khan has a special affinity for superheroes, particularly Captain Marvel. However, she struggles to fit in at home and at school — that is, until she gets superpowers like the heroes she’s always looked up to. Life is easier with superpowers, right?"
+    },
+    {
+      "id": "thor-love-and-thunder",
+      "title": "Thor: Love and Thunder",
+      "release_date": "2022-07-08",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 119,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Thor leaves with the Guardians at the end of it"
+        }
+      ],
+      "tmdb_id": 616037,
+      "poster_url": "https://image.tmdb.org/t/p/w500/pIkRyD18kl4FhoCNQuWxWu5cBLM.jpg",
+      "synopsis": "After his retirement is interrupted by Gorr the God Butcher, a galactic killer who seeks the extinction of the gods, Thor Odinson enlists the help of King Valkyrie, Korg, and ex-girlfriend Jane Foster, who now wields Mjolnir as the Mighty Thor. Together they embark upon a harrowing cosmic adventure to uncover the mystery of the God Butcher’s vengeance and stop him before it’s too late."
+    },
+    {
+      "id": "she-hulk-attorney-at-law",
+      "title": "She-Hulk: Attorney at Law",
+      "release_date": "2022-08-18",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "optional",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Bruce's Smart Hulk state and the five-year gap are assumed"
+        },
+        {
+          "id": "shang-chi-and-the-legend-of-the-ten-rings",
+          "strength": "recommended",
+          "note": "Wong and Abomination's fight-club arrangement starts there"
+        }
+      ],
+      "tmdb_id": 92783,
+      "poster_url": "https://image.tmdb.org/t/p/w500/5xz2orV8f0usyrfGNshcoXHmiaV.jpg",
+      "synopsis": "Jennifer Walters navigates the complicated life of a single, 30-something attorney who also happens to be a green 6-foot-7-inch superpowered hulk."
+    },
+    {
+      "id": "werewolf-by-night",
+      "title": "Werewolf by Night",
+      "release_date": "2022-10-07",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "special",
+      "tier": "optional",
+      "runtime_min": 55,
+      "prerequisites": [],
+      "tmdb_id": 894205,
+      "poster_url": "https://image.tmdb.org/t/p/w500/mvIvNKRIJPPS7WSFarFhOAGIVnU.jpg",
+      "synopsis": "On a dark and somber night, a secret cabal of monster hunters emerge from the shadows and gather at the foreboding Bloodstone Temple following the death of their leader. In a strange and macabre memorial to the leader’s life, the attendees are thrust into a mysterious and deadly competition for a powerful relic—a hunt that will ultimately bring them face to face with a dangerous monster."
+    },
+    {
+      "id": "black-panther-wakanda-forever",
+      "title": "Black Panther: Wakanda Forever",
+      "release_date": "2022-11-11",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 162,
+      "prerequisites": [
+        {
+          "id": "black-panther",
+          "strength": "essential",
+          "note": "The whole film is about the succession it set up"
+        },
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Wakanda's place in the world after the Blip"
+        }
+      ],
+      "tmdb_id": 505642,
+      "poster_url": "https://image.tmdb.org/t/p/w500/sv1xJUazXeYqALzczSZ3O6nkH75.jpg",
+      "synopsis": "Queen Ramonda, Shuri, M’Baku, Okoye and the Dora Milaje fight to protect their nation from intervening world powers in the wake of King T’Challa’s death.  As the Wakandans strive to embrace their next chapter, the heroes must band together with the help of War Dog Nakia and Everett Ross and forge a new path for the kingdom of Wakanda."
+    },
+    {
+      "id": "the-guardians-of-the-galaxy-holiday-special",
+      "title": "The Guardians of the Galaxy Holiday Special",
+      "release_date": "2022-11-25",
+      "phase": 4,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "special",
+      "tier": "optional",
+      "runtime_min": 45,
+      "prerequisites": [
+        {
+          "id": "guardians-of-the-galaxy-vol-2",
+          "strength": "essential",
+          "note": "Assumes Mantis and Peter's family history"
+        },
+        {
+          "id": "thor-love-and-thunder",
+          "strength": "recommended",
+          "note": "The team has just parted ways with Thor"
+        }
+      ],
+      "tmdb_id": 774752,
+      "poster_url": "https://image.tmdb.org/t/p/w500/8dqXyslZ2hv49Oiob9UjlGSHSTR.jpg",
+      "synopsis": "On a mission to make Christmas unforgettable for Quill, the Guardians head to Earth in search of the perfect present."
+    },
+    {
+      "id": "ant-man-and-the-wasp-quantumania",
+      "title": "Ant-Man and the Wasp: Quantumania",
+      "release_date": "2023-02-17",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 125,
+      "prerequisites": [
+        {
+          "id": "ant-man-and-the-wasp",
+          "strength": "essential",
+          "note": "Janet's thirty years in the Quantum Realm are the whole plot"
+        },
+        {
+          "id": "avengers-endgame",
+          "strength": "essential",
+          "note": "Scott is a public hero because of the time heist"
+        },
+        {
+          "id": "loki",
+          "strength": "recommended",
+          "note": "You have already met a version of Kang there"
+        }
+      ],
+      "tmdb_id": 640146,
+      "poster_url": "https://image.tmdb.org/t/p/w500/qnqGbB22YJ7dSs4o6M7exTpNxPz.jpg",
+      "synopsis": "Super-Hero partners Scott Lang and Hope van Dyne, along with with Hope's parents Janet van Dyne and Hank Pym, and Scott's daughter Cassie Lang, find themselves exploring the Quantum Realm, interacting with strange new creatures and embarking on an adventure that will push them beyond the limits of what they thought possible."
+    },
+    {
+      "id": "guardians-of-the-galaxy-vol-3",
+      "title": "Guardians of the Galaxy Vol. 3",
+      "release_date": "2023-05-05",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 150,
+      "prerequisites": [
+        {
+          "id": "the-guardians-of-the-galaxy-holiday-special",
+          "strength": "essential",
+          "note": "Knowhere is now the team's home, established there"
+        }
+      ],
+      "tmdb_id": 447365,
+      "poster_url": "https://image.tmdb.org/t/p/w500/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg",
+      "synopsis": "Peter Quill, still reeling from the loss of Gamora, must rally his team around him to defend the universe along with protecting one of their own. A mission that, if not completed successfully, could quite possibly lead to the end of the Guardians as we know them."
+    },
+    {
+      "id": "secret-invasion",
+      "title": "Secret Invasion",
+      "release_date": "2023-06-21",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "supporting",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "captain-marvel",
+          "strength": "essential",
+          "note": "Fury's promise to the Skrulls is the betrayal at its heart"
+        },
+        {
+          "id": "the-falcon-and-the-winter-soldier",
+          "strength": "recommended",
+          "note": "Rhodey and the geopolitical state of play"
+        }
+      ],
+      "tmdb_id": 114472,
+      "poster_url": "https://image.tmdb.org/t/p/w500/3rINdUPSy9AklJg74jWHOyUXuZd.jpg",
+      "synopsis": "Nick Fury and Talos discover a faction of shapeshifting Skrulls who have been infiltrating Earth for years."
+    },
+    {
+      "id": "loki-season-2",
+      "title": "Loki: Season 2",
+      "release_date": "2023-10-05",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "core",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "loki",
+          "strength": "essential",
+          "note": "Resumes seconds after the first season's finale"
+        },
+        {
+          "id": "ant-man-and-the-wasp-quantumania",
+          "strength": "recommended",
+          "note": "Fills in who Kang is beyond He Who Remains"
+        }
+      ],
+      "tmdb_id": 84958,
+      "poster_url": "https://image.tmdb.org/t/p/w500/oJdVHUYrjdS2IqiNztVIP4GPB1p.jpg",
+      "synopsis": "In the aftermath of Season 1, Loki finds himself in a battle for the soul of the Time Variance Authority. Along with Mobius, Hunter B-15 and a team of new and returning characters, Loki navigates an ever-expanding and increasingly dangerous multiverse in search of Sylvie, Judge Renslayer, Miss Minutes and the truth of what it means to possess free will and glorious purpose."
+    },
+    {
+      "id": "echo",
+      "title": "Echo",
+      "release_date": "2024-01-09",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "optional",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "hawkeye",
+          "strength": "essential",
+          "note": "Maya's vendetta against Fisk begins there"
+        }
+      ],
+      "tmdb_id": 122226,
+      "poster_url": "https://image.tmdb.org/t/p/w500/vFyJH630cF68LohVYjQW49074Sy.jpg",
+      "synopsis": "Pursued by Wilson Fisk's criminal empire, Maya's journey brings her home and she must confront her own family and legacy."
+    },
+    {
+      "id": "the-marvels",
+      "title": "The Marvels",
+      "release_date": "2023-11-10",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 105,
+      "prerequisites": [
+        {
+          "id": "ms-marvel",
+          "strength": "essential",
+          "note": "Kamala's powers and the bangle are introduced there"
+        },
+        {
+          "id": "wandavision",
+          "strength": "essential",
+          "note": "Monica gains her powers in that finale"
+        },
+        {
+          "id": "secret-invasion",
+          "strength": "recommended",
+          "note": "Explains where Fury has been and the Skrull refugee crisis"
+        }
+      ],
+      "tmdb_id": 609681,
+      "poster_url": "https://image.tmdb.org/t/p/w500/9GBhzXMFjgcZ3FdR9w3bUMMTps5.jpg",
+      "synopsis": "When her duties send her to an anomalous wormhole linked to a Kree revolutionary, Carol's powers become entangled with that of Jersey City super-fan Kamala Khan, aka Ms. Marvel, and Carol's estranged niece, now S.A.B.E.R. astronaut Captain Monica Rambeau. Together, this unlikely trio must team up and learn to work in concert to save the universe."
+    },
+    {
+      "id": "agatha-all-along",
+      "title": "Agatha All Along",
+      "release_date": "2024-09-18",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "supporting",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "wandavision",
+          "strength": "essential",
+          "note": "Opens with Agatha still under Wanda's hex"
+        }
+      ],
+      "tmdb_id": 138501,
+      "poster_url": "https://image.tmdb.org/t/p/w500/mGsxKwXUjojitRv2E9qMTbxbBRd.jpg",
+      "synopsis": "Agatha Harkness gathers a coven of witches and sets off down, down, down The Witches' Road."
+    },
+    {
+      "id": "deadpool-and-wolverine",
+      "title": "Deadpool & Wolverine",
+      "release_date": "2024-07-26",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 128,
+      "prerequisites": [
+        {
+          "id": "loki-season-2",
+          "strength": "essential",
+          "note": "The TVA, its rules and its politics carry the plot"
+        },
+        {
+          "id": "avengers-endgame",
+          "strength": "recommended",
+          "note": "The joke density assumes the Infinity Saga"
+        }
+      ],
+      "tmdb_id": 533535,
+      "poster_url": "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
+      "synopsis": "A listless Wade Wilson toils away in civilian life with his days as the morally flexible mercenary, Deadpool, behind him. But when his homeworld faces an existential threat, Wade must reluctantly suit-up again with an even more reluctant Wolverine."
+    },
+    {
+      "id": "captain-america-brave-new-world",
+      "title": "Captain America: Brave New World",
+      "release_date": "2025-02-14",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 119,
+      "prerequisites": [
+        {
+          "id": "the-falcon-and-the-winter-soldier",
+          "strength": "essential",
+          "note": "Sam has only just accepted the shield"
+        },
+        {
+          "id": "the-incredible-hulk",
+          "strength": "essential",
+          "note": "Pays off Thaddeus Ross and the Leader after seventeen years"
+        },
+        {
+          "id": "eternals",
+          "strength": "essential",
+          "note": "The Celestial in the ocean is the resource everyone is fighting over"
+        }
+      ],
+      "tmdb_id": 822119,
+      "poster_url": "https://image.tmdb.org/t/p/w500/pzIddUEMWhWzfvLI3TwxUG2wGoi.jpg",
+      "synopsis": "After meeting with newly elected U.S. President Thaddeus Ross, Sam finds himself in the middle of an international incident. He must discover the reason behind a nefarious global plot before the true mastermind has the entire world seeing red."
+    },
+    {
+      "id": "daredevil-born-again",
+      "title": "Daredevil: Born Again",
+      "release_date": "2025-03-04",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "supporting",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "echo",
+          "strength": "essential",
+          "note": "Follows directly from Fisk's fate at the end of it"
+        },
+        {
+          "id": "she-hulk-attorney-at-law",
+          "strength": "recommended",
+          "note": "Where this version of Matt Murdock is reintroduced"
+        }
+      ],
+      "tmdb_id": 202555,
+      "poster_url": "https://image.tmdb.org/t/p/w500/xDUoAsU8lQHOOoRkFiBuarmACDN.jpg",
+      "synopsis": "Matt Murdock, a blind lawyer with heightened abilities, is fighting for justice through his bustling law firm, while former mob boss Wilson Fisk pursues his own political endeavors in New York. When their past identities begin to emerge, both men find themselves on an inevitable collision course."
+    },
+    {
+      "id": "thunderbolts",
+      "title": "Thunderbolts*",
+      "release_date": "2025-05-02",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 127,
+      "prerequisites": [
+        {
+          "id": "hawkeye",
+          "strength": "essential",
+          "note": "Yelena is working for Valentina by the end of it"
+        },
+        {
+          "id": "the-falcon-and-the-winter-soldier",
+          "strength": "essential",
+          "note": "John Walker and Valentina both come from there"
+        },
+        {
+          "id": "ant-man-and-the-wasp-quantumania",
+          "strength": "recommended",
+          "note": "Ghost's whereabouts since the Quantum Realm"
+        },
+        {
+          "id": "black-panther-wakanda-forever",
+          "strength": "recommended",
+          "note": "Valentina's manoeuvring against Ross"
+        }
+      ],
+      "tmdb_id": 986056,
+      "poster_url": "https://image.tmdb.org/t/p/w500/hqcexYHbiTBfDIdDWxrxPtVndBX.jpg",
+      "synopsis": "After finding themselves ensnared in a death trap, seven disillusioned castoffs must embark on a dangerous mission that will force them to confront the darkest corners of their pasts."
+    },
+    {
+      "id": "ironheart",
+      "title": "Ironheart",
+      "release_date": "2025-06-24",
+      "phase": 5,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "optional",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "black-panther-wakanda-forever",
+          "strength": "essential",
+          "note": "Riri builds her first suit there"
+        }
+      ],
+      "tmdb_id": 114471,
+      "poster_url": "https://image.tmdb.org/t/p/w500/dOh6MJpdlQhYpLBhzhNQeYGKTZ5.jpg",
+      "synopsis": "After the events of Black Panther: Wakanda Forever, technology is pitted against magic when Riri Williams, a young, genius inventor determined to make her mark on the world, returns to her hometown of Chicago. Her unique take on building iron suits is brilliant, but in pursuit of her ambitions, she finds herself wrapped up with the mysterious yet charming Parker Robbins aka \"The Hood.\""
+    },
+    {
+      "id": "the-fantastic-four-first-steps",
+      "title": "The Fantastic Four: First Steps",
+      "release_date": "2025-07-25",
+      "phase": 6,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 115,
+      "prerequisites": [],
+      "tmdb_id": 617126,
+      "poster_url": "https://image.tmdb.org/t/p/w500/nf5qaSEvyYSNeFH0YhSs5EsBLX9.jpg",
+      "synopsis": "Against the vibrant backdrop of a 1960s-inspired, retro-futuristic world, Marvel's First Family is forced to balance their roles as heroes with the strength of their family bond, while defending Earth from a ravenous space god called Galactus and his enigmatic Herald, Silver Surfer."
+    },
+    {
+      "id": "wonder-man",
+      "title": "Wonder Man",
+      "release_date": "2026-01-27",
+      "phase": 6,
+      "saga": "multiverse",
+      "universe": "mcu",
+      "media_type": "series",
+      "tier": "optional",
+      "runtime_min": null,
+      "prerequisites": [
+        {
+          "id": "she-hulk-attorney-at-law",
+          "strength": "recommended",
+          "note": "Shares the industry-satire register and Los Angeles setting"
+        }
+      ],
+      "tmdb_id": 198178,
+      "poster_url": "https://image.tmdb.org/t/p/w500/6yy9nQlFt2l6UVWzrfhszFCaZ5C.jpg",
+      "synopsis": "Simon and Trevor, two actors at opposite ends of their careers, chase life-changing roles."
+    }
+  ]
+}

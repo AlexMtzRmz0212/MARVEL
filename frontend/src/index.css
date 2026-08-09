@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/* Design direction: "archive dossier".
+ *
+ * A reference tool rather than a fan page. Near-black so poster art carries the
+ * only saturated colour on screen; structure from hairline borders and
+ * whitespace instead of drop shadows; metadata always in mono, because it reads
+ * as data and that is what makes the thing feel like an archive.
+ *
+ * Saga is the colour axis, so phase and continuity are legible at a glance in
+ * every view. Adjacent (non-MCU) titles are deliberately desaturated so the
+ * main spine stays readable in a catalogue this long.
+ *
+ * Tailwind v4 is configured in CSS: there is no tailwind.config.js and none
+ * should be added.
+ */
+@theme {
+  --color-base: #0a0a0b;
+  --color-surface: #121215;
+  --color-raised: #1a1a1e;
+  --color-hairline: #26262b;
+  --color-hairline-strong: #3a3a42;
+
+  --color-ink: #ece9e4;
+  --color-ink-dim: #94908a;
+  --color-ink-faint: #64615c;
+
+  --color-infinity: #e0a45e;
+  --color-multiverse: #8b7ff5;
+  --color-adjacent: #5c6370;
+
+  --color-danger: #e5484d;
+  --color-warn: #e0a45e;
+  --color-ok: #4cc38a;
+
+  /* System stack only: no web fonts means no network cost and no layout shift. */
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-base);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-infinity) 35%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ink-dim);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Small-caps mono, used for every piece of metadata in the app. */
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .hairline {
+    border-color: var(--color-hairline);
+  }
+}
+
+/* Respect a user's reduced-motion preference for the graph and card hovers. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,341 @@
+{
+  "$comment": [
+    "Shared conformance fixture for custom-order validation.",
+    "",
+    "Consumed by backend/tests/test_graph_fixture.py (pytest) AND",
+    "frontend/src/lib/validateOrder.test.js (vitest). The frontend runs its own",
+    "copy of the validator so drag-and-drop feedback is instant instead of",
+    "waiting on a round trip; this file is what keeps that copy honest. If the",
+    "two implementations ever disagree, one of these cases fails.",
+    "",
+    "Expectations here are hand-derived from the rules, not captured from a run.",
+    "Positions are 0-based in the data and 1-based in the prose messages.",
+    "",
+    "The graph is a nine-title slice of the real catalog chosen for its shapes:",
+    "a wide fan-in on The Avengers (mixed essential/recommended), a diamond",
+    "through The Avengers into Infinity War, and a long tail to Endgame."
+  ],
+  "version": 1,
+
+  "graph": {
+    "nodes": {
+      "captain-america-the-first-avenger": 1,
+      "iron-man": 2,
+      "the-incredible-hulk": 3,
+      "iron-man-2": 4,
+      "thor": 5,
+      "the-avengers": 6,
+      "captain-america-the-winter-soldier": 7,
+      "avengers-infinity-war": 8,
+      "avengers-endgame": 9
+    },
+    "edges": [
+      { "movie_id": "the-avengers", "prerequisite_id": "iron-man", "strength": "essential" },
+      { "movie_id": "the-avengers", "prerequisite_id": "thor", "strength": "essential" },
+      { "movie_id": "the-avengers", "prerequisite_id": "captain-america-the-first-avenger", "strength": "essential" },
+      { "movie_id": "the-avengers", "prerequisite_id": "iron-man-2", "strength": "recommended" },
+      { "movie_id": "the-avengers", "prerequisite_id": "the-incredible-hulk", "strength": "recommended" },
+      { "movie_id": "captain-america-the-winter-soldier", "prerequisite_id": "captain-america-the-first-avenger", "strength": "essential" },
+      { "movie_id": "captain-america-the-winter-soldier", "prerequisite_id": "the-avengers", "strength": "essential" },
+      { "movie_id": "avengers-infinity-war", "prerequisite_id": "the-avengers", "strength": "essential" },
+      { "movie_id": "avengers-infinity-war", "prerequisite_id": "captain-america-the-winter-soldier", "strength": "recommended" },
+      { "movie_id": "avengers-endgame", "prerequisite_id": "avengers-infinity-war", "strength": "essential" }
+    ]
+  },
+
+  "titles": {
+    "captain-america-the-first-avenger": "Captain America: The First Avenger",
+    "iron-man": "Iron Man",
+    "the-incredible-hulk": "The Incredible Hulk",
+    "iron-man-2": "Iron Man 2",
+    "thor": "Thor",
+    "the-avengers": "The Avengers",
+    "captain-america-the-winter-soldier": "Captain America: The Winter Soldier",
+    "avengers-infinity-war": "Avengers: Infinity War",
+    "avengers-endgame": "Avengers: Endgame"
+  },
+
+  "cases": [
+    {
+      "name": "canonical chronological order is valid",
+      "order": [
+        "captain-america-the-first-avenger", "iron-man", "the-incredible-hulk", "iron-man-2",
+        "thor", "the-avengers", "captain-america-the-winter-soldier", "avengers-infinity-war",
+        "avengers-endgame"
+      ],
+      "expected": {
+        "is_valid": true,
+        "has_warnings": false,
+        "checked_count": 9,
+        "violations": [],
+        "messages": [],
+        "missing_prerequisite_ids": [],
+        "unknown_ids": [],
+        "duplicate_ids": [],
+        "suggested_order": [
+          "captain-america-the-first-avenger", "iron-man", "the-incredible-hulk", "iron-man-2",
+          "thor", "the-avengers", "captain-america-the-winter-soldier", "avengers-infinity-war",
+          "avengers-endgame"
+        ]
+      }
+    },
+
+    {
+      "name": "Endgame placed before Infinity War is a single error",
+      "order": [
+        "captain-america-the-first-avenger", "iron-man", "the-incredible-hulk", "iron-man-2",
+        "thor", "the-avengers", "captain-america-the-winter-soldier",
+        "avengers-endgame", "avengers-infinity-war"
+      ],
+      "expected": {
+        "is_valid": false,
+        "has_warnings": false,
+        "checked_count": 9,
+        "violations": [
+          {
+            "kind": "out_of_order",
+            "severity": "error",
+            "movie_id": "avengers-endgame",
+            "prerequisite_id": "avengers-infinity-war",
+            "strength": "essential",
+            "movie_position": 7,
+            "prerequisite_position": 8
+          }
+        ],
+        "messages": [
+          "You have Avengers: Endgame (position 8) before Avengers: Infinity War (position 9)."
+        ],
+        "missing_prerequisite_ids": [],
+        "unknown_ids": [],
+        "duplicate_ids": [],
+        "suggested_order": [
+          "captain-america-the-first-avenger", "iron-man", "the-incredible-hulk", "iron-man-2",
+          "thor", "the-avengers", "captain-america-the-winter-soldier", "avengers-infinity-war",
+          "avengers-endgame"
+        ]
+      }
+    },
+
+    {
+      "name": "only direct edges are reported, never the transitive closure",
+      "$comment": "Endgame first depends transitively on all eight other titles, but only its one direct edge is flagged.",
+      "order": [
+        "avengers-endgame",
+        "captain-america-the-first-avenger", "iron-man", "the-incredible-hulk", "iron-man-2",
+        "thor", "the-avengers", "captain-america-the-winter-soldier", "avengers-infinity-war"
+      ],
+      "expected": {
+        "is_valid": false,
+        "has_warnings": false,
+        "checked_count": 9,
+        "violations": [
+          {
+            "kind": "out_of_order",
+            "severity": "error",
+            "movie_id": "avengers-endgame",
+            "prerequisite_id": "avengers-infinity-war",
+            "strength": "essential",
+            "movie_position": 0,
+            "prerequisite_position": 8
+          }
+        ],
+        "messages": [
+          "You have Avengers: Endgame (position 1) before Avengers: Infinity War (position 9)."
+        ],
+        "missing_prerequisite_ids": [],
+        "unknown_ids": [],
+        "duplicate_ids": [],
+        "suggested_order": [
+          "captain-america-the-first-avenger", "iron-man", "the-incredible-hulk", "iron-man-2",
+          "thor", "the-avengers", "captain-america-the-winter-soldier", "avengers-infinity-war",
+          "avengers-endgame"
+        ]
+      }
+    },
+
+    {
+      "name": "an absent essential prerequisite is an error, not silence",
+      "order": ["avengers-endgame"],
+      "expected": {
+        "is_valid": false,
+        "has_warnings": false,
+        "checked_count": 1,
+        "violations": [
+          {
+            "kind": "missing_prerequisite",
+            "severity": "error",
+            "movie_id": "avengers-endgame",
+            "prerequisite_id": "avengers-infinity-war",
+            "strength": "essential",
+            "movie_position": 0,
+            "prerequisite_position": null
+          }
+        ],
+        "messages": [
+          "Avengers: Infinity War is required before Avengers: Endgame but isn't in this order."
+        ],
+        "missing_prerequisite_ids": ["avengers-infinity-war"],
+        "unknown_ids": [],
+        "duplicate_ids": [],
+        "suggested_order": ["avengers-endgame"]
+      }
+    },
+
+    {
+      "name": "an absent recommended prerequisite warns but stays valid",
+      "order": ["captain-america-the-first-avenger", "iron-man", "thor", "the-avengers"],
+      "expected": {
+        "is_valid": true,
+        "has_warnings": true,
+        "checked_count": 4,
+        "violations": [
+          {
+            "kind": "missing_prerequisite",
+            "severity": "warning",
+            "movie_id": "the-avengers",
+            "prerequisite_id": "iron-man-2",
+            "strength": "recommended",
+            "movie_position": 3,
+            "prerequisite_position": null
+          },
+          {
+            "kind": "missing_prerequisite",
+            "severity": "warning",
+            "movie_id": "the-avengers",
+            "prerequisite_id": "the-incredible-hulk",
+            "strength": "recommended",
+            "movie_position": 3,
+            "prerequisite_position": null
+          }
+        ],
+        "messages": [
+          "Iron Man 2 is recommended before The Avengers but isn't in this order.",
+          "The Incredible Hulk is recommended before The Avengers but isn't in this order."
+        ],
+        "missing_prerequisite_ids": ["iron-man-2", "the-incredible-hulk"],
+        "unknown_ids": [],
+        "duplicate_ids": [],
+        "suggested_order": ["captain-america-the-first-avenger", "iron-man", "thor", "the-avengers"]
+      }
+    },
+
+    {
+      "name": "duplicates and unknown ids are stripped and reported separately",
+      "order": ["iron-man", "iron-man", "not-a-real-movie", "the-avengers"],
+      "expected": {
+        "is_valid": false,
+        "has_warnings": true,
+        "checked_count": 2,
+        "violations": [
+          {
+            "kind": "missing_prerequisite",
+            "severity": "error",
+            "movie_id": "the-avengers",
+            "prerequisite_id": "captain-america-the-first-avenger",
+            "strength": "essential",
+            "movie_position": 1,
+            "prerequisite_position": null
+          },
+          {
+            "kind": "missing_prerequisite",
+            "severity": "warning",
+            "movie_id": "the-avengers",
+            "prerequisite_id": "iron-man-2",
+            "strength": "recommended",
+            "movie_position": 1,
+            "prerequisite_position": null
+          },
+          {
+            "kind": "missing_prerequisite",
+            "severity": "warning",
+            "movie_id": "the-avengers",
+            "prerequisite_id": "the-incredible-hulk",
+            "strength": "recommended",
+            "movie_position": 1,
+            "prerequisite_position": null
+          },
+          {
+            "kind": "missing_prerequisite",
+            "severity": "error",
+            "movie_id": "the-avengers",
+            "prerequisite_id": "thor",
+            "strength": "essential",
+            "movie_position": 1,
+            "prerequisite_position": null
+          }
+        ],
+        "messages": [
+          "Captain America: The First Avenger is required before The Avengers but isn't in this order.",
+          "Iron Man 2 is recommended before The Avengers but isn't in this order.",
+          "The Incredible Hulk is recommended before The Avengers but isn't in this order.",
+          "Thor is required before The Avengers but isn't in this order."
+        ],
+        "missing_prerequisite_ids": [
+          "captain-america-the-first-avenger", "iron-man-2", "the-incredible-hulk", "thor"
+        ],
+        "unknown_ids": ["not-a-real-movie"],
+        "duplicate_ids": ["iron-man"],
+        "suggested_order": ["iron-man", "the-avengers"]
+      }
+    },
+
+    {
+      "name": "an empty order is vacuously valid",
+      "order": [],
+      "expected": {
+        "is_valid": true,
+        "has_warnings": false,
+        "checked_count": 0,
+        "violations": [],
+        "messages": [],
+        "missing_prerequisite_ids": [],
+        "unknown_ids": [],
+        "duplicate_ids": [],
+        "suggested_order": []
+      }
+    },
+
+    {
+      "name": "a self-consistent partial order needs no repair",
+      "$comment": "Nothing here depends on anything absent, so the DAG has no opinion.",
+      "order": ["iron-man", "iron-man-2"],
+      "expected": {
+        "is_valid": true,
+        "has_warnings": false,
+        "checked_count": 2,
+        "violations": [],
+        "messages": [],
+        "missing_prerequisite_ids": [],
+        "unknown_ids": [],
+        "duplicate_ids": [],
+        "suggested_order": ["iron-man", "iron-man-2"]
+      }
+    }
+  ],
+
+  "$comment_complete": "complete_order cases: adding every missing prerequisite must yield an order that validates clean.",
+  "completion_cases": [
+    {
+      "name": "Endgame alone pulls in the entire chain",
+      "order": ["avengers-endgame"],
+      "expected": [
+        "captain-america-the-first-avenger", "iron-man", "the-incredible-hulk", "iron-man-2",
+        "thor", "the-avengers", "captain-america-the-winter-soldier", "avengers-infinity-war",
+        "avengers-endgame"
+      ]
+    },
+    {
+      "name": "user-chosen titles keep their relative order where the DAG allows",
+      "order": ["thor", "iron-man", "the-avengers"],
+      "expected": [
+        "thor", "iron-man", "captain-america-the-first-avenger", "the-incredible-hulk",
+        "iron-man-2", "the-avengers"
+      ]
+    },
+    {
+      "name": "an already-complete order is left alone",
+      "order": ["iron-man", "iron-man-2"],
+      "expected": ["iron-man", "iron-man-2"]
+    }
+  ]
+}
