@@ -1,90 +1,124 @@
-# MARVEL
+# Marvel Watch Order
 
-## Done so far:
+The Marvel catalog in release, chronological and custom viewing orders — with a
+prerequisite dependency graph for every title. Pick any film and see exactly
+what you need to have watched first, and why.
 
-### Frontend
-- created the first timeline dashboard
+## Run it
 
-### Backend
-- phases classification script
-
-
-## OMDb
 ```
-https://www.omdbapi.com/?i=tt3896198&apikey=apikey
-{
-    "Title": "Guardians of the Galaxy Vol. 2",
-    "Year": "2017",
-    "Rated": "PG-13",
-    "Released": "05 May 2017",
-    "Runtime": "136 min",
-    "Genre": "Action, Adventure, Comedy",
-    "Director": "James Gunn",
-    "Writer": "James Gunn, Dan Abnett, Andy Lanning",
-    "Actors": "Chris Pratt, Zoe Saldaña, Dave Bautista",
-    "Plot": "The Guardians struggle to keep together as a team while dealing with their personal family issues, notably Star-Lord's encounter with his father, the ambitious celestial being Ego.",
-    "Language": "English",
-    "Country": "United States",
-    "Awards": "Nominated for 1 Oscar. 15 wins & 60 nominations total",
-    "Poster": "https://m.media-amazon.com/images/M/MV5BNWE5MGI3MDctMmU5Ni00YzI2LWEzMTQtZGIyZDA5MzQzNDBhXkEyXkFqcGc@._V1_SX300.jpg",
-    "Ratings": [
-        {
-            "Source": "Internet Movie Database",
-            "Value": "7.6/10"
-        },
-        {
-            "Source": "Rotten Tomatoes",
-            "Value": "85%"
-        },
-        {
-            "Source": "Metacritic",
-            "Value": "67/100"
-        }
-    ],
-    "Metascore": "67",
-    "imdbRating": "7.6",
-    "imdbVotes": "823,054",
-    "imdbID": "tt3896198",
-    "Type": "movie",
-    "DVD": "N/A",
-    "BoxOffice": "$389,813,101",
-    "Production": "N/A",
-    "Website": "N/A",
-    "Response": "True"
-}
+run.bat
 ```
 
+That validates the catalog, starts both servers and opens the app. First run
+installs frontend dependencies.
 
+| | |
+|---|---|
+| App | http://localhost:5173 |
+| API docs | http://localhost:8000/api/docs |
 
-## TMDb
-https://api.themoviedb.org/3/discover/movie?api_key=api_key&with_companies=420&sort_by=release_date.asc
+<details>
+<summary>Manual setup</summary>
+
+```bash
+cd backend
+python -m venv .venv
+.venv/Scripts/python.exe -m pip install -e ".[dev]"
+.venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8000
 ```
-{
-    "page": 1,
-    "results": [
-        {
-            "adult": false,
-            "backdrop_path": "/hoJpIYgFPc75NhaSWPNUeMFPMy1.jpg",
-            "genre_ids": [
-                12,
-                16,
-                28,
-                878
-            ],
-            "id": 14611,
-            "original_language": "en",
-            "original_title": "Ultimate Avengers 2",
-            "overview": "Mysterious Wakanda lies in the darkest heart of Africa, unknown to most of the world. An isolated land hidden behind closed borders, fiercely protected by its young king: Black Panther. But when brutal alien invaders attack, the threat leaves Black Panther with no option but to go against the sacred decrees of his people and ask for help from outsiders.",
-            "popularity": 4.419,
-            "poster_path": "/sMFyYZR9krqcQC99G6jnb10Zv4P.jpg",
-            "release_date": "2006-08-08",
-            "title": "Ultimate Avengers 2",
-            "video": false,
-            "vote_average": 6.785,
-            "vote_count": 318
-        },
-    ],
-    "total_pages": 5,
-    "total_results": 96
-}
+
+```bash
+cd frontend
+npm install
+npm run dev
 ```
+
+Vite proxies `/api` to the API, so both environments are same-origin.
+</details>
+
+## How it works
+
+**The dependency edges are the source of truth.** Release order is derived from
+dates and chronological order is editorial, but "what must I watch first" is a
+directed acyclic graph — and every interesting feature is a query over it.
+
+- `backend/app/core/graph.py` is the engine: Kahn's topological sort with
+  deterministic tie-breaking, cycle detection, transitive closure with
+  longest-path depth, and order validation. It imports nothing from SQLAlchemy
+  or FastAPI, which is why its tests run in milliseconds with no fixtures.
+- `backend/app/seed/data/mcu.json` is the catalog: 54 titles and 80 hand-written
+  edges, each with a note explaining the dependency. **Array position is the
+  chronological order**; release order is derived from dates. Neither is
+  hand-numbered, so neither can drift.
+- The loader asserts the curated chronology is itself a valid topological sort
+  of the edges. That one check catches most authoring mistakes.
+
+### Why depth is computed on the server
+
+Each node in a prerequisite chain carries a `depth` measured by **longest** path
+to the target, not shortest. Longest path is what guarantees a title is drawn
+further from the target than everything depending on it — with shortest path,
+edges visually skip backwards over intervening columns. Because the server sends
+it, the graph visualization is ~120 lines of SVG arithmetic with no graph
+library.
+
+### Two validators, one fixture
+
+The order builder validates while you drag, which means a copy of the validator
+runs in the browser (`frontend/src/lib/validateOrder.js`). Two implementations
+of one rule is a real risk, so both are tested against the same
+`fixtures/validation_cases.json` — including the exact wording of every message.
+If they drift, CI fails.
+
+## Layout
+
+```
+backend/          FastAPI + the graph engine
+  app/core/       graph.py (pure), config, enums
+  app/seed/       curated catalog, validation, Postgres loader
+  app/api/        routes
+  tests/          97 tests, no infrastructure required
+frontend/         React + Vite + Tailwind v4
+  src/lib/        dagLayout.js, validateOrder.js
+  src/features/   catalog, prereq graph, order builder
+fixtures/         shared across both test suites
+server.py         production entrypoint: API + built SPA in one process
+```
+
+## Data
+
+The catalog is authoritative for ids, phases, sagas, tiers, chronology and the
+dependency edges — the things APIs get wrong. TMDb fills in only posters,
+synopses, runtimes and its own id:
+
+```bash
+cd backend
+.venv/Scripts/python.exe scripts/enrich_tmdb.py --dry-run
+```
+
+Needs `TMDB_API_KEY` in the root `.env` (see `.env.example`). It writes back into
+the JSON so the result is reviewable as a diff.
+
+## Deploying
+
+Configured for Vercel: `server.py` serves the API and the built SPA from one
+origin, so there is no CORS and deep links resolve.
+
+```bash
+vercel deploy
+```
+
+`vercel.json` sets the build command; `requirements.txt` holds the runtime
+dependencies, deliberately just FastAPI and pydantic — the API reads the catalog
+from JSON and needs no database.
+
+## Status
+
+Working: catalog with release/chronological/filtered views, title detail, the
+prerequisite graph, and the custom order builder with live validation.
+
+Not built yet: **accounts**. Custom orders currently save to `localStorage`, so
+they live in one browser. The Postgres schema, migration and seed loader for
+users, saved orders and watch progress are already written and tested — they are
+simply not wired up, because nothing so far needs a database.

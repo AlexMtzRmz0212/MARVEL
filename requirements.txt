@@ -1,0 +1,10 @@
+# Runtime dependencies for the deployed function, installed by Vercel.
+#
+# Deliberately minimal. The API serves the catalog from a JSON file, so it needs
+# no database driver, no ORM and no migration tooling -- app/seed/reader.py is
+# kept free of SQLAlchemy precisely so this list can stay this short. Everything
+# needed to *write* to Postgres lives in backend/pyproject.toml instead, because
+# only the seed loader and Alembic use it, and neither runs in production.
+fastapi>=0.141
+pydantic>=2.10
+pydantic-settings>=2.7

@@ -12,27 +12,23 @@ nothing.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Any
 
-from pydantic import ValidationError
 from sqlalchemy import delete, insert, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.models import Movie, Prerequisite
-from app.seed.schema import (
-    SeedFile,
-    SeedValidationError,
-    ValidatedCatalog,
-    validate_catalog,
-)
+from app.seed.reader import DEFAULT_SEED_PATH, load_and_validate, read_seed_file
+from app.seed.schema import SeedValidationError, ValidatedCatalog
 
-DEFAULT_SEED_PATH = Path(__file__).parent / "data" / "mcu.json"
+# Re-exported so existing callers and tests keep working; the read path itself
+# lives in app.seed.reader, which stays free of SQLAlchemy.
+__all__ = ["DEFAULT_SEED_PATH", "load_and_validate", "read_seed_file", "load", "main"]
 
 # Everything except the primary key, which is what the upsert conflicts on.
 UPDATABLE_COLUMNS = (
@@ -65,33 +61,6 @@ class LoadReport:
     @property
     def has_changes(self) -> bool:
         return bool(self.created or self.updated)
-
-
-# --------------------------------------------------------------------------- #
-# Reading and validating
-# --------------------------------------------------------------------------- #
-
-
-def read_seed_file(path: Path) -> SeedFile:
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise SeedValidationError([f"Seed file not found: {path}"]) from exc
-    except json.JSONDecodeError as exc:
-        raise SeedValidationError([f"{path.name} is not valid JSON: {exc}"]) from exc
-
-    try:
-        return SeedFile.model_validate(raw)
-    except ValidationError as exc:
-        problems = []
-        for error in exc.errors():
-            location = ".".join(str(part) for part in error["loc"])
-            problems.append(f"{location}: {error['msg']}")
-        raise SeedValidationError(problems) from exc
-
-
-def load_and_validate(path: Path = DEFAULT_SEED_PATH) -> ValidatedCatalog:
-    return validate_catalog(read_seed_file(path))
 
 
 # --------------------------------------------------------------------------- #

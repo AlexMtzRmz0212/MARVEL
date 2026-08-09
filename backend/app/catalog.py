@@ -24,7 +24,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from app.core.graph import Graph, MovieId
-from app.seed.loader import DEFAULT_SEED_PATH, load_and_validate
+from app.seed.reader import DEFAULT_SEED_PATH, load_and_validate
 
 # Titles with no agreed in-universe placement sort after every title that has
 # one, in release order. A large offset rather than None keeps the tie-break key

@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Install
+        working-directory: backend
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        working-directory: backend
+        run: ruff check app tests scripts
+
+      # No database service: the API serves the catalog from JSON, and the seed
+      # loader's Postgres path is exercised separately when there is one.
+      - name: Test
+        working-directory: backend
+        run: pytest
+
+      # The catalog is a checked artifact. This is the same validation the app
+      # runs at startup, so a bad edit fails here rather than at deploy.
+      - name: Validate the catalog
+        working-directory: backend
+        run: python -m app.seed.loader --check
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      # These consume fixtures/validation_cases.json, the same file the backend
+      # suite runs against. If the two validators drift, this job fails.
+      - name: Test
+        working-directory: frontend
+        run: npm test
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build

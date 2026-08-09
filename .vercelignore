@@ -1,0 +1,11 @@
+# Keep the function bundle to what actually runs in production.
+backend/.venv/
+backend/tests/
+backend/alembic/
+backend/alembic.ini
+backend/scripts/
+fixtures/
+run.bat
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
