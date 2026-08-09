@@ -1,6 +1,9 @@
 import { Link } from 'react-router'
 
+import { useWatchProgress } from '../hooks/useWatchProgress'
 import { MEDIA_LABEL, accentFor, formatRuntime, phaseLabel, year } from '../lib/format'
+import { isWatched } from '../lib/watchStorage'
+import { WatchToggle } from './WatchToggle'
 
 /**
  * A catalog entry.
@@ -12,6 +15,8 @@ import { MEDIA_LABEL, accentFor, formatRuntime, phaseLabel, year } from '../lib/
  * the poster instead with no layout change.
  */
 export function TitleCard({ movie, index }) {
+  const progress = useWatchProgress()
+  const watched = isWatched(progress, movie.id)
   const accent = accentFor(movie)
   const runtime = formatRuntime(movie.runtime_min)
   const isAdjacent = movie.universe && movie.universe !== 'mcu'
@@ -35,7 +40,12 @@ export function TitleCard({ movie, index }) {
             src={movie.poster_url}
             alt=""
             loading="lazy"
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className={[
+              'size-full object-cover transition-all duration-300 group-hover:scale-[1.03]',
+              // Watched titles recede so the remaining ones stand out, which is
+              // what you actually scan a catalogue this long for.
+              watched ? 'opacity-40 saturate-50 group-hover:opacity-70' : '',
+            ].join(' ')}
           />
         ) : (
           <span
@@ -45,6 +55,10 @@ export function TitleCard({ movie, index }) {
             {String(index + 1).padStart(2, '0')}
           </span>
         )}
+
+        <div className="absolute top-1.5 right-1.5">
+          <WatchToggle movieId={movie.id} watched={watched} title={movie.title} size="sm" />
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-3 pl-4">

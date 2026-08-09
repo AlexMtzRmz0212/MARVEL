@@ -31,12 +31,13 @@ function Node({ node, nodeWidth, nodeHeight }) {
         <span
           aria-hidden="true"
           className="absolute inset-y-0 left-0"
-          style={{ width: node.is_target ? 3 : 2, backgroundColor: accent }}
+          style={{ width: node.is_target ? 3 : 2, backgroundColor: node.watched ? 'var(--color-ok)' : accent }}
         />
         <p
           className={[
             'line-clamp-2 text-xs leading-snug',
             node.is_target ? 'font-semibold text-ink' : 'text-ink',
+            node.watched ? 'text-ink-dim line-through decoration-ink-faint' : '',
           ].join(' ')}
         >
           {node.title}
@@ -141,11 +142,23 @@ export function PrereqChainList({ watchOrder, nodes }) {
                 aria-hidden="true"
                 className="h-6 w-[2px] shrink-0"
                 style={{
-                  backgroundColor: node.strength === 'essential' ? accent : 'transparent',
-                  outline: node.strength === 'essential' ? 'none' : `1px solid ${accent}`,
+                  backgroundColor: node.watched
+                    ? 'var(--color-ok)'
+                    : node.strength === 'essential'
+                      ? accent
+                      : 'transparent',
+                  outline:
+                    node.strength === 'essential' || node.watched ? 'none' : `1px solid ${accent}`,
                 }}
               />
-              <span className="min-w-0 flex-1 truncate text-sm text-ink">{node.title}</span>
+              <span
+                className={[
+                  'min-w-0 flex-1 truncate text-sm',
+                  node.watched ? 'text-ink-faint line-through' : 'text-ink',
+                ].join(' ')}
+              >
+                {node.title}
+              </span>
               <span className="meta shrink-0">{year(node.release_date)}</span>
             </Link>
           </li>

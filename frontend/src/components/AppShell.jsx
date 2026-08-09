@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router'
 const NAV = [
   { to: '/catalog', label: 'Catalog' },
   { to: '/orders', label: 'My orders' },
+  { to: '/progress', label: 'Progress' },
 ]
 
 function navClass({ isActive }) {

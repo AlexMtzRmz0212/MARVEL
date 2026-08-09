@@ -5,6 +5,7 @@ import { CatalogPage } from './features/catalog/CatalogPage'
 import { OrderBuilderPage } from './features/builder/OrderBuilderPage'
 import { OrdersPage } from './features/builder/OrdersPage'
 import { PrereqGraphPage } from './features/prereq/PrereqGraphPage'
+import { ProgressPage } from './features/progress/ProgressPage'
 import { MovieDetailPage } from './pages/MovieDetailPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
       { path: 'orders', element: <OrdersPage /> },
       { path: 'orders/new', element: <OrderBuilderPage /> },
       { path: 'orders/:orderId', element: <OrderBuilderPage /> },
+      { path: 'progress', element: <ProgressPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

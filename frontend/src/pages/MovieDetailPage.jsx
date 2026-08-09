@@ -1,7 +1,10 @@
 import { Link, useParams } from 'react-router'
 
 import { useMovie } from '../api/catalog'
+import { WatchToggle } from '../components/WatchToggle'
 import { ErrorState, LoadingState } from '../components/states'
+import { useWatchProgress } from '../hooks/useWatchProgress'
+import { isWatched } from '../lib/watchStorage'
 import {
   MEDIA_LABEL,
   SAGA_LABEL,
@@ -60,6 +63,7 @@ function Panel({ title, count, empty, children }) {
 
 export function MovieDetailPage() {
   const { movieId } = useParams()
+  const progress = useWatchProgress()
   const { data: movie, isPending, error, refetch } = useMovie(movieId)
 
   if (isPending) return <LoadingState label="Loading title" />
@@ -67,6 +71,7 @@ export function MovieDetailPage() {
 
   const accent = accentFor(movie)
   const runtime = formatRuntime(movie.runtime_min)
+  const watched = isWatched(progress, movie.id)
 
   return (
     <article className="py-8">
@@ -82,9 +87,14 @@ export function MovieDetailPage() {
           </p>
         </div>
 
-        <h1 className="mt-3 text-3xl leading-tight font-medium tracking-tight text-ink sm:text-4xl">
-          {movie.title}
-        </h1>
+        <div className="mt-3 flex items-start gap-4">
+          <h1 className="flex-1 text-3xl leading-tight font-medium tracking-tight text-ink sm:text-4xl">
+            {movie.title}
+          </h1>
+          <div className="mt-1 shrink-0">
+            <WatchToggle movieId={movie.id} watched={watched} title={movie.title} />
+          </div>
+        </div>
 
         <dl className="meta mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
           <div>

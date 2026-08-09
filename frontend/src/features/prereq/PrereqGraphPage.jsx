@@ -2,8 +2,11 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 
 import { usePrerequisites } from '../../api/catalog'
+import { ProgressBar } from '../../components/WatchToggle'
 import { EmptyState, ErrorState, LoadingState } from '../../components/states'
+import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { accentFor, formatTotalRuntime } from '../../lib/format'
+import { isWatched, markManyWatched, progressFor } from '../../lib/watchStorage'
 import { PrereqChainList, PrereqGraph } from './PrereqGraph'
 
 function Stat({ label, value, accent }) {
@@ -20,6 +23,7 @@ function Stat({ label, value, accent }) {
 export function PrereqGraphPage() {
   const { movieId } = useParams()
   const [essentialOnly, setEssentialOnly] = useState(false)
+  const progress = useWatchProgress()
 
   const { data, isPending, error, refetch } = usePrerequisites(
     movieId,
@@ -32,6 +36,17 @@ export function PrereqGraphPage() {
   const { movie, stats, nodes, edges, watch_order: watchOrder } = data
   const accent = accentFor(movie)
   const totalRuntime = formatTotalRuntime(stats.total_runtime_min)
+
+  // The API can enrich nodes with `watched` once there are accounts; until then
+  // it comes from local storage and is merged in here.
+  const watchedNodes = nodes.map((node) => ({
+    ...node,
+    watched: isWatched(progress, node.id),
+  }))
+  const chainProgress = progressFor(progress, watchOrder)
+  const unwatchedRuntime = watchedNodes
+    .filter((node) => !node.is_target && !node.watched)
+    .reduce((sum, node) => sum + (node.runtime_min ?? 0), 0)
 
   return (
     <article className="py-8">
@@ -56,7 +71,15 @@ export function PrereqGraphPage() {
             <Stat label="Required" value={stats.essential} accent={accent} />
             <Stat label="Recommended" value={stats.recommended} accent="var(--color-ink-dim)" />
             {totalRuntime && (
-              <Stat label="Runtime" value={totalRuntime} accent="var(--color-ink-dim)" />
+              <Stat
+                label={chainProgress.watched > 0 ? 'Left to watch' : 'Runtime'}
+                value={
+                  chainProgress.watched > 0
+                    ? (formatTotalRuntime(unwatchedRuntime) ?? '0m')
+                    : totalRuntime
+                }
+                accent="var(--color-ink-dim)"
+              />
             )}
             <Stat label="Depth" value={stats.max_depth} accent="var(--color-ink-dim)" />
           </div>
@@ -91,6 +114,29 @@ export function PrereqGraphPage() {
         </EmptyState>
       ) : (
         <>
+          <section className="hairline flex flex-wrap items-center gap-4 border-b py-4">
+            <div className="min-w-48 flex-1">
+              <div className="mb-2 flex items-baseline justify-between">
+                <span className="meta">
+                  {chainProgress.watched} of {chainProgress.total} watched
+                </span>
+                <span className="font-mono text-xs tabular-nums text-ink-dim">
+                  {chainProgress.percent}%
+                </span>
+              </div>
+              <ProgressBar percent={chainProgress.percent} />
+            </div>
+            {chainProgress.remaining > 0 && (
+              <button
+                type="button"
+                onClick={() => markManyWatched(watchOrder)}
+                className="meta border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+              >
+                Mark all {chainProgress.remaining} watched
+              </button>
+            )}
+          </section>
+
           <div className="meta flex flex-wrap items-center gap-x-5 gap-y-2 py-4">
             <span className="flex items-center gap-2">
               <svg width="26" height="8" aria-hidden="true">
@@ -125,16 +171,16 @@ export function PrereqGraphPage() {
           {/* The column layout needs horizontal room; narrow screens get the
               same data as an ordered list instead of a squeezed diagram. */}
           <div className="hidden md:block">
-            <PrereqGraph nodes={nodes} edges={edges} />
+            <PrereqGraph nodes={watchedNodes} edges={edges} />
           </div>
           <div className="md:hidden">
-            <PrereqChainList watchOrder={watchOrder} nodes={nodes} />
+            <PrereqChainList watchOrder={watchOrder} nodes={watchedNodes} />
           </div>
 
           <section className="py-10">
             <h2 className="meta hairline border-b pb-2">In watch order</h2>
             <div className="mt-4 hidden md:block">
-              <PrereqChainList watchOrder={watchOrder} nodes={nodes} />
+              <PrereqChainList watchOrder={watchOrder} nodes={watchedNodes} />
             </div>
           </section>
         </>
