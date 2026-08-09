@@ -26,7 +26,12 @@ class Universe(StrEnum):
     SONY = "sony"  # Raimi/Webb Spider-Man, Venom, Morbius
     FOX = "fox"  # X-Men, Deadpool, Fantastic Four
     NETFLIX = "netflix"  # Daredevil, Jessica Jones, the Defenders
-    ABC = "abc"  # Agents of S.H.I.E.L.D., Agent Carter, Inhumans
+    # Agents of S.H.I.E.L.D., Inhumans. Note that Agent Carter is filed under
+    # MCU rather than here: `include_adjacent=False` hides everything that is
+    # not `MCU`, and Agent Carter sits inside the main narrative continuity even
+    # though ABC produced it. This axis is really about which studio's continuity
+    # a title belongs to, and the Marvel Television shows straddle that line.
+    ABC = "abc"
 
 
 class MediaType(StrEnum):

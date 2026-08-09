@@ -68,8 +68,13 @@ def test_release_order_is_sorted_by_date(client):
 
 def test_chronological_order_starts_in_the_past(client):
     movies = client.get("/api/orders/chronological").json()["movies"]
-    assert movies[0]["id"] == "captain-america-the-first-avenger"
-    assert movies[1]["id"] == "captain-marvel"
+    assert [movie["id"] for movie in movies[:5]] == [
+        "captain-america-the-first-avenger",
+        "agent-carter-one-shot",
+        "agent-carter-season-one",
+        "agent-carter-season-two",
+        "captain-marvel",
+    ]
 
 
 def test_chronological_order_respects_every_prerequisite(client):

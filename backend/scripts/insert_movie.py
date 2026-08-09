@@ -9,12 +9,24 @@ MCU_JSON_PATH = os.path.join(
     "../app/seed/data/mcu.json"
 )
 
+# The prompts below offer exactly the values the seed schema accepts, taken from
+# the enums themselves rather than retyped here. A value the enums reject makes
+# mcu.json unloadable, and the catalog is validated on every request -- so a
+# typo in this script is a 500 on the deployed site, not a local nuisance.
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from app.core.enums import MediaType, Saga, Tier, Universe  # noqa: E402
+
+SAGAS = [member.value for member in Saga]
+UNIVERSES = [member.value for member in Universe]
+MEDIA_TYPES = [member.value for member in MediaType]
+TIERS = [member.value for member in Tier]
+
 def load_mcu_data():
     """Loads the MCU data from mcu.json."""
     if not os.path.exists(MCU_JSON_PATH):
         print(f"Error: {MCU_JSON_PATH} not found.")
         sys.exit(1)
-    with open(MCU_JSON_PATH, 'r', encoding='utf-8') as f:
+    with open(MCU_JSON_PATH, encoding='utf-8') as f:
         return json.load(f)
 
 def save_mcu_data(data):
@@ -30,16 +42,17 @@ def get_user_input(prompt, default=None, type_cast=str, validator=None, choices=
     while True:
         if choices:
             display_choices = ", ".join(choices)
-            input_prompt = f"{prompt} ({display_choices})[{default if default is not None else ''}]: "
+            shown_default = default if default is not None else ''
+            input_prompt = f"{prompt} ({display_choices})[{shown_default}]: "
         else:
             input_prompt = f"{prompt}[{default if default is not None else ''}]: "
-        
+
         user_input = input(input_prompt).strip()
-        
+
         if not user_input and default is not None:
             user_input = default
-        
-        if not user_input and not default and type_cast != str:
+
+        if not user_input and not default and type_cast is not str:
             return None # Allow None for optional non-string fields if no input and no default
 
         try:
@@ -62,12 +75,18 @@ def validate_unique_id(new_id, existing_movies):
         if movie["id"] == new_id:
             raise ValueError(f"ID '{new_id}' already exists. Please choose a unique ID.")
 
+def validate_phase(phase):
+    """Validator matching the schema's `ge=1, le=10` bound on phase."""
+    if phase is not None and not 1 <= phase <= 10:
+        raise ValueError("Phase must be between 1 and 10, or blank for none.")
+
+
 def validate_date_format(date_str):
     """Validator to ensure date is in YYYY-MM-DD format."""
     try:
         datetime.strptime(date_str, "%Y-%m-%d")
-    except ValueError:
-        raise ValueError("Date must be in YYYY-MM-DD format.")
+    except ValueError as exc:
+        raise ValueError("Date must be in YYYY-MM-DD format.") from exc
 
 def main():
     mcu_data = load_mcu_data()
@@ -87,18 +106,25 @@ def main():
         "Release Date (YYYY-MM-DD)",
         # validator=validate_date_format
     )
-    new_movie["phase"] = get_user_input("Phase (integer)", type_cast=int, default="0")
-    new_movie["saga"] = get_user_input("Saga (e.g., 'infinity', 'multiverse')", default="multiverse")
-    new_movie["universe"] = get_user_input("Universe", default="earth-616", choices=["earth-616", "adjacent"])
+    # Blank means "no agreed phase", which the schema stores as null; 0 is not a
+    # legal phase.
+    new_movie["phase"] = get_user_input(
+        "Phase (1-10, blank for none)",
+        type_cast=lambda x: int(x) if x else None,
+        validator=validate_phase,
+        default=""
+    )
+    new_movie["saga"] = get_user_input("Saga", default="multiverse", choices=SAGAS)
+    new_movie["universe"] = get_user_input("Universe", default="mcu", choices=UNIVERSES)
     new_movie["media_type"] = get_user_input(
         "Media Type",
         default="film",
-        choices=["film", "series", "special"]
+        choices=MEDIA_TYPES
     )
     new_movie["tier"] = get_user_input(
         "Tier",
         default="core",
-        choices=["core", "supporting", "optional"]
+        choices=TIERS
     )
     new_movie["runtime_min"] = get_user_input(
         "Runtime in minutes (integer, optional)",

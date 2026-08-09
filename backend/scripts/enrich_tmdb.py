@@ -8,9 +8,9 @@ This is a developer tool, run occasionally and by hand. It is deliberately NOT
 part of the seed path: the curated file is authoritative for everything that
 matters -- ids, phases, sagas, tiers, chronology and above all the prerequisite
 edges -- and TMDb is only trusted for metadata fields (poster, synopsis,
-runtime, release date, and TMDb id). The predecessor of this script derived phases from release years and
-fetched a single page of results, which is exactly the class of mistake that
-arrangement prevents.
+runtime, release date, and TMDb id). The predecessor of this script derived
+phases from release years and fetched a single page of results, which is exactly
+the class of mistake that arrangement prevents.
 
 Writes back into the same JSON file, preserving its structure and comments, so
 the result is reviewable as a diff before it ever reaches a database.

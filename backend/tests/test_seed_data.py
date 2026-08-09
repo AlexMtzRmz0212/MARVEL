@@ -54,16 +54,31 @@ def test_release_order_starts_with_iron_man():
 
 def test_chronological_order_starts_in_the_1940s_then_1995():
     order = [movie.id for movie in CATALOG.movies]
-    assert order[0] == "captain-america-the-first-avenger"
-    assert order[1] == "captain-marvel"
+    assert order[:5] == [
+        "captain-america-the-first-avenger",
+        "agent-carter-one-shot",
+        "agent-carter-season-one",
+        "agent-carter-season-two",
+        "captain-marvel",
+    ]
 
 
-def test_series_have_no_runtime_and_films_do():
+def test_films_have_a_runtime_and_series_runtimes_are_season_totals():
+    """A series either carries a whole-season total or nothing at all.
+
+    `enrich_tmdb.py` sums episode runtimes where TMDb exposes them, so the field
+    means minutes-for-the-season. The floor is what distinguishes that from a
+    single episode length written into the same field by mistake -- the shortest
+    season in the catalog is still several hours long.
+    """
     for movie in CATALOG.movies:
         if movie.media_type.value == "film":
             assert movie.runtime_min, f"{movie.id} is a film with no runtime"
-        elif movie.media_type.value == "series":
-            assert movie.runtime_min is None, f"{movie.id} is a series with a single runtime"
+        elif movie.media_type.value == "series" and movie.runtime_min is not None:
+            assert movie.runtime_min > 120, (
+                f"{movie.id} has a series runtime of {movie.runtime_min} min, which reads as "
+                f"one episode rather than a season total"
+            )
 
 
 def test_mcu_titles_all_carry_a_phase():
