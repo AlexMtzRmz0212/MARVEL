@@ -165,7 +165,9 @@ export function PrereqGraphPage() {
               </svg>
               Recommended
             </span>
-            <span className="text-ink-faint/70">Earliest on the left · hover an edge for why</span>
+            <span className="text-ink-faint/70">
+              Earliest on the left · hover a title to trace it, or a line for why
+            </span>
           </div>
 
           {/* The column layout needs horizontal room; narrow screens get the

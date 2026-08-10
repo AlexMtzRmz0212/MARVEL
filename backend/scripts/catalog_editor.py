@@ -11,6 +11,9 @@ posters you click to edit in a pop-up, drag to reorder, and that saves itself.
 * Click a poster to edit it in a focused dialog -- no long scrolling form.
 * The dialog's TMDb picker shows *every* match (poster, year, overview) and you
   choose, so "X-Men: First Class" can't silently match a making-of special.
+* The Dependencies tab edits the graph itself: pick a title and connect or
+  disconnect what it requires *and* what it unlocks, with essential/recommended
+  and the note editable in place.
 * Every change is validated with the same checks as `app.seed.loader --check`
   and, if valid, written straight back to mcu.json. Nothing invalid is ever
   saved, so a bad edit can't become a 500 on the deployed site.
@@ -18,6 +21,7 @@ posters you click to edit in a pop-up, drag to reorder, and that saves itself.
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import shutil
@@ -65,8 +69,16 @@ GALLERY_COLUMNS = 5
 # Catalog state
 # --------------------------------------------------------------------------- #
 def load_document() -> dict:
-    """Read mcu.json verbatim, preserving `$comment` and `version`."""
-    return json.loads(SEED_PATH.read_text(encoding="utf-8"))
+    """Read mcu.json verbatim, preserving `$comment` and `version`.
+
+    The exact text is remembered so `autosave` can tell whether the file has
+    since been changed by someone else -- two editor windows open on the same
+    file is an easy mistake, and last-writer-wins silently resurrects whatever
+    the stale window loaded.
+    """
+    text = SEED_PATH.read_text(encoding="utf-8")
+    st.session_state.disk_text = text
+    return json.loads(text)
 
 
 def ensure_state() -> None:
@@ -75,6 +87,7 @@ def ensure_state() -> None:
     st.session_state.setdefault("draft_for", None)
     st.session_state.setdefault("search", "")
     st.session_state.setdefault("universe_filter", [])
+    st.session_state.setdefault("link_error", None)
 
 
 def movies() -> list[dict]:
@@ -86,6 +99,25 @@ def find_index(movie_id: str) -> int | None:
         if movie["id"] == movie_id:
             return index
     return None
+
+
+def movie_by_id(movie_id: str) -> dict | None:
+    index = find_index(movie_id)
+    return None if index is None else movies()[index]
+
+
+def dependents_of(movie_id: str) -> list[tuple[dict, dict]]:
+    """Every (title, edge) pair whose edge points at `movie_id`.
+
+    An edge is stored on the title that *depends*, so the titles a given one
+    unlocks can only be found by sweeping the whole catalog.
+    """
+    return [
+        (movie, edge)
+        for movie in movies()
+        for edge in movie.get("prerequisites", [])
+        if edge["id"] == movie_id
+    ]
 
 
 def parse_date(value) -> date:
@@ -107,6 +139,10 @@ def parse_date(value) -> date:
 def year_of(movie: dict) -> str:
     value = movie.get("release_date") or ""
     return value[:4] if isinstance(value, str) and value[:4].isdigit() else "—"
+
+
+def label_of(movie: dict) -> str:
+    return f"{movie['title']} ({year_of(movie)})"
 
 
 # --------------------------------------------------------------------------- #
@@ -134,28 +170,63 @@ def validate_document(document: dict):
     return catalog, []
 
 
-def autosave() -> None:
+def disk_conflict() -> str | None:
+    """Describe how mcu.json differs from what this window last read or wrote.
+
+    Two editor windows on one file is the failure that costs an afternoon: the
+    stale one writes its whole document back and silently reinstates every
+    edge the other had removed. Cheap to detect, so never write blind.
+    """
+    known = st.session_state.get("disk_text")
+    if known is None or not SEED_PATH.exists():
+        return None
+    if SEED_PATH.read_text(encoding="utf-8") == known:
+        return None
+    return (
+        "mcu.json changed on disk since this window loaded it — another editor "
+        "window, most likely. Nothing was written, because saving would undo "
+        "whatever that window did. Use ↻ Reload from disk to pick up its "
+        "version (this window's unsaved changes are lost)."
+    )
+
+
+def autosave(revert_to: dict | None = None) -> bool:
     """Validate the working document and, if valid, write it back to disk.
 
     Called after every deliberate change (a dialog save, a delete, a drag), so
     there is no separate 'save' step -- but an invalid document (a cycle, a bad
     date) is never written, only surfaced.
+
+    Pass `revert_to` for changes the user cannot easily undo by hand -- a single
+    edge toggle leaves no form open to correct, so the rejected change is rolled
+    back instead of leaving the working copy broken. Returns whether it saved.
     """
     catalog, problems = validate_document(st.session_state.document)
     if problems:
+        if revert_to is not None:
+            st.session_state.document = revert_to
         st.session_state.save_error = problems
         st.toast("Not saved — validation failed. See the sidebar.", icon="⚠️")
-        return
+        return False
+
+    if conflict := disk_conflict():
+        if revert_to is not None:
+            st.session_state.document = revert_to
+        st.session_state.save_error = [conflict]
+        st.toast("Not saved — the file changed on disk. See the catalog status.", icon="⚠️")
+        return False
 
     if SEED_PATH.exists():
         shutil.copy2(SEED_PATH, SEED_PATH.with_name(f"{SEED_PATH.name}.bak"))
-    SEED_PATH.write_text(
-        json.dumps(st.session_state.document, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+    text = json.dumps(st.session_state.document, indent=2, ensure_ascii=False) + "\n"
+    # newline="\n": without it Windows writes CRLF and every save shows up as a
+    # whole-file change in git, burying the one edge that actually moved.
+    SEED_PATH.write_text(text, encoding="utf-8", newline="\n")
+    st.session_state.disk_text = text
     st.session_state.save_error = None
     st.session_state.warnings = list(catalog.warnings)
     st.toast("Saved to mcu.json", icon="💾")
+    return True
 
 
 # --------------------------------------------------------------------------- #
@@ -471,13 +542,24 @@ def render_status_menu() -> None:
     hosts the reorder panel). The button's own label carries the at-a-glance
     validity status, so you don't have to open it just to see if it's OK."""
     catalog, problems = validate_document(st.session_state.document)
-    label = f"⚠️ {len(problems)} problem(s)" if problems else "✅ Valid"
+    # A refused save (a conflict on disk) leaves a valid document in memory, so
+    # the label has to carry it too or the only trace is a toast that has gone.
+    unsaved = st.session_state.get("save_error") or []
+    if problems:
+        label = f"⚠️ {len(problems)} problem(s)"
+    elif unsaved:
+        label = "⚠️ Not saved"
+    else:
+        label = "✅ Valid"
     st.caption("Catalog")
     popover = st.popover(label, width="stretch", on_change="rerun")
     if not popover.open:
         return
     with popover:
         st.caption(str(SEED_PATH))
+        if unsaved and not problems:
+            for problem in unsaved:
+                st.error(problem)
         if problems:
             st.error(f"{len(problems)} problem(s) — not saving until fixed")
             for problem in problems:
@@ -494,6 +576,12 @@ def render_status_menu() -> None:
         if st.button("↻ Reload from disk", width="stretch"):
             st.session_state.document = load_document()
             st.session_state.draft_for = None
+            st.session_state.link_error = None
+            st.session_state.save_error = None
+            # Keyed edge widgets would otherwise keep showing values from the
+            # document just discarded.
+            for key in [k for k in st.session_state if k.startswith("dep_")]:
+                del st.session_state[key]
             st.rerun()
 
 
@@ -584,6 +672,247 @@ def render_reorder(container) -> None:
 
 
 # --------------------------------------------------------------------------- #
+# Dependencies editor
+# --------------------------------------------------------------------------- #
+def apply_edge_change(mutate) -> bool:
+    """Run `mutate` on the working document, save it, and roll back if invalid.
+
+    A single edge toggle leaves no form open to correct, so unlike a dialog save
+    a rejected change is undone rather than left sitting in the working copy.
+
+    Never calls `st.rerun()`: that is illegal inside a widget callback, and a
+    callback is followed by a rerun anyway. Button handlers rerun themselves.
+    """
+    snapshot = copy.deepcopy(st.session_state.document)
+    mutate()
+    if autosave(revert_to=snapshot):
+        st.session_state.link_error = None
+        return True
+    # After the rollback the document is valid again, so the catalog-status
+    # popover must not keep claiming otherwise. The rejection belongs to the
+    # edge that caused it and is shown beside it instead.
+    st.session_state.link_error = st.session_state.save_error
+    st.session_state.save_error = None
+    return False
+
+
+def connect(owner_id: str, prerequisite_id: str, strength: str, note: str) -> None:
+    """Make `owner_id` depend on `prerequisite_id`."""
+    def mutate() -> None:
+        owner = movie_by_id(owner_id)
+        owner.setdefault("prerequisites", []).append(
+            {"id": prerequisite_id, "strength": strength, "note": note.strip() or None}
+        )
+
+    apply_edge_change(mutate)
+
+
+def disconnect(owner_id: str, prerequisite_id: str) -> None:
+    def mutate() -> None:
+        owner = movie_by_id(owner_id)
+        owner["prerequisites"] = [
+            edge for edge in owner.get("prerequisites", []) if edge["id"] != prerequisite_id
+        ]
+
+    apply_edge_change(mutate)
+
+
+def set_edge_field(owner_id: str, prerequisite_id: str, field: str, widget_key: str) -> None:
+    """on_change handler: copy a widget's value onto its edge and save."""
+    value = st.session_state[widget_key]
+    if field == "note":
+        value = value.strip() or None
+
+    def mutate() -> None:
+        for edge in movie_by_id(owner_id).get("prerequisites", []):
+            if edge["id"] == prerequisite_id:
+                edge[field] = value
+
+    apply_edge_change(mutate)
+
+
+def render_edge_row(owner: dict, edge: dict, other: dict) -> None:
+    """One connection, from the point of view of whichever title is in focus.
+
+    `owner` always holds the edge, `other` is the title at its far end -- so the
+    same row renders both directions and every control edits `owner`.
+    """
+    prefix = f"{owner['id']}__{edge['id']}"
+    with st.container(border=True):
+        title_col, cut_col = st.columns([5, 1])
+        with title_col:
+            st.markdown(f"**{other['title']}**  \n{year_of(other)} · `{other['id']}`")
+        with cut_col:
+            # on_click, not `if st.button(...)`: a callback runs before the
+            # script body, so the row simply isn't drawn on this run and no
+            # st.rerun() is needed to hide it.
+            st.button(
+                "✕", key=f"dep_cut_{prefix}", help="Disconnect", width="stretch",
+                on_click=disconnect, args=(owner["id"], edge["id"]),
+            )
+        strength_key = f"dep_str_{prefix}"
+        st.radio(
+            "Strength", STRENGTHS,
+            index=STRENGTHS.index(edge.get("strength", "essential")),
+            key=strength_key, horizontal=True, label_visibility="collapsed",
+            on_change=set_edge_field,
+            args=(owner["id"], edge["id"], "strength", strength_key),
+        )
+        note_key = f"dep_note_{prefix}"
+        st.text_input(
+            "Note", value=edge.get("note") or "", key=note_key,
+            label_visibility="collapsed", placeholder="why, in one line (optional)",
+            on_change=set_edge_field, args=(owner["id"], edge["id"], "note", note_key),
+        )
+
+
+def render_connect_form(
+    side: str, focus: dict, eligible: list[str], label: str, empty_hint: str
+) -> None:
+    """The 'add a connection' affordance at the foot of a column.
+
+    Deliberately *not* another bordered card: given the same shape as the edge
+    rows above it, an empty picker + strength + note reads as a connection that
+    already exists. A collapsed expander is unmistakably a thing you open to
+    add something, and its fields carry visible labels for the same reason.
+    """
+    if not eligible:
+        st.caption(empty_hint)
+        return
+    pick_key = f"dep_pick_{side}"
+    # Deliberately not an st.form: a form submits on Enter, so picking a title
+    # with the keyboard writes an edge with whatever strength and note happened
+    # to be there -- a connection nobody asked for, made by a keystroke.
+    #
+    # The eligible set also changes with the focused title, and a keyed
+    # selectbox holding a value that is no longer an option raises.
+    if st.session_state.get(pick_key) not in eligible:
+        st.session_state.pop(pick_key, None)
+    with st.expander(label):
+        st.selectbox(
+            "Title", eligible, format_func=lambda i: label_of(movie_by_id(i)), key=pick_key,
+        )
+        st.radio("Strength", STRENGTHS, key=f"dep_new_str_{side}", horizontal=True)
+        st.text_input(
+            "Note", key=f"dep_new_note_{side}",
+            placeholder="why, in one line (optional)",
+        )
+        st.button(
+            "🔗 Connect", key=f"dep_connect_{side}", type="primary", width="stretch",
+            on_click=submit_connection, args=(side, focus["id"]),
+        )
+
+
+def submit_connection(side: str, focus_id: str) -> None:
+    """on_click handler for the Connect button. Only a click reaches here."""
+    choice = st.session_state[f"dep_pick_{side}"]
+    strength = st.session_state[f"dep_new_str_{side}"]
+    note = st.session_state[f"dep_new_note_{side}"]
+    if side == "requires":
+        connect(focus_id, choice, strength, note)
+    else:
+        connect(choice, focus_id, strength, note)
+    # Leave the panel ready for the next connection rather than holding the
+    # one just made (which is no longer even an eligible option).
+    for key in (f"dep_pick_{side}", f"dep_new_str_{side}", f"dep_new_note_{side}"):
+        st.session_state.pop(key, None)
+
+
+def render_requires(focus: dict) -> None:
+    st.subheader("⬅ Requires")
+    st.caption("Watch these first. Each edge is stored on this title.")
+    edges = focus.get("prerequisites", [])
+    if not edges:
+        st.caption("Nothing yet.")
+    for edge in list(edges):
+        other = movie_by_id(edge["id"])
+        if other is None:  # validation forbids it, but never render a crash
+            st.warning(f"Dangling prerequisite `{edge['id']}`")
+            continue
+        render_edge_row(focus, edge, other)
+
+    taken = {edge["id"] for edge in edges}
+    earlier = movies()[: find_index(focus["id"])]
+    render_connect_form(
+        "requires", focus,
+        [movie["id"] for movie in earlier if movie["id"] not in taken],
+        "➕ Add a prerequisite",
+        "Nothing eligible — a prerequisite has to sit earlier in the timeline. "
+        "Reorder in the sidebar first.",
+    )
+
+
+def render_unlocks(focus: dict, dependents: list[tuple[dict, dict]]) -> None:
+    st.subheader("Unlocks ➡")
+    st.caption("These depend on it. Each edge is stored on the other title.")
+    if not dependents:
+        st.caption("Nothing yet.")
+    for owner, edge in dependents:
+        render_edge_row(owner, edge, owner)
+
+    taken = {owner["id"] for owner, _ in dependents}
+    later = movies()[find_index(focus["id"]) + 1 :]
+    render_connect_form(
+        "unlocks", focus,
+        [movie["id"] for movie in later if movie["id"] not in taken],
+        "➕ Add a title that depends on this one",
+        "Nothing eligible — only titles later in the timeline can depend on this "
+        "one. Reorder in the sidebar first.",
+    )
+
+
+def render_focus_warnings(focus: dict) -> None:
+    """Warnings that name the focused title -- redundancy, orphanhood.
+
+    The catalog keeps its edges transitively reduced, so the moment that stops
+    being true is worth seeing right here rather than in the status popover.
+    """
+    catalog, problems = validate_document(st.session_state.document)
+    if problems or catalog is None:
+        return
+    hits = [warning for warning in catalog.warnings if focus["title"] in warning]
+    if hits:
+        st.info("\n".join(f"- {warning}" for warning in hits))
+
+
+def render_dependencies() -> None:
+    if not movies():
+        st.info("Add a title first.")
+        return
+
+    ids = [movie["id"] for movie in movies()]
+    if st.session_state.get("dep_focus_id") not in ids:
+        st.session_state.dep_focus_id = ids[0]
+
+    pick_col, count_col = st.columns([3, 2])
+    with pick_col:
+        st.selectbox(
+            "Title", ids,
+            format_func=lambda i: f"{find_index(i) + 1}. {label_of(movie_by_id(i))}",
+            key="dep_focus_id", label_visibility="collapsed",
+        )
+    focus = movie_by_id(st.session_state.dep_focus_id)
+    dependents = dependents_of(focus["id"])
+    with count_col:
+        st.caption(
+            f"requires {len(focus.get('prerequisites', []))} · unlocks {len(dependents)}"
+        )
+
+    if st.session_state.link_error:
+        st.error("Change rejected and undone — nothing was written to mcu.json:")
+        for problem in st.session_state.link_error:
+            st.write(f"- {problem}")
+
+    requires_col, unlocks_col = st.columns(2)
+    with requires_col:
+        render_requires(focus)
+    with unlocks_col:
+        render_unlocks(focus, dependents)
+
+    render_focus_warnings(focus)
+
+
+# --------------------------------------------------------------------------- #
 # Sidebar
 # --------------------------------------------------------------------------- #
 def render_sidebar() -> None:
@@ -604,8 +933,12 @@ def main() -> None:
         st.title("🎬 MARVEL catalog editor")
     with rail_col:
         render_status_menu()
-    render_toolbar()
-    render_gallery()
+    gallery_tab, dependencies_tab = st.tabs(["🖼 Gallery", "🔗 Dependencies"])
+    with gallery_tab:
+        render_toolbar()
+        render_gallery()
+    with dependencies_tab:
+        render_dependencies()
 
 
 if __name__ == "__main__":

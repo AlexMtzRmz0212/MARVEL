@@ -96,7 +96,9 @@ Edit the catalog with the local editor (`catalog.bat` at the repo root, or
 `streamlit run scripts/catalog_editor.py` from `backend`). It organises and
 edits `app/seed/data/mcu.json`, validates with the same checks as
 `app.seed.loader --check` before writing, and has a TMDb picker that shows every
-match so you choose the right one rather than trusting a blind first hit.
+match so you choose the right one rather than trusting a blind first hit. Its
+Dependencies tab edits the graph directly: pick a title and connect or
+disconnect what it requires and what it unlocks, essential or recommended.
 
 Needs `TMDB_API_KEY` in the root `.env` (see `.env.example`) for the picker. The
 editor writes back into the JSON so the result is reviewable as a diff.
