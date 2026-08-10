@@ -9,6 +9,6 @@
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/server.py" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/|assets/|.*\\.).*)", "destination": "/index.html" }
   ]
 }
