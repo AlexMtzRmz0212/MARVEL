@@ -48,17 +48,31 @@ def test_ids_are_unique():
 
 
 def test_release_order_starts_with_iron_man():
-    first = min(CATALOG.release_order, key=lambda movie_id: CATALOG.release_order[movie_id])
-    assert first == "iron-man"
+    """Iron Man opens *Marvel Studios'* release order.
+
+    Tier B (Fox, Sony, Netflix, ABC, ...) titles append to the same array with
+    their own universe, and several -- X-Men (2000) chief among them -- release
+    earlier than Iron Man. So this checks the Infinity/Multiverse Saga slice
+    specifically, not `CATALOG.release_order` as a whole.
+    """
+    core = [m for m in CATALOG.movies if m.saga.value in {"Infinity Saga", "Multiverse Saga"}]
+    first = min(core, key=lambda movie: CATALOG.release_order[movie.id])
+    assert first.id == "iron-man"
 
 
 def test_chronological_order_starts_in_the_1940s_then_1995():
     order = [movie.id for movie in CATALOG.movies]
-    assert order[:5] == [
+    assert order[:11] == [
         "captain-america-the-first-avenger",
         "agent-carter-one-shot",
         "agent-carter-season-one",
         "agent-carter-season-two",
+        "x-men-first-class",
+        "the-fantastic-four-first-steps",
+        "x-men-days-of-future-past",
+        "x-men-origins-wolverine",
+        "x-men-apocalypse",
+        "x-men-dark-phoenix",
         "captain-marvel",
     ]
 
@@ -82,8 +96,16 @@ def test_films_have_a_runtime_and_series_runtimes_are_season_totals():
 
 
 def test_mcu_titles_all_carry_a_phase():
+    """Only the two core sagas carry phase semantics -- see `test_phase_and_saga_agree`.
+
+    Franchise tags (Fox X-Men Saga, Defenders Saga, the 'Era' sagas covering
+    Marvel TV's ABC/Netflix run, ...) sit outside Marvel Studios' own phase
+    numbering regardless of how central the title is to its own continuity, so
+    `tier` is not the right signal here -- `saga` is.
+    """
+    phased_sagas = {"Infinity Saga", "Multiverse Saga"}
     for movie in CATALOG.movies:
-        if movie.tier.value != "adjacent":
+        if movie.saga.value in phased_sagas:
             assert movie.phase is not None, f"{movie.id} has no phase"
 
 
@@ -91,7 +113,7 @@ def test_phase_and_saga_agree():
     for movie in CATALOG.movies:
         if movie.tier.value == "adjacent" or movie.phase is None:
             continue
-        expected = "infinity" if movie.phase <= 3 else "multiverse"
+        expected = "Infinity Saga" if movie.phase <= 3 else "Multiverse Saga"
         assert movie.saga.value == expected, f"{movie.id}: phase {movie.phase} vs {movie.saga}"
 
 

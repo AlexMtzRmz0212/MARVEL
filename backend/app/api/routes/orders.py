@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query
 
 from app.api.deps import CatalogDep
 from app.catalog import Title
-from app.core.enums import Tier
+from app.core.enums import MCU_UNIVERSES
 from app.core.graph import complete_order
 from app.schemas.movie import MovieSummary
 from app.schemas.order import (
@@ -28,7 +28,7 @@ IncludeAdjacent = Annotated[
 
 def _visible(titles: list[Title], include_adjacent: bool) -> list[MovieSummary]:
     if not include_adjacent:
-        titles = [title for title in titles if title.tier != Tier.ADJACENT.value]
+        titles = [title for title in titles if title.universe in MCU_UNIVERSES]
     return [MovieSummary.model_validate(title) for title in titles]
 
 

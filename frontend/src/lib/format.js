@@ -32,11 +32,30 @@ export function formatTotalRuntime(minutes) {
   return `${Math.round(minutes / 60)}h`
 }
 
-export const SAGA_LABEL = {
-  infinity: 'Infinity Saga',
-  multiverse: 'Multiverse Saga',
-  none: 'Unaffiliated',
-}
+/**
+ * Saga values are already display-ready strings (e.g. "Infinity Saga",
+ * "Fox X-Men Saga"), same convention as `movie.universe` below -- this table
+ * only exists for call sites that want a `SAGA_LABEL[x]` lookup with a safe
+ * fallback for values it doesn't know about yet.
+ */
+export const SAGA_LABEL = Object.fromEntries(
+  [
+    'Animated Multiverse',
+    'Defenders Saga',
+    'Fox X-Men Saga',
+    'Infinity Saga',
+    'Infinity Saga Era',
+    'Multiverse Saga',
+    'Multiverse Era',
+    'N/A',
+    'Raimi Trilogy',
+    "Sony's Spider-Man Universe",
+    'Spider-Verse Saga',
+    'Story F4 Duology',
+    'Trank F4',
+    'Webb Spider-Man',
+  ].map((saga) => [saga, saga]),
+)
 
 export const MEDIA_LABEL = {
   film: 'Film',
@@ -60,8 +79,8 @@ export const TIER_LABEL = {
 /** Saga drives the accent colour everywhere: cards, graph nodes, progress. */
 export function accentFor(movie) {
   if (movie.tier === 'adjacent') return 'var(--color-adjacent)'
-  if (movie.saga === 'multiverse') return 'var(--color-multiverse)'
-  if (movie.saga === 'infinity') return 'var(--color-infinity)'
+  if (movie.saga === 'Multiverse Saga') return 'var(--color-multiverse)'
+  if (movie.saga === 'Infinity Saga') return 'var(--color-infinity)'
   return 'var(--color-adjacent)'
 }
 

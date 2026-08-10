@@ -53,12 +53,12 @@ export function FilterBar({ filters, setFilter, reset, resultCount, totalCount }
         </Group>
 
         <Group label="Saga">
-          {['infinity', 'multiverse'].map((saga) => (
+          {['Infinity Saga', 'Multiverse Saga'].map((saga) => (
             <Toggle
               key={saga}
               active={filters.saga === saga}
               accent={
-                saga === 'infinity' ? 'var(--color-infinity)' : 'var(--color-multiverse)'
+                saga === 'Infinity Saga' ? 'var(--color-infinity)' : 'var(--color-multiverse)'
               }
               onClick={() => setFilter('saga', filters.saga === saga ? null : saga)}
             >

@@ -233,7 +233,7 @@ def seed_draft(source: dict | None) -> None:
     ss.draft_release = parse_date(s["release_date"]) if s.get("release_date") else date(2008, 1, 1)
     ss.draft_has_phase = bool(s.get("phase"))
     ss.draft_phase = int(s["phase"]) if s.get("phase") else 1
-    ss.draft_saga = s.get("saga", "multiverse")
+    ss.draft_saga = s.get("saga", "N/A")
     ss.draft_universe = s.get("universe", "Earth-616")
     ss.draft_media_type = s.get("media_type", "film")
     ss.draft_tier = s.get("tier", "core")
@@ -242,6 +242,7 @@ def seed_draft(source: dict | None) -> None:
     ss.draft_poster_url = s.get("poster_url") or ""
     ss.draft_synopsis = s.get("synopsis") or ""
     ss.draft_prereqs = [dict(p) for p in s.get("prerequisites", [])]
+    ss.draft_insert_before = None  # None = at the beginning; else insert before this id
     ss.tmdb_applied = None
 
 
@@ -265,6 +266,23 @@ def edit_dialog(movie_id: str | None) -> None:
         st.selectbox("Saga", SAGAS, key="draft_saga")
         st.selectbox("Universe", UNIVERSES, key="draft_universe")
         st.selectbox("Tier", TIERS, key="draft_tier")
+
+    # --- where in the array a new title lands (existing titles use reorder) -
+    if movie_id is None:
+        def _insert_option_label(option_id: str | None) -> str:
+            if option_id is None:
+                return "— At the beginning —"
+            index = find_index(option_id)
+            return f"Before {index + 1}. {movies()[index]['title']}"
+
+        st.selectbox(
+            "Insert position",
+            [None] + [m["id"] for m in movies()],
+            format_func=_insert_option_label,
+            key="draft_insert_before",
+            help="Array order is the chronological timeline order. You can also "
+            "drag it into place afterwards from the reorder panel.",
+        )
 
     # --- TMDb picker: rendered before date/runtime so a pick flows into them --
     st.divider()
@@ -392,7 +410,9 @@ def commit_entry(movie_id: str | None) -> None:
         if find_index(entry["id"]) is not None:
             st.error(f"id '{entry['id']}' already exists.")
             return
-        movies().append(entry)
+        insert_before_id = st.session_state.get("draft_insert_before")
+        index = find_index(insert_before_id) if insert_before_id is not None else 0
+        movies().insert(index, entry)
     else:
         movies()[find_index(movie_id)] = entry
 
@@ -445,6 +465,38 @@ def render_toolbar() -> None:
             edit_dialog(None)
 
 
+def render_status_menu() -> None:
+    """The catalog status + reload control that used to live in the sidebar,
+    now tucked behind a button in the right rail (the sidebar itself now
+    hosts the reorder panel). The button's own label carries the at-a-glance
+    validity status, so you don't have to open it just to see if it's OK."""
+    catalog, problems = validate_document(st.session_state.document)
+    label = f"⚠️ {len(problems)} problem(s)" if problems else "✅ Valid"
+    st.caption("Catalog")
+    popover = st.popover(label, width="stretch", on_change="rerun")
+    if not popover.open:
+        return
+    with popover:
+        st.caption(str(SEED_PATH))
+        if problems:
+            st.error(f"{len(problems)} problem(s) — not saving until fixed")
+            for problem in problems:
+                st.write(f"- {problem}")
+        else:
+            st.success(f"Valid · {len(movies())} titles · {len(catalog.edges)} edges")
+            warnings = st.session_state.get("warnings") or catalog.warnings
+            if warnings:
+                with st.expander(f"{len(warnings)} warning(s)"):
+                    for warning in warnings:
+                        st.write(f"- {warning}")
+        st.caption("Changes auto-save to mcu.json when valid.")
+        st.divider()
+        if st.button("↻ Reload from disk", width="stretch"):
+            st.session_state.document = load_document()
+            st.session_state.draft_for = None
+            st.rerun()
+
+
 def render_gallery() -> None:
     shown = visible_movies()
     st.caption(f"{len(shown)} of {len(movies())} titles")
@@ -476,18 +528,57 @@ def render_card(movie: dict) -> None:
         edit_dialog(movie["id"])
 
 
-def render_reorder() -> None:
-    with st.expander("⇅ Reorder the in-universe timeline (drag)"):
+REORDER_STYLE = """
+.sortable-container-body { display: flex; flex-wrap: wrap; gap: 6px; counter-reset: order; }
+.sortable-item, .sortable-item:hover {
+    height: auto !important;
+    width: 190px;
+    white-space: normal;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    /* Calmer than the theme's default --primary-color red, which at 59
+       solid tiles reads as an alert, not a movie grid. */
+    background-color: #3a3d4a;
+    color: var(--text-color);
+    border: 1px solid #4b4f5e;
+    position: relative;
+    padding-left: 24px !important;
+}
+/* Drag order isn't obvious from a left-to-right, wrapping grid alone, so
+   number each tile in DOM order -- it re-numbers live as you drag. */
+.sortable-item::before {
+    counter-increment: order;
+    content: counter(order);
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.65rem;
+    opacity: 0.6;
+}
+"""
+
+
+def render_reorder(container) -> None:
+    # No inner expander: the sidebar itself is already the show/hide toggle
+    # (its native collapse arrow), so a second toggle around this content
+    # would just be redundant.
+    with container:
         if sort_items is None:
             st.info("Install `streamlit-sortables` to drag-reorder.")
             return
         st.caption("Array order is the chronological order. Drag a title, then it saves.")
-        labels = [f"{movie['title']}  ·  {movie['id']}" for movie in movies()]
-        new_order = sort_items(labels, direction="vertical", key="reorder")
+        labels = [movie["title"] for movie in movies()]
+        new_order = sort_items(
+            labels, direction="vertical", key="reorder", custom_style=REORDER_STYLE
+        )
         if new_order and new_order != labels:
-            id_order = [label.rsplit("  ·  ", 1)[1] for label in new_order]
-            by_id = {movie["id"]: movie for movie in movies()}
-            st.session_state.document["movies"] = [by_id[movie_id] for movie_id in id_order]
+            # Titles aren't guaranteed unique, so consume matches in order
+            # (a queue per title) rather than a title -> movie dict.
+            by_title: dict[str, list[dict]] = {}
+            for movie in movies():
+                by_title.setdefault(movie["title"], []).append(movie)
+            st.session_state.document["movies"] = [by_title[title].pop(0) for title in new_order]
             autosave()
             st.rerun()
 
@@ -496,28 +587,9 @@ def render_reorder() -> None:
 # Sidebar
 # --------------------------------------------------------------------------- #
 def render_sidebar() -> None:
-    st.sidebar.header("🎬 Catalog")
-    st.sidebar.caption(str(SEED_PATH))
-
-    catalog, problems = validate_document(st.session_state.document)
-    if problems:
-        st.sidebar.error(f"{len(problems)} problem(s) — not saving until fixed")
-        for problem in problems:
-            st.sidebar.write(f"- {problem}")
-    else:
-        st.sidebar.success(f"Valid · {len(movies())} titles · {len(catalog.edges)} edges")
-        warnings = st.session_state.get("warnings") or catalog.warnings
-        if warnings:
-            with st.sidebar.expander(f"{len(warnings)} warning(s)"):
-                for warning in warnings:
-                    st.write(f"- {warning}")
-
-    st.sidebar.caption("Changes auto-save to mcu.json when valid.")
-    st.sidebar.divider()
-    if st.sidebar.button("↻ Reload from disk", width="stretch"):
-        st.session_state.document = load_document()
-        st.session_state.draft_for = None
-        st.rerun()
+    st.sidebar.header("⇅ Timeline")
+    st.sidebar.caption("Drag a title to reorder the chronological array.")
+    render_reorder(st.sidebar)
 
 
 # --------------------------------------------------------------------------- #
@@ -527,9 +599,12 @@ def main() -> None:
     st.set_page_config(page_title="MARVEL catalog editor", page_icon="🎬", layout="wide")
     ensure_state()
     render_sidebar()
-    st.title("🎬 MARVEL catalog editor")
+    title_col, rail_col = st.columns([6, 1])
+    with title_col:
+        st.title("🎬 MARVEL catalog editor")
+    with rail_col:
+        render_status_menu()
     render_toolbar()
-    render_reorder()
     render_gallery()
 
 
