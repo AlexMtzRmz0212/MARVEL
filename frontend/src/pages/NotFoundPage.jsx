@@ -6,7 +6,7 @@ export function NotFoundPage() {
       <p className="meta text-ink-faint">404</p>
       <h1 className="mt-2 text-2xl font-medium text-ink">No such page</h1>
       <Link
-        to="/catalog"
+        to="/"
         className="meta mt-6 inline-block border border-hairline-strong px-4 py-2 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
       >
         Back to the catalog

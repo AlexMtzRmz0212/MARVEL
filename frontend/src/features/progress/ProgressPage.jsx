@@ -82,7 +82,7 @@ export function ProgressPage() {
                 label={phaseLabel(phase)}
                 movieIds={movies.filter((m) => m.phase === phase).map((m) => m.id)}
                 progress={progress}
-                to={`/catalog?phase=${phase}`}
+                to={`/?phase=${phase}`}
               />
             ))}
           </ul>
@@ -97,7 +97,7 @@ export function ProgressPage() {
                 label={SAGA_LABEL[saga] ?? saga}
                 movieIds={movies.filter((m) => m.saga === saga).map((m) => m.id)}
                 progress={progress}
-                to={`/catalog?saga=${saga}`}
+                to={`/?saga=${saga}`}
               />
             ))}
           </ul>

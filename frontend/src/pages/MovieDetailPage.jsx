@@ -74,7 +74,7 @@ export function MovieDetailPage() {
 
   return (
     <article className="py-8">
-      <Link to="/catalog" className="meta text-ink-faint transition-colors hover:text-ink">
+      <Link to="/" className="meta text-ink-faint transition-colors hover:text-ink">
         &larr; Catalog
       </Link>
 

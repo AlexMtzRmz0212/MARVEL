@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router'
+import { createBrowserRouter } from 'react-router'
 
 import { AppShell } from './components/AppShell'
 import { CatalogPage } from './features/catalog/CatalogPage'
@@ -13,7 +13,11 @@ export const router = createBrowserRouter([
   {
     element: <AppShell />,
     children: [
-      { index: true, element: <Navigate to="/catalog" replace /> },
+      // The catalog is the landing page, rendered at "/" rather than reached by
+      // a redirect: a redirect left the address bar on /catalog, so every
+      // refresh and bookmark hit a path the app has to serve rather than the
+      // bare domain. /catalog stays mounted so older links keep resolving.
+      { index: true, element: <CatalogPage /> },
       { path: 'catalog', element: <CatalogPage /> },
       { path: 'movies/:movieId', element: <MovieDetailPage /> },
       { path: 'movies/:movieId/prereqs', element: <PrereqGraphPage /> },
