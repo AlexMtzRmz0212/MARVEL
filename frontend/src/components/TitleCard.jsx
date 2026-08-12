@@ -44,7 +44,7 @@ export function TitleCard({ movie, index }) {
               'size-full object-cover transition-all duration-300 group-hover:scale-[1.03]',
               // Watched titles recede so the remaining ones stand out, which is
               // what you actually scan a catalogue this long for.
-              watched ? 'opacity-40 saturate-50 group-hover:opacity-70' : '',
+              watched ? 'opacity-40 saturate-50 brightness-60 group-hover:opacity-70' : '',
             ].join(' ')}
           />
         ) : (

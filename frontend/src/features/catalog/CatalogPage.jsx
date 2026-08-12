@@ -3,6 +3,10 @@ import { useSearchParams } from 'react-router'
 import { useMovies } from '../../api/catalog'
 import { TitleCard } from '../../components/TitleCard'
 import { EmptyState, ErrorState, LoadingState } from '../../components/states'
+import { useWatchedDisplayMode } from '../../hooks/useWatchedDisplayMode'
+import { useWatchProgress } from '../../hooks/useWatchProgress'
+import { setWatchedDisplayMode } from '../../lib/watchDisplayPref'
+import { isWatched } from '../../lib/watchStorage'
 import { FilterBar } from './FilterBar'
 
 const ORDERS = [
@@ -55,6 +59,13 @@ export function CatalogPage() {
   const { data: movies, isPending, error, refetch } = useMovies(params)
   const { data: allMovies } = useMovies({ order })
 
+  const watchProgress = useWatchProgress()
+  const watchedDisplayMode = useWatchedDisplayMode()
+  const visibleMovies =
+    watchedDisplayMode === 'hide'
+      ? movies?.filter((movie) => !isWatched(watchProgress, movie.id))
+      : movies
+
   const active = ORDERS.find((item) => item.key === order)
 
   return (
@@ -94,8 +105,10 @@ export function CatalogPage() {
           filters={filters}
           setFilter={setParam}
           reset={resetFilters}
-          resultCount={movies?.length ?? 0}
+          resultCount={visibleMovies?.length ?? 0}
           totalCount={allMovies?.length ?? 0}
+          watchedDisplayMode={watchedDisplayMode}
+          setWatchedDisplayMode={setWatchedDisplayMode}
         />
       </div>
 
@@ -104,9 +117,13 @@ export function CatalogPage() {
 
       {movies && movies.length === 0 && <EmptyState>No titles match these filters</EmptyState>}
 
-      {movies && movies.length > 0 && (
+      {movies && movies.length > 0 && visibleMovies.length === 0 && (
+        <EmptyState>Every matching title is already watched</EmptyState>
+      )}
+
+      {visibleMovies && visibleMovies.length > 0 && (
         <ul className="grid grid-cols-2 gap-3 py-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
-          {movies.map((movie, index) => (
+          {visibleMovies.map((movie, index) => (
             <li key={movie.id}>
               <TitleCard
                 movie={movie}

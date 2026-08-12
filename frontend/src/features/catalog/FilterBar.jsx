@@ -34,7 +34,15 @@ function Group({ label, children }) {
  * Every filter lives in the URL rather than component state, so a filtered view
  * is linkable and the browser's back button does what you expect.
  */
-export function FilterBar({ filters, setFilter, reset, resultCount, totalCount }) {
+export function FilterBar({
+  filters,
+  setFilter,
+  reset,
+  resultCount,
+  totalCount,
+  watchedDisplayMode,
+  setWatchedDisplayMode,
+}) {
   const hasFilters = Object.values(filters).some(Boolean)
 
   return (
@@ -91,6 +99,21 @@ export function FilterBar({ filters, setFilter, reset, resultCount, totalCount }
               {TIER_LABEL[tier]}
             </Toggle>
           ))}
+        </Group>
+
+        <Group label="Watched">
+          <Toggle
+            active={watchedDisplayMode === 'fade'}
+            onClick={() => setWatchedDisplayMode('fade')}
+          >
+            Fade
+          </Toggle>
+          <Toggle
+            active={watchedDisplayMode === 'hide'}
+            onClick={() => setWatchedDisplayMode('hide')}
+          >
+            Hide
+          </Toggle>
         </Group>
       </div>
 
