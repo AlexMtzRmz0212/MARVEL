@@ -16,9 +16,9 @@ import {
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 
+import { useOrderQuery, useSaveOrder } from '../../api/userOrders'
 import { ErrorState, LoadingState } from '../../components/states'
 import { formatTotalRuntime } from '../../lib/format'
-import { getOrder, saveOrder } from '../../lib/orderStorage'
 import { completeOrder, validateOrder } from '../../lib/validateOrder'
 import { SortableRow } from './SortableRow'
 import { TitlePicker } from './TitlePicker'
@@ -28,15 +28,13 @@ import { useOrderGraph } from './useOrderGraph'
 /**
  * Reads the starting state once, synchronously.
  *
- * Both sources are available on the first render -- localStorage for a saved
- * order, the query string for "build an order from this chain" -- so there is
- * nothing to synchronise in an effect.
+ * Both sources are available on the first render -- the saved order, already
+ * resolved by the caller, and the query string for "build an order from this
+ * chain" -- so there is nothing to synchronise in an effect.
  */
-function initialState(orderId, searchParams) {
-  if (orderId) {
-    const existing = getOrder(orderId)
-    if (existing) return { name: existing.name, movieIds: existing.movie_ids }
-  }
+function initialState(existing, searchParams) {
+  if (existing) return { name: existing.name, movieIds: existing.movie_ids }
+
   const start = searchParams.get('start')
   return {
     name: searchParams.get('name') || 'My watch order',
@@ -48,22 +46,36 @@ export function OrderBuilderPage() {
   const { orderId } = useParams()
   const [searchParams] = useSearchParams()
 
+  // A saved order comes from localStorage for guests and over the wire for
+  // accounts, so it has to be awaited here. Resolving it *before* mounting
+  // Builder is what preserves the once-only initial state below: Builder still
+  // reads its starting values synchronously, it just does not exist until they
+  // are available.
+  const { data: existing, isPending, error } = useOrderQuery(orderId)
+
+  if (orderId && isPending) return <LoadingState label="Loading order" />
+  // A missing order is not fatal -- fall through to an empty builder rather
+  // than dead-ending on a 404 for something the user may have just deleted.
+  if (error && error.status !== 404) return <ErrorState error={error} />
+
   // Keying on the route remounts the builder when you switch orders, which is
   // what makes the once-only initial state above correct.
   return (
     <Builder
       key={orderId ?? `new:${searchParams.get('start') ?? ''}`}
       orderId={orderId}
+      existing={existing ?? null}
       searchParams={searchParams}
     />
   )
 }
 
-function Builder({ orderId, searchParams }) {
+function Builder({ orderId, existing, searchParams }) {
   const navigate = useNavigate()
   const { graph, titles, byId, movies, isPending, error } = useOrderGraph()
+  const saveOrder = useSaveOrder()
 
-  const [initial] = useState(() => initialState(orderId, searchParams))
+  const [initial] = useState(() => initialState(existing, searchParams))
   const [name, setName] = useState(initial.name)
   const [movieIds, setMovieIds] = useState(initial.movieIds)
   const [savedAt, setSavedAt] = useState(null)
@@ -109,10 +121,14 @@ function Builder({ orderId, searchParams }) {
     setSavedAt(null)
   }
 
-  function handleSave() {
-    const record = saveOrder({ id: orderId, name, movie_ids: movieIds })
-    setSavedAt(new Date())
-    if (!orderId) navigate(`/orders/${record.id}`, { replace: true })
+  async function handleSave() {
+    try {
+      const record = await saveOrder.mutateAsync({ id: orderId, name, movie_ids: movieIds })
+      setSavedAt(new Date())
+      if (!orderId) navigate(`/orders/${record.id}`, { replace: true })
+    } catch {
+      // Rendered next to the button below; the mutation holds the error.
+    }
   }
 
   if (isPending) return <LoadingState label="Loading catalog" />
@@ -145,13 +161,18 @@ function Builder({ orderId, searchParams }) {
 
         <div className="flex shrink-0 items-center gap-3">
           {savedAt && <span className="meta text-ok">Saved</span>}
+          {saveOrder.error && (
+            <span role="alert" className="meta text-danger">
+              {saveOrder.error.message}
+            </span>
+          )}
           <button
             type="button"
             onClick={handleSave}
-            disabled={movieIds.length === 0}
+            disabled={movieIds.length === 0 || saveOrder.isPending}
             className="meta border border-hairline-strong px-4 py-2 text-ink transition-colors hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Save order
+            {saveOrder.isPending ? 'Saving…' : 'Save order'}
           </button>
         </div>
       </div>

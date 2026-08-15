@@ -35,3 +35,6 @@ mcu.json.*.bak
 # OS Generated Files
 .DS_Store
 Thumbs.db
+
+.vercel
+.env*

@@ -111,6 +111,13 @@ def sql_in(column: str, enum: type[StrEnum]) -> str:
     """Render a CHECK body pinning `column` to an enum's members.
 
     Generated from the enum so the constraint can never drift from the code.
+
+    Apostrophes are doubled because at least one member genuinely contains one
+    ("Sony's Spider-Man Universe"), and an unescaped quote closes the literal
+    early and makes the whole CREATE TABLE unparseable. The migrations carry
+    their own `_quoted_list()` doing the same thing -- this brings the metadata
+    path in line with it.
     """
-    values = ", ".join(f"'{member.value}'" for member in enum)
+    escaped = [member.value.replace("'", "''") for member in enum]
+    values = ", ".join(f"'{value}'" for value in escaped)
     return f"{column} IN ({values})"

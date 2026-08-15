@@ -4,7 +4,8 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, String, Uuid, func
+from sqlalchemy import JSON, Boolean, DateTime, String, Uuid, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -29,6 +30,19 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     display_name: Mapped[str | None] = mapped_column(String(80))
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
+
+    # A JSON blob rather than a column per setting: these are small display
+    # choices, they arrive free inside GET /api/auth/me (which the SPA already
+    # calls once at boot), and one migration covers every preference added
+    # later. app.schemas.auth.PreferencesUpdate is what keeps it from becoming
+    # a junk drawer -- nothing unvalidated is ever written here.
+    #
+    # Assign a whole new dict when writing: SQLAlchemy does not track in-place
+    # mutation of a plain JSON value, so `user.preferences["x"] = 1` never
+    # flushes.
+    preferences: Mapped[dict] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False, server_default="{}"
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

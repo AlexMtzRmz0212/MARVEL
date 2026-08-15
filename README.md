@@ -113,15 +113,47 @@ vercel deploy
 ```
 
 `vercel.json` sets the build command; `requirements.txt` holds the runtime
-dependencies, deliberately just FastAPI and pydantic — the API reads the catalog
-from JSON and needs no database.
+dependencies. The catalog half of the API still reads from JSON and touches no
+database, but accounts need one, so the driver and auth libraries ship too.
+
+Set three environment variables in the Vercel project:
+
+| Variable | Value |
+| --- | --- |
+| `ENVIRONMENT` | `prod` — drives both `cookie_secure` and the `NullPool` engine |
+| `DATABASE_URL` | Neon's **pooled** host (the one containing `-pooler`) |
+| `SECRET_KEY` | `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
+
+The app refuses to start in `prod` with the default `SECRET_KEY`, so a
+misconfigured deploy fails loudly rather than shipping forgeable sessions.
+
+## Accounts
+
+Signed out, the app works exactly as it always did: everything saves to
+`localStorage` and lives in one browser. Signing in swaps the storage backend
+and offers to bring that data along — orders keep their existing ids, and
+anything already in the account wins.
+
+Sessions are an HttpOnly cookie carrying a JWT, same origin in both dev and
+production, so no token is ever visible to JavaScript.
+
+### Database setup
+
+Run against the **direct** (non-pooled) host — PgBouncer's transaction mode
+cannot hold a session open for DDL:
+
+```bash
+cd backend && alembic upgrade head && python -m app.seed.loader
+```
+
+The seed step is not optional. `custom_order_items.movie_id` and
+`watch_progress.movie_id` are foreign keys into `movies`, so an unseeded
+database cannot store an order at all — and **any change to
+`app/seed/data/mcu.json` needs the loader re-run against every database before
+the deploy that ships it.**
 
 ## Status
 
 Working: catalog with release/chronological/filtered views, title detail, the
-prerequisite graph, and the custom order builder with live validation.
-
-Not built yet: **accounts**. Custom orders currently save to `localStorage`, so
-they live in one browser. The Postgres schema, migration and seed loader for
-users, saved orders and watch progress are already written and tested — they are
-simply not wired up, because nothing so far needs a database.
+prerequisite graph, the custom order builder with live validation, and accounts
+syncing saved orders, watch progress and display preferences across devices.

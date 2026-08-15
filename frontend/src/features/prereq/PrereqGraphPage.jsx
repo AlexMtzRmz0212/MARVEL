@@ -37,8 +37,12 @@ export function PrereqGraphPage() {
   const accent = accentFor(movie)
   const totalRuntime = formatTotalRuntime(stats.total_runtime_min)
 
-  // The API can enrich nodes with `watched` once there are accounts; until then
-  // it comes from local storage and is merged in here.
+  // Merged in from the watch store rather than fetched. The API has a `watched`
+  // field for this and it stays deliberately unpopulated: this response is
+  // cached forever on the grounds that the catalog is immutable between
+  // deploys, and making it depend on per-user state would mean invalidating it
+  // on every toggle. The store is already correct for both guests and accounts,
+  // so there is nothing to gain.
   const watchedNodes = nodes.map((node) => ({
     ...node,
     watched: isWatched(progress, node.id),

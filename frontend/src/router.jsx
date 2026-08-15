@@ -1,6 +1,8 @@
 import { createBrowserRouter } from 'react-router'
 
 import { AppShell } from './components/AppShell'
+import { LoginPage } from './features/auth/LoginPage'
+import { RegisterPage } from './features/auth/RegisterPage'
 import { CatalogPage } from './features/catalog/CatalogPage'
 import { OrderBuilderPage } from './features/builder/OrderBuilderPage'
 import { OrdersPage } from './features/builder/OrdersPage'
@@ -25,6 +27,11 @@ export const router = createBrowserRouter([
       { path: 'orders/new', element: <OrderBuilderPage /> },
       { path: 'orders/:orderId', element: <OrderBuilderPage /> },
       { path: 'progress', element: <ProgressPage /> },
+      // Inside the shell rather than beside it: the header belongs on both, and
+      // there is no route to guard — every page above works signed out, backed
+      // by localStorage, exactly as it did before accounts existed.
+      { path: 'login', element: <LoginPage /> },
+      { path: 'register', element: <RegisterPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

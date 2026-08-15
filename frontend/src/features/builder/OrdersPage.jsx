@@ -1,11 +1,17 @@
-import { useState } from 'react'
 import { Link } from 'react-router'
 
+import { useDeleteOrder, useOrders } from '../../api/userOrders'
+import { useAuth } from '../../auth/AuthContext'
+import { ErrorState, LoadingState } from '../../components/states'
 import { formatDate } from '../../lib/format'
-import { deleteOrder, listOrders } from '../../lib/orderStorage'
 
 export function OrdersPage() {
-  const [orders, setOrders] = useState(() => listOrders())
+  const { user } = useAuth()
+  const { data: orders, isPending, error } = useOrders()
+  const deleteOrder = useDeleteOrder()
+
+  if (isPending) return <LoadingState label="Loading orders" />
+  if (error) return <ErrorState error={error} />
 
   return (
     <div className="py-8">
@@ -48,11 +54,9 @@ export function OrdersPage() {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => {
-                    deleteOrder(order.id)
-                    setOrders(listOrders())
-                  }}
-                  className="meta shrink-0 px-2 py-1 text-ink-faint transition-colors hover:text-danger"
+                  onClick={() => deleteOrder.mutate(order.id)}
+                  disabled={deleteOrder.isPending}
+                  className="meta shrink-0 px-2 py-1 text-ink-faint transition-colors hover:text-danger disabled:opacity-40"
                 >
                   Delete
                 </button>
@@ -63,7 +67,17 @@ export function OrdersPage() {
       )}
 
       <p className="meta mt-8 max-w-xl leading-relaxed">
-        Saved in this browser only. Accounts will sync them across devices.
+        {user ? (
+          <>Saved to your account and synced across your devices.</>
+        ) : (
+          <>
+            Saved in this browser only.{' '}
+            <Link to="/login" className="underline underline-offset-4 hover:text-ink-dim">
+              Sign in
+            </Link>{' '}
+            to sync them across devices.
+          </>
+        )}
       </p>
     </div>
   )

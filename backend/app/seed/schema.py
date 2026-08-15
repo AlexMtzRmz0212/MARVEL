@@ -102,6 +102,27 @@ def validate_catalog(seed: SeedFile) -> ValidatedCatalog:
         seen.add(movie.id)
     problems.extend(f"Duplicate title id: {movie_id}" for movie_id in sorted(set(duplicates)))
 
+    # -- duplicate tmdb_id ----------------------------------------------------
+    #
+    # `movies.tmdb_id` is UNIQUE in Postgres. TMDb assigns one id per *show*,
+    # not per season, so a series split into several catalog rows (one per
+    # season or episode range) must carry the id on only the first row -- the
+    # rest stay null. Nothing caught this before the loader actually wrote to a
+    # real database for the first time.
+    tmdb_seen: dict[int, str] = {}
+    tmdb_duplicates: list[str] = []
+    for movie in seed.movies:
+        if movie.tmdb_id is None:
+            continue
+        if movie.tmdb_id in tmdb_seen:
+            tmdb_duplicates.append(
+                f"{movie.id} shares tmdb_id {movie.tmdb_id} with {tmdb_seen[movie.tmdb_id]} "
+                f"-- null it on every row but the first for that show"
+            )
+        else:
+            tmdb_seen[movie.tmdb_id] = movie.id
+    problems.extend(sorted(tmdb_duplicates))
+
     if not seed.movies:
         problems.append("The seed file contains no titles.")
     if problems:

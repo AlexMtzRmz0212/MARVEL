@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routes import graph, health, movies, orders
+from app.api.routes import auth, graph, health, me, movies, orders
 from app.core.config import get_settings
 from app.core.graph import CycleError
 
@@ -62,7 +62,14 @@ def create_app() -> FastAPI:
             },
         )
 
-    for router in (health.router, movies.router, orders.router, graph.router):
+    for router in (
+        health.router,
+        movies.router,
+        orders.router,
+        graph.router,
+        auth.router,
+        me.router,
+    ):
         app.include_router(router, prefix=API_PREFIX)
 
     return app

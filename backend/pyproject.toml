@@ -16,6 +16,10 @@ dependencies = [
     "pydantic-settings>=2.7",
     "pyjwt[crypto]>=2.10",
     "pwdlib[argon2]>=0.2.1",
+    # Required by pydantic's EmailStr, which the registration schema uses.
+    # Pydantic imports it lazily, so without this the failure is a runtime
+    # ImportError on the first signup rather than anything at startup.
+    "email-validator>=2.2",
 ]
 
 [project.optional-dependencies]
@@ -43,6 +47,12 @@ packages = ["app"]
 testpaths = ["tests"]
 addopts = "-q"
 filterwarnings = ["error::DeprecationWarning:app.*"]
+markers = [
+    # Needs a real Postgres in TEST_DATABASE_URL; skipped otherwise so the
+    # default suite still runs on a laptop with nothing installed. The CI
+    # postgres job is what actually exercises these.
+    "postgres: requires a live Postgres database",
+]
 
 [tool.ruff]
 line-length = 100

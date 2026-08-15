@@ -1,12 +1,12 @@
-import { useMemo } from 'react'
 import { Link } from 'react-router'
 
 import { useMovies } from '../../api/catalog'
+import { useOrders } from '../../api/userOrders'
+import { useAuth } from '../../auth/AuthContext'
 import { ProgressBar } from '../../components/WatchToggle'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { SAGA_LABEL, formatTotalRuntime, phaseLabel } from '../../lib/format'
-import { listOrders } from '../../lib/orderStorage'
 import { clearAll, isWatched, progressFor } from '../../lib/watchStorage'
 
 function Row({ label, sublabel, movieIds, progress, to }) {
@@ -38,9 +38,12 @@ function Row({ label, sublabel, movieIds, progress, to }) {
 }
 
 export function ProgressPage() {
+  const { user } = useAuth()
   const progress = useWatchProgress()
   const { data: movies, isPending, error, refetch } = useMovies({ order: 'release' })
-  const orders = useMemo(() => listOrders(), [])
+  // Saved orders are a secondary panel here, so a slow load should not hold up
+  // the phase and saga breakdowns -- default to none until they arrive.
+  const { data: orders = [] } = useOrders()
 
   if (isPending) return <LoadingState label="Loading catalog" />
   if (error) return <ErrorState error={error} onRetry={refetch} />
@@ -134,7 +137,17 @@ export function ProgressPage() {
       )}
 
       <p className="meta mt-8 max-w-xl leading-relaxed">
-        Saved in this browser only. Accounts will sync it across devices.
+        {user ? (
+          <>Saved to your account and synced across your devices.</>
+        ) : (
+          <>
+            Saved in this browser only.{' '}
+            <Link to="/login" className="underline underline-offset-4 hover:text-ink-dim">
+              Sign in
+            </Link>{' '}
+            to sync it across devices.
+          </>
+        )}
       </p>
     </div>
   )
