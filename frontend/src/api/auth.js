@@ -27,6 +27,16 @@ export function logout() {
   return api('/auth/logout', { method: 'POST' })
 }
 
+/**
+ * Erase the account and everything attached to it.
+ *
+ * The password goes up again even though the session cookie already identifies
+ * the caller: this is the only irreversible action in the app.
+ */
+export function deleteAccount(password) {
+  return api('/auth/me', { method: 'DELETE', body: { password } })
+}
+
 export function importLocalData(payload) {
   return api('/me/import', { method: 'POST', body: payload })
 }

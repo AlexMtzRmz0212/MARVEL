@@ -62,7 +62,7 @@ export function TitleCard({ movie, index }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-3 pl-4">
-        <h3 className="text-sm leading-snug font-medium text-ink">{movie.title}</h3>
+        <h2 className="text-sm leading-snug font-medium text-ink">{movie.title}</h2>
         <p className="meta mt-auto flex flex-wrap items-center gap-x-2 gap-y-1">
           <span>{year(movie.release_date)}</span>
           <span aria-hidden="true">·</span>

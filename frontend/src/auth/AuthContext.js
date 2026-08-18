@@ -14,6 +14,7 @@ export const AuthContext = createContext({
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
+  deleteAccount: async () => {},
 })
 
 /** `user` is null for guests, which is a supported state everywhere in the app. */

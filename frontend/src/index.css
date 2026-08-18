@@ -23,11 +23,18 @@
 
   --color-ink: #ece9e4;
   --color-ink-dim: #94908a;
-  --color-ink-faint: #64615c;
+  /* Both of these are WCAG AA floors, not free choices. `.meta` renders at 11px
+   * and is the only styling most metadata gets, so ink-faint has to clear 4.5:1
+   * against the darkest thing it ever sits on (`raised`), not just against
+   * `base`. It measures 4.80:1 there, 5.47:1 on `base`. The previous #64615c
+   * was 3.03-3.41:1 and failed everywhere it was used. */
+  --color-ink-faint: #8a8681;
 
   --color-infinity: #e0a45e;
   --color-multiverse: #8b7ff5;
-  --color-adjacent: #5c6370;
+  /* Desaturated so the main spine stays readable, but no darker than AA allows:
+   * this is title text on cards, at 4.9:1 against `surface`. */
+  --color-adjacent: #838b99;
 
   --color-danger: #e5484d;
   --color-warn: #e0a45e;

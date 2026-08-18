@@ -10,6 +10,8 @@ import { PrereqGraphPage } from './features/prereq/PrereqGraphPage'
 import { ProgressPage } from './features/progress/ProgressPage'
 import { MovieDetailPage } from './pages/MovieDetailPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { PrivacyPage } from './pages/legal/PrivacyPage'
+import { TermsPage } from './pages/legal/TermsPage'
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +32,8 @@ export const router = createBrowserRouter([
       // Inside the shell rather than beside it: the header belongs on both, and
       // there is no route to guard — every page above works signed out, backed
       // by localStorage, exactly as it did before accounts existed.
+      { path: 'privacy', element: <PrivacyPage /> },
+      { path: 'terms', element: <TermsPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: '*', element: <NotFoundPage /> },

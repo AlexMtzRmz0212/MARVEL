@@ -11,7 +11,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { api, setUnauthorizedHandler } from '../api/client'
-import { fetchMe, login as loginRequest, logout as logoutRequest, register } from '../api/auth'
+import {
+  deleteAccount as deleteAccountRequest,
+  fetchMe,
+  login as loginRequest,
+  logout as logoutRequest,
+  register,
+} from '../api/auth'
 import { setDisplayPrefBackend } from '../lib/watchDisplayPref'
 import { resetToLocalStorage, setWatchBackend } from '../lib/watchStorage'
 import { AuthContext } from './AuthContext'
@@ -138,9 +144,29 @@ export function AuthProvider({ children }) {
     await queryClient.invalidateQueries({ queryKey: ['me'] })
   }, [queryClient])
 
+  const deleteAccount = useCallback(
+    async (password) => {
+      await deleteAccountRequest(password)
+      // Same teardown as signing out, and for the same reason: the identity
+      // effect above sees the user go null and puts the stores back on
+      // localStorage. The difference is only on the server, where there is now
+      // nothing left to sign back in to.
+      queryClient.setQueryData(['auth', 'me'], null)
+      await queryClient.invalidateQueries({ queryKey: ['me'] })
+    },
+    [queryClient],
+  )
+
   const value = useMemo(
-    () => ({ user: user ?? null, isLoading: isLoading || isSwitching, signIn, signUp, signOut }),
-    [user, isLoading, isSwitching, signIn, signUp, signOut],
+    () => ({
+      user: user ?? null,
+      isLoading: isLoading || isSwitching,
+      signIn,
+      signUp,
+      signOut,
+      deleteAccount,
+    }),
+    [user, isLoading, isSwitching, signIn, signUp, signOut, deleteAccount],
   )
 
   return (

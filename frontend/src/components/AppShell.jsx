@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { NavLink, Outlet } from 'react-router'
+import { Link, NavLink, Outlet } from 'react-router'
 
 import { clearSyncError, getSnapshot, subscribe } from '../lib/syncStatus'
 import { UserMenu } from './UserMenu'
@@ -14,9 +14,17 @@ const NAV = [
 
 function navClass({ isActive }) {
   return [
-    'meta px-3 py-1.5 transition-colors',
-    isActive ? 'text-ink' : 'text-ink-faint hover:text-ink-dim',
+    'meta px-2 py-1.5 transition-colors sm:px-3',
+    isActive ? 'text-ink' : 'text-ink-dim hover:text-ink',
   ].join(' ')
+}
+
+function NavLinks() {
+  return NAV.map((item) => (
+    <NavLink key={item.to} to={item.to} end={item.end} className={navClass}>
+      {item.label}
+    </NavLink>
+  ))
 }
 
 /**
@@ -34,7 +42,7 @@ function SyncErrorBanner() {
         <button
           type="button"
           onClick={clearSyncError}
-          className="meta shrink-0 text-ink-faint transition-colors hover:text-ink"
+          className="meta shrink-0 text-ink-dim transition-colors hover:text-ink"
         >
           Dismiss
         </button>
@@ -45,9 +53,9 @@ function SyncErrorBanner() {
 
 export function AppShell() {
   return (
-    <div className="min-h-dvh bg-base">
+    <div className="flex min-h-dvh flex-col bg-base">
       <header className="hairline sticky top-0 z-30 border-b bg-base/85 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] items-center gap-6 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3 sm:gap-6 sm:px-6">
           <NavLink to="/" className="flex items-baseline gap-2">
             <span className="font-mono text-sm font-semibold tracking-[0.2em] text-ink">
               MARVEL
@@ -55,23 +63,52 @@ export function AppShell() {
             <span className="meta hidden sm:inline">Watch Order</span>
           </NavLink>
 
-          <nav className="flex items-center gap-1">
-            {NAV.map((item) => (
-              <NavLink key={item.to} to={item.to} end={item.end} className={navClass}>
-                {item.label}
-              </NavLink>
-            ))}
+          {/* Below `sm` the nav moves to its own row underneath. The logo, the
+           * three nav items and the account control together need ~414px of
+           * min-content, so on a 320-390px phone a single row cannot fit them:
+           * the document grew wider than the viewport, which is what let the
+           * browser pinch-zoom out past the layout. Rendering one nav or the
+           * other (rather than reordering a single one with `order`) keeps the
+           * focus order matching the visual order in both layouts, and the
+           * hidden copy is `display:none`, so assistive tech only ever sees one.
+           */}
+          <nav className="hidden items-center gap-1 sm:flex">
+            <NavLinks />
           </nav>
 
           <UserMenu />
         </div>
+
+        <nav className="mx-auto -mt-1 flex max-w-[1400px] items-center gap-1 px-3 pb-2 sm:hidden">
+          <NavLinks />
+        </nav>
       </header>
 
       <SyncErrorBanner />
 
-      <main className="mx-auto max-w-[1400px] px-4 pb-24 sm:px-6">
+      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-24 sm:px-6">
         <Outlet />
       </main>
+
+      <footer className="hairline border-t">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-6 gap-y-2 px-4 py-6 sm:px-6">
+          <p className="meta">Marvel Watch Order</p>
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-2" aria-label="Legal">
+            <Link
+              to="/privacy"
+              className="meta text-ink-dim transition-colors hover:text-ink"
+            >
+              Privacy policy
+            </Link>
+            <Link to="/terms" className="meta text-ink-dim transition-colors hover:text-ink">
+              Terms of service
+            </Link>
+          </nav>
+          <p className="meta w-full text-ink-dim sm:w-auto">
+            An unofficial fan project, not affiliated with Marvel or Disney.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }

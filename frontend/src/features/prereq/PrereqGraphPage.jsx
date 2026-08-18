@@ -114,7 +114,7 @@ export function PrereqGraphPage() {
 
       {stats.total === 0 ? (
         <EmptyState>
-          Nothing comes first — this is a starting point, watchable with no context
+          Nothing comes first. This is a starting point, watchable with no context
         </EmptyState>
       ) : (
         <>
@@ -169,7 +169,7 @@ export function PrereqGraphPage() {
               </svg>
               Recommended
             </span>
-            <span className="text-ink-faint/70">
+            <span className="text-ink-dim">
               Earliest on the left · hover a title to trace it, or a line for why
             </span>
           </div>

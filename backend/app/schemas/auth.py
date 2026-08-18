@@ -40,6 +40,17 @@ class LoginRequest(_NormalisedEmail):
     password: str = Field(max_length=128)
 
 
+class DeleteAccountRequest(BaseModel):
+    """Password confirmation for account deletion.
+
+    Required even though the session cookie already proves who is asking: this
+    is the one irreversible action in the API, and a borrowed unlocked browser
+    should not be enough to trigger it.
+    """
+
+    password: str = Field(max_length=128)
+
+
 class Preferences(BaseModel):
     """The account-synced display settings.
 

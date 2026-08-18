@@ -24,7 +24,7 @@ function Toggle({ active, onClick, children, accent }) {
 function Group({ label, children }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="meta mr-1 text-ink-faint/60">{label}</span>
+      <span className="meta mr-1 text-ink-dim">{label}</span>
       {children}
     </div>
   )

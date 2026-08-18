@@ -18,7 +18,7 @@ export function TitlePicker({ movies, chosenIds, onAdd }) {
     <div className="flex h-full flex-col">
       <div className="hairline flex items-baseline justify-between border-b pb-2">
         <h2 className="meta">Add titles</h2>
-        <span className="meta text-ink-faint/60">{available.length}</span>
+        <span className="meta text-ink-dim">{available.length}</span>
       </div>
 
       <input

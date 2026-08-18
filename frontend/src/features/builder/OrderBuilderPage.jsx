@@ -140,6 +140,8 @@ function Builder({ orderId, existing, searchParams }) {
 
   return (
     <div className="py-8">
+      <h1 className="sr-only">{orderId ? `Edit order: ${name}` : 'New order'}</h1>
+
       <div className="hairline flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 flex-1">
           <label className="meta" htmlFor="order-name">

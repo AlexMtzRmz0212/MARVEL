@@ -6,9 +6,19 @@ from fastapi import APIRouter, HTTPException, Response, status
 
 from app.api.deps import CurrentUserDep, DbDep
 from app.core.config import get_settings
-from app.core.security import COOKIE_NAME, create_access_token
-from app.schemas.auth import LoginRequest, RegisterRequest, UserOut
-from app.services.accounts import EmailTakenError, authenticate, create_user
+from app.core.security import COOKIE_NAME, create_access_token, verify_password
+from app.schemas.auth import (
+    DeleteAccountRequest,
+    LoginRequest,
+    RegisterRequest,
+    UserOut,
+)
+from app.services.accounts import (
+    EmailTakenError,
+    authenticate,
+    create_user,
+    delete_user,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -79,6 +89,10 @@ def login(payload: LoginRequest, response: Response, db: DbDep) -> UserOut:
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(response: Response) -> None:
+    _clear_session_cookie(response)
+
+
+def _clear_session_cookie(response: Response) -> None:
     settings = get_settings()
     # The attributes have to mirror _set_session_cookie exactly. A deletion that
     # differs in path, samesite or secure is treated as targeting a different
@@ -90,6 +104,34 @@ def logout(response: Response) -> None:
         samesite="lax",
         path="/",
     )
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_account(
+    payload: DeleteAccountRequest,
+    response: Response,
+    user: CurrentUserDep,
+    db: DbDep,
+) -> None:
+    """Erase the account and every row belonging to it.
+
+    This is what makes the deletion clause of the privacy policy true: there is
+    no soft delete and no retention window, and `is_active = false` deliberately
+    is not used, because a deactivated row still holds the address and the
+    display name.
+
+    The session cookie is cleared in the same response, so the SPA cannot be
+    left holding a token for a user id that no longer resolves.
+    """
+    ok, _ = verify_password(payload.password, user.hashed_password)
+    if not ok:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="That password is not correct.",
+        )
+
+    delete_user(db, user)
+    _clear_session_cookie(response)
 
 
 @router.get("/me", response_model=UserOut)

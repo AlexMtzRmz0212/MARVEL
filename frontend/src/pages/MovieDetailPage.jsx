@@ -49,7 +49,7 @@ function Panel({ title, count, empty, children }) {
     <section>
       <h2 className="meta hairline flex items-baseline gap-2 border-b pb-2">
         {title}
-        <span className="text-ink-faint/60">{count}</span>
+        <span className="text-ink-dim">{count}</span>
       </h2>
       {count === 0 ? (
         <p className="py-4 text-xs text-ink-faint">{empty}</p>
@@ -157,7 +157,7 @@ export function MovieDetailPage() {
         <Panel
           title="Watch first"
           count={movie.prerequisites.length}
-          empty="Nothing. This is a starting point — you can watch it cold."
+          empty="Nothing. This is a starting point, watchable cold."
         >
           {movie.prerequisites.map((item) => (
             <LinkRow key={item.id} item={item} accent={accent} />

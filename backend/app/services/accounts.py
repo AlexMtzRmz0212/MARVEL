@@ -58,6 +58,18 @@ def create_user(db: Session, *, email: str, password: str, display_name: str | N
     return user
 
 
+def delete_user(db: Session, user: User) -> None:
+    """Erase an account and everything hanging off it.
+
+    Both relationships are `cascade="all, delete-orphan"`, and the underlying
+    foreign keys are ON DELETE CASCADE, so this removes the user row, their
+    watch progress, their custom orders and those orders' items. Nothing about
+    the account survives, which is what the privacy policy promises.
+    """
+    db.delete(user)
+    db.commit()
+
+
 def authenticate(db: Session, *, email: str, password: str) -> User | None:
     user = get_by_email(db, email)
     if user is None:

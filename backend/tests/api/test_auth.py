@@ -48,9 +48,7 @@ def test_short_passwords_are_rejected(api):
 
 
 def test_login_failures_do_not_distinguish_the_reason(api):
-    api.post(
-        "/api/auth/register", json={"email": "bruce@example.com", "password": "gamma-ray-77"}
-    )
+    api.post("/api/auth/register", json={"email": "bruce@example.com", "password": "gamma-ray-77"})
 
     wrong_password = api.post(
         "/api/auth/login", json={"email": "bruce@example.com", "password": "not-it-at-all"}
@@ -95,3 +93,51 @@ def test_token_round_trips(registered):
 def test_decoding_rubbish_yields_none():
     assert decode_access_token("") is None
     assert decode_access_token("a.b.c") is None
+
+
+def test_deleting_an_account_needs_the_right_password(api, registered):
+    response = api.request("DELETE", "/api/auth/me", json={"password": "not-the-password"})
+
+    assert response.status_code == 403
+    # Still signed in, and the account is still there.
+    assert api.get("/api/auth/me").status_code == 200
+
+
+def test_deleting_an_account_erases_it_and_everything_it_owns(api, registered, db):
+    from app.models.custom_order import CustomOrder, CustomOrderItem
+    from app.models.user import User
+    from app.models.watch_progress import WatchProgress
+
+    api.put("/api/me/watch-progress/iron-man", json={"watched": True})
+    order = api.post("/api/me/orders", json={"name": "Doomed", "movie_ids": ["iron-man"]})
+    assert order.status_code == 201, order.text
+
+    # Everything is really there before the delete, or the assertions after it
+    # would pass against an account that never had any data.
+    assert db.query(WatchProgress).count() == 1
+    assert db.query(CustomOrder).count() == 1
+    assert db.query(CustomOrderItem).count() == 1
+
+    response = api.request("DELETE", "/api/auth/me", json={"password": "web-slinger-1"})
+    assert response.status_code == 204
+
+    # No soft delete: the row is gone, not flagged inactive.
+    assert db.query(User).count() == 0
+    # ondelete="CASCADE" plus the ORM cascade took the rest with it.
+    assert db.query(WatchProgress).count() == 0
+    assert db.query(CustomOrder).count() == 0
+    assert db.query(CustomOrderItem).count() == 0
+
+    # The session cookie went out with it, and the credentials no longer work.
+    assert api.get("/api/auth/me").status_code == 401
+    assert (
+        api.post(
+            "/api/auth/login",
+            json={"email": "peter@example.com", "password": "web-slinger-1"},
+        ).status_code
+        == 401
+    )
+
+
+def test_deleting_an_account_requires_being_signed_in(api):
+    assert api.request("DELETE", "/api/auth/me", json={"password": "anything"}).status_code == 401
