@@ -16,6 +16,12 @@ import { isWatched } from '../../lib/watchStorage'
  *
  * The loop only runs while the graph is actually moving — the simulation cools
  * to a stop and the frame is cancelled — so a settled graph costs nothing.
+ *
+ * Until you touch it, the view refits itself every frame. The graph spreads out
+ * as it settles and the window can change size underneath it; refitting
+ * continuously means it always fills the space on its own and there is never
+ * anything to scroll to. The moment you pan, zoom or drag, that stops and the
+ * view is yours.
  */
 
 const MIN_ZOOM = 0.15
@@ -63,7 +69,9 @@ export function GraphCanvas({
   onOpen,
   onStep,
   onToggleWatched,
-  centreOn,
+  pinned,
+  onPinned,
+  command,
   showAllLabels,
   onZoom,
 }) {
@@ -73,8 +81,11 @@ export function GraphCanvas({
   const linkRefs = useRef(new Map())
 
   const view = useRef({ x: 0, y: 0, k: 1 })
+  const box = useRef({ width: 0, height: 0 })
   const frame = useRef(0)
   const drag = useRef(null)
+  /** Set the first time the view is moved by hand. Stops the auto-fit. */
+  const touched = useRef(false)
 
   const { nodes, links } = graph
 
@@ -101,38 +112,12 @@ export function GraphCanvas({
     viewportRef.current?.setAttribute('transform', `translate(${x} ${y}) scale(${k})`)
   }, [])
 
-  /** Run the simulation until it stops, then stand down. */
-  const run = useCallback(() => {
-    cancelAnimationFrame(frame.current)
-    const step = () => {
-      const alpha = simulation.tick()
-      paint()
-      // Keep going while a drag is live even once it has cooled, so the node
-      // under the pointer still tracks it.
-      if (alpha > 0.0021 || drag.current?.node) frame.current = requestAnimationFrame(step)
-    }
-    frame.current = requestAnimationFrame(step)
-  }, [simulation, paint])
-
-  // First paint happens before the browser does, so nothing is ever seen piled
-  // up at the origin waiting for frame one.
-  useLayoutEffect(() => {
-    paint()
-    applyView()
-  }, [paint, applyView])
-
-  useEffect(() => {
-    run()
-    return () => cancelAnimationFrame(frame.current)
-  }, [run])
-
-  // ---------------------------------------------------------- navigation --
   const centre = useCallback(
     (point, zoom) => {
-      const box = svgRef.current?.getBoundingClientRect()
-      if (!box) return
+      const { width, height } = box.current
+      if (width < 1 || height < 1) return
       const k = zoom ?? view.current.k
-      view.current = { k, x: box.width / 2 - point.x * k, y: box.height / 2 - point.y * k }
+      view.current = { k, x: width / 2 - point.x * k, y: height / 2 - point.y * k }
       applyView()
       onZoom?.(k)
     },
@@ -140,31 +125,66 @@ export function GraphCanvas({
   )
 
   const fit = useCallback(() => {
-    const box = svgRef.current?.getBoundingClientRect()
+    const { width, height } = box.current
     // A canvas with no area yet would divide its way to a zoom of nearly zero
-    // and leave the graph as a speck nobody could find their way back from.
-    if (!box || box.width < 1 || box.height < 1) return
+    // and leave the graph a speck nobody could find their way back from.
+    if (width < 1 || height < 1) return
 
     const bounds = boundsOf(nodes)
     const k = Math.min(
-      Math.max(Math.min(box.width / bounds.width, box.height / bounds.height), MIN_ZOOM),
+      Math.max(Math.min(width / bounds.width, height / bounds.height), MIN_ZOOM),
       MAX_ZOOM,
     )
     centre({ x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }, k)
   }, [nodes, centre])
 
-  // Open looking at the title you are on rather than at the whole cloud: the
-  // graph is worth meeting at reading distance, and `Fit` is one button away.
-  const opened = useRef(false)
-  useLayoutEffect(() => {
-    if (opened.current) return
-    opened.current = true
-    const node = nodes.find((candidate) => candidate.id === selectedId) ?? nodes[0]
-    if (node) centre(node, 1)
-  }, [nodes, selectedId, centre])
+  /** Run the simulation until it stops, then stand down. */
+  const run = useCallback(() => {
+    cancelAnimationFrame(frame.current)
+    const step = () => {
+      const alpha = simulation.tick()
+      paint()
+      if (!touched.current) fit()
+      // Keep going while a drag is live even once it has cooled, so the node
+      // under the pointer still tracks it.
+      if (alpha > 0.0021 || drag.current?.node) frame.current = requestAnimationFrame(step)
+    }
+    frame.current = requestAnimationFrame(step)
+  }, [simulation, paint, fit])
 
+  // ------------------------------------------------------------ measuring --
+  const measure = useCallback(() => {
+    const rect = svgRef.current?.getBoundingClientRect()
+    if (!rect) return
+    box.current = { width: rect.width, height: rect.height }
+    if (!touched.current) fit()
+  }, [fit])
+
+  // Measured directly first and only then observed: a `ResizeObserver` delivers
+  // nothing until the next frame, and in an environment that never paints one
+  // it delivers nothing at all — which would leave the graph unfitted with no
+  // way to notice.
+  useLayoutEffect(() => {
+    paint()
+    measure()
+
+    const observer = new ResizeObserver(measure)
+    if (svgRef.current) observer.observe(svgRef.current)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [paint, measure])
+
+  useEffect(() => {
+    run()
+    return () => cancelAnimationFrame(frame.current)
+  }, [run])
+
+  // ---------------------------------------------------------- navigation --
   // Focus follows the selection, but only while the graph already has it:
-  // otherwise clicking Next unwatched would steal focus out of the toolbar.
+  // otherwise clicking a toolbar button would steal focus back into the graph.
   useEffect(() => {
     const element = nodeRefs.current.get(selectedId)
     if (!element || !svgRef.current?.contains(document.activeElement)) return
@@ -172,29 +192,44 @@ export function GraphCanvas({
   }, [selectedId])
 
   useEffect(() => {
-    if (!centreOn) return
-    if (centreOn.id === 'fit') {
+    if (!command) return
+
+    if (command.kind === 'fit') {
+      touched.current = false
       fit()
       return
     }
-    const node = nodes.find((candidate) => candidate.id === centreOn.id)
+
+    // The page has already let the simulation go and emptied the pin set; all
+    // that is left here is the motion.
+    if (command.kind === 'reset') {
+      touched.current = false
+      simulation.reheat(0.8)
+      run()
+      return
+    }
+
+    const node = nodes.find((candidate) => candidate.id === command.id)
     if (!node) return
 
     // Only if it is off screen. Recentring on something already in view makes
     // every arrow key throw the whole graph sideways under the reader.
-    const box = svgRef.current?.getBoundingClientRect()
+    const { width, height } = box.current
     const { x, y, k } = view.current
     const at = { x: node.x * k + x, y: node.y * k + y }
-    const inside =
-      box && at.x > 60 && at.x < box.width - 60 && at.y > 60 && at.y < box.height - 60
-    if (!inside) centre(node, Math.max(k, 0.9))
-  }, [centreOn, nodes, centre, fit])
+    if (at.x > 60 && at.x < width - 60 && at.y > 60 && at.y < height - 60) return
+
+    touched.current = true
+    centre(node, Math.max(k, 0.9))
+  }, [command, nodes, centre, fit, run, simulation])
 
   const zoomBy = useCallback(
     (factor, at) => {
       const previous = view.current.k
       const k = Math.min(Math.max(previous * factor, MIN_ZOOM), MAX_ZOOM)
       if (k === previous) return
+
+      touched.current = true
       // Anchored on the pointer: the point under the cursor is the one that
       // stays put, which is the only zoom that feels like it is being aimed.
       view.current = {
@@ -208,11 +243,6 @@ export function GraphCanvas({
     [applyView, onZoom],
   )
 
-  function localPoint(event) {
-    const box = svgRef.current.getBoundingClientRect()
-    return { x: event.clientX - box.left, y: event.clientY - box.top }
-  }
-
   // Wired by hand rather than with `onWheel`, because React registers wheel
   // listeners as passive: `preventDefault` inside one is ignored, and the page
   // would scroll away underneath every zoom.
@@ -222,10 +252,10 @@ export function GraphCanvas({
 
     const onWheel = (event) => {
       event.preventDefault()
-      const box = svg.getBoundingClientRect()
+      const rect = svg.getBoundingClientRect()
       zoomBy(event.deltaY < 0 ? 1.12 : 1 / 1.12, {
-        x: event.clientX - box.left,
-        y: event.clientY - box.top,
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
       })
     }
 
@@ -233,10 +263,26 @@ export function GraphCanvas({
     return () => svg.removeEventListener('wheel', onWheel)
   }, [zoomBy])
 
+  function localPoint(event) {
+    const rect = svgRef.current.getBoundingClientRect()
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top }
+  }
+
   function graphPoint(event) {
     const local = localPoint(event)
     const { x, y, k } = view.current
     return { x: (local.x - x) / k, y: (local.y - y) / k }
+  }
+
+  function unpin(node) {
+    if (!pinned.has(node.id)) return
+    node.fx = null
+    node.fy = null
+    const next = new Set(pinned)
+    next.delete(node.id)
+    onPinned(next)
+    simulation.reheat(0.4)
+    run()
   }
 
   // -------------------------------------------------------------- pointer --
@@ -244,8 +290,7 @@ export function GraphCanvas({
     if (event.button !== 0) return
     capture(event.currentTarget, event.pointerId, true)
 
-    const start = localPoint(event)
-    drag.current = { node, start, moved: false, view: { ...view.current }, at: graphPoint(event) }
+    drag.current = { node, start: localPoint(event), moved: false, view: { ...view.current } }
 
     if (node) {
       node.fx = node.x
@@ -264,6 +309,7 @@ export function GraphCanvas({
       const travel = Math.hypot(local.x - state.start.x, local.y - state.start.y)
       if (travel < CLICK_SLOP) return
       state.moved = true
+      touched.current = true
     }
 
     if (state.node) {
@@ -288,17 +334,24 @@ export function GraphCanvas({
     if (!state) return
     capture(event.currentTarget, event.pointerId, false)
 
-    if (state.node) {
-      // Released rather than left pinned: the point of the constraint is that
-      // the graph re-settles into something that still obeys the edges, and a
-      // node nailed where you dropped it would never show you that.
-      state.node.fx = null
-      state.node.fy = null
-      simulation.reheat(0.3)
+    if (!state.node) return
+
+    if (state.moved) {
+      // Left where it was dropped, and everything else redistributes around it.
+      // That is the point of being able to move a title at all: you are
+      // rearranging the graph to read it, not flicking it and watching it
+      // spring back. Double-click hands it back to the simulation.
+      onPinned(new Set(pinned).add(state.node.id))
+      simulation.reheat(0.5)
       run()
+      return
     }
 
-    if (!state.moved && state.node) onSelect(state.node.id)
+    // Never moved, so it was a click rather than a drag: select it, and undo
+    // the pin that `pointerdown` put on it in the expectation of one.
+    state.node.fx = null
+    state.node.fy = null
+    onSelect(state.node.id)
   }
 
   /**
@@ -307,8 +360,22 @@ export function GraphCanvas({
    * rather than 123 identical listeners.
    */
   function onKeyDown(event) {
-    if (!selectedId || event.metaKey || event.ctrlKey || event.altKey) return
+    if (event.metaKey || event.ctrlKey || event.altKey) return
 
+    // Escape lets go of the selection, and of the focus that goes with it —
+    // leaving focus on a node nothing is selecting would put the ring and the
+    // highlight back the moment anything re-read it.
+    if (event.key === 'Escape') {
+      if (!selectedId) return
+      onSelect(null)
+      if (svgRef.current?.contains(document.activeElement)) document.activeElement.blur()
+      event.preventDefault()
+      return
+    }
+
+    if (!selectedId) return
+
+    const middle = { x: box.current.width / 2, y: box.current.height / 2 }
     switch (event.key) {
       case 'ArrowRight':
       case 'ArrowLeft':
@@ -329,10 +396,10 @@ export function GraphCanvas({
         break
       case '+':
       case '=':
-        zoomBy(1.25, { x: 0, y: 0 })
+        zoomBy(1.25, middle)
         break
       case '-':
-        zoomBy(0.8, { x: 0, y: 0 })
+        zoomBy(0.8, middle)
         break
       default:
         return
@@ -351,7 +418,10 @@ export function GraphCanvas({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
-      onDoubleClick={fit}
+      onDoubleClick={() => {
+        touched.current = false
+        fit()
+      }}
     >
       <defs>
         <marker
@@ -373,7 +443,7 @@ export function GraphCanvas({
             const lit = link.from === activeId || link.to === activeId
             // Only a hover fades the rest of the graph. The selection is
             // long-lived — dimming for it would mean arriving on a page whose
-            // graph is already 80% greyed out, which is not a graph.
+            // graph is already mostly greyed out, which is not a graph.
             const dimmed = hovering && !lit
             const essential = link.strength === 'essential'
             return (
@@ -396,7 +466,7 @@ export function GraphCanvas({
           })}
         </g>
 
-        {nodes.map((node) => {
+        {nodes.map((node, index) => {
           const watched = isWatched(progress, node.id)
           const active = node.id === activeId
           const near = related.has(node.id)
@@ -412,7 +482,9 @@ export function GraphCanvas({
               }}
               // Roving: one Tab stop for the whole graph, then the arrow keys.
               // 123 sequential tab stops would be a worse way in than none.
-              tabIndex={node.id === selectedId ? 0 : -1}
+              // With nothing selected the first title holds the stop, so
+              // Escape can never leave the graph unreachable by keyboard.
+              tabIndex={(selectedId ? node.id === selectedId : index === 0) ? 0 : -1}
               role="button"
               aria-label={watched ? `${node.title} (watched)` : node.title}
               aria-current={node.id === selectedId ? 'true' : undefined}
@@ -436,12 +508,21 @@ export function GraphCanvas({
               onFocus={() => onSelect(node.id)}
               onDoubleClick={(event) => {
                 event.stopPropagation()
-                onOpen(node.id)
+                unpin(node)
               }}
             >
               {/* A generous invisible disc, so a 5px dot is still something a
                   pointer can reasonably be expected to hit. */}
               <circle r={radius + 8} fill="transparent" />
+              {pinned.has(node.id) && (
+                <circle
+                  r={radius + 4}
+                  fill="none"
+                  stroke="var(--color-ink-dim)"
+                  strokeWidth="1"
+                  strokeDasharray="2 2"
+                />
+              )}
               {(active || node.id === selectedId) && (
                 <circle
                   r={radius + 5}

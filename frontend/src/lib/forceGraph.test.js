@@ -89,10 +89,10 @@ describe('seedPositions', () => {
     )
   })
 
-  it('starts each title at the height of its own depth', () => {
+  it('starts each title at the distance of its own depth', () => {
     const graph = buildGraph(catalog(4), [edge(0, 1), edge(1, 2)])
     seedPositions(graph)
-    for (const node of graph.nodes) expect(node.y).toBe(node.depth * DEFAULTS.levelGap)
+    for (const node of graph.nodes) expect(node.x).toBe(node.depth * DEFAULTS.levelGap)
   })
 })
 
@@ -111,11 +111,24 @@ describe('createSimulation', () => {
     edge(8, 12),
   ]
 
-  it('leaves every edge pointing downward once it settles', () => {
-    const graph = settled(catalog(16), links)
-    for (const link of graph.links) {
-      expect(graph.nodes[link.target].y).toBeGreaterThan(graph.nodes[link.source].y)
+  it('leaves every edge pointing forward once it settles, whichever way it runs', () => {
+    for (const depthAxis of ['x', 'y']) {
+      const graph = settled(catalog(16), links, { depthAxis })
+      for (const link of graph.links) {
+        expect(graph.nodes[link.target][depthAxis]).toBeGreaterThan(
+          graph.nodes[link.source][depthAxis],
+        )
+      }
     }
+  })
+
+  it('turns the same graph on its side without reshaping it', () => {
+    const across = settled(catalog(30), links, { depthAxis: 'x' })
+    const down = settled(catalog(30), links, { depthAxis: 'y' })
+    const box = (graph) => boundsOf(graph.nodes, 0)
+
+    expect(Math.round(box(across).width)).toBe(Math.round(box(down).height))
+    expect(Math.round(box(across).height)).toBe(Math.round(box(down).width))
   })
 
   it('separates every pair of titles', () => {
@@ -135,7 +148,7 @@ describe('createSimulation', () => {
     const graph = settled(catalog(16), links)
     const room = DEFAULTS.levelGap * DEFAULTS.depthBand + 0.001
     for (const node of graph.nodes) {
-      expect(Math.abs(node.y - node.depth * DEFAULTS.levelGap)).toBeLessThanOrEqual(room)
+      expect(Math.abs(node.x - node.depth * DEFAULTS.levelGap)).toBeLessThanOrEqual(room)
     }
   })
 
@@ -153,17 +166,38 @@ describe('createSimulation', () => {
     simulation.settle(600)
 
     const node = graph.nodes[9]
-    node.fx = 400
-    node.fy = node.depth * DEFAULTS.levelGap
+    node.fx = node.depth * DEFAULTS.levelGap
+    node.fy = 400
     simulation.reheat()
     simulation.settle(60)
-    expect(node.x).toBe(400)
+    expect(node.y).toBe(400)
 
-    node.fx = null
-    node.fy = null
+    simulation.release()
     simulation.reheat()
     simulation.settle(600)
-    expect(node.x).not.toBe(400)
+    expect(node.fx).toBeNull()
+    expect(node.y).not.toBe(400)
+  })
+
+  it('leaves a pinned title alone while everything else redistributes', () => {
+    const graph = buildGraph(catalog(16), links)
+    seedPositions(graph)
+    const simulation = createSimulation(graph)
+    simulation.settle(600)
+
+    const pinned = graph.nodes[9]
+    pinned.fx = pinned.x
+    pinned.fy = pinned.y + 260
+    const others = graph.nodes.filter((node) => node !== pinned).map((node) => node.y)
+
+    simulation.reheat()
+    simulation.settle(400)
+
+    expect(pinned.y).toBe(pinned.fy)
+    const moved = graph.nodes
+      .filter((node) => node !== pinned)
+      .filter((node, index) => Math.abs(node.y - others[index]) > 1)
+    expect(moved.length).toBeGreaterThan(0)
   })
 
   it('will not let a drag carry a title out of its band', () => {
@@ -172,13 +206,13 @@ describe('createSimulation', () => {
     const simulation = createSimulation(graph)
 
     const node = graph.nodes.find((candidate) => candidate.depth === 1)
-    node.fx = 0
-    node.fy = -5000
+    node.fx = -5000
+    node.fy = 0
     simulation.reheat()
     simulation.settle(10)
 
     const room = DEFAULTS.levelGap * DEFAULTS.depthBand + 0.001
-    expect(Math.abs(node.y - node.depth * DEFAULTS.levelGap)).toBeLessThanOrEqual(room)
+    expect(Math.abs(node.x - node.depth * DEFAULTS.levelGap)).toBeLessThanOrEqual(room)
   })
 })
 

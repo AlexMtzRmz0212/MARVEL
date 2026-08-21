@@ -71,7 +71,7 @@ function Node({ node, nodeWidth, nodeHeight, state, onEnter, onLeave }) {
           className={[
             'line-clamp-2 text-xs leading-snug',
             node.is_target ? 'font-semibold text-ink' : 'text-ink',
-            node.watched ? 'pr-4 text-ink-dim line-through decoration-ok/70' : '',
+            node.watched ? 'pr-4 text-ink-dim' : '',
           ].join(' ')}
         >
           {node.title}
@@ -300,7 +300,7 @@ export function PrereqChainList({ watchOrder, nodes }) {
               <span
                 className={[
                   'min-w-0 flex-1 truncate text-sm',
-                  node.watched ? 'text-ink-faint line-through decoration-ok/70' : 'text-ink',
+                  node.watched ? 'text-ink-faint' : 'text-ink',
                 ].join(' ')}
               >
                 {node.title}

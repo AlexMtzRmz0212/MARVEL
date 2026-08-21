@@ -5,11 +5,16 @@
  * pretty cloud that says nothing about watch order — the one thing this catalog
  * is *for*. A fixed layered drawing says it perfectly and cannot be touched.
  *
- * So: forces on x, a constraint on y. Every title is pulled towards the height
- * of its own dependency depth, hard enough that prerequisites always sit above
- * the things that need them, while repulsion and the link springs are free to
- * arrange each band horizontally. Drag a title and it moves; let go and it
- * settles back into a position that still obeys the edges.
+ * So: forces along one axis, a constraint on the other. Every title is pulled
+ * towards its own dependency depth, hard enough that prerequisites always sit
+ * ahead of the things that need them, while repulsion and the link springs are
+ * free to arrange each band across. Drag a title and it moves, and everything
+ * else redistributes around wherever it is put.
+ *
+ * Which axis carries the depth is a setting, because the answer depends on the
+ * catalog rather than on taste: a run with many depths and few titles at each
+ * is long and thin, and it should be laid along the longer side of the screen.
+ * `depthAxis: 'x'` reads left to right, `'y'` reads top to bottom.
  *
  * Everything here is pure and frame-independent — `tick()` advances the
  * simulation by one step and mutates the node array in place — so the whole
@@ -21,7 +26,9 @@
  */
 
 export const DEFAULTS = {
-  /** Vertical distance between two dependency depths. */
+  /** Which way the dependencies run: 'x' reads left to right, 'y' downward. */
+  depthAxis: 'x',
+  /** Distance between two consecutive dependency depths. */
   levelGap: 96,
   /** Coulomb constant for the all-pairs repulsion. */
   repulsion: 5000,
@@ -32,7 +39,7 @@ export const DEFAULTS = {
   depthStrength: 0.34,
   /** ...and how far it is allowed to stray from it regardless, as a fraction
    *  of `levelGap`. Under a half, consecutive bands cannot overlap, so every
-   *  edge is guaranteed to point downward however hard the graph is dragged
+   *  edge is guaranteed to point forward however hard the graph is dragged
    *  about. This is the constraint the whole layout rests on. */
   depthBand: 0.36,
   /** A weak pull towards the middle, so nothing drifts off to infinity. */
@@ -150,8 +157,9 @@ export function buildGraph(movies, edges) {
  * answer is most of what makes it settle quickly.
  */
 export function seedPositions(graph, options = {}) {
-  const { levelGap, collideRadius } = { ...DEFAULTS, ...options }
+  const { levelGap, collideRadius, depthAxis } = { ...DEFAULTS, ...options }
   const { nodes, preds, succs } = graph
+  const [along, across] = depthAxis === 'y' ? ['y', 'x'] : ['x', 'y']
 
   const bands = []
   for (const node of nodes) {
@@ -162,8 +170,8 @@ export function seedPositions(graph, options = {}) {
   const spacing = collideRadius * 3
   const place = (band) =>
     band.forEach((node, index) => {
-      node.x = (index - (band.length - 1) / 2) * spacing
-      node.y = node.depth * levelGap
+      node[across] = (index - (band.length - 1) / 2) * spacing
+      node[along] = node.depth * levelGap
       node.vx = 0
       node.vy = 0
     })
@@ -176,18 +184,18 @@ export function seedPositions(graph, options = {}) {
   // alternating direction gets most of what a dozen would.
   const by = new Map(nodes.map((node) => [node.id, node]))
   const barycentre = (node, side) => {
-    const neighbours = side.get(node.id).map((id) => by.get(id).x)
-    if (neighbours.length === 0) return node.x
+    const neighbours = side.get(node.id).map((id) => by.get(id)[across])
+    if (neighbours.length === 0) return node[across]
     return neighbours.reduce((sum, value) => sum + value, 0) / neighbours.length
   }
 
   for (let sweep = 0; sweep < 4; sweep += 1) {
-    const downward = sweep % 2 === 0
-    const order = downward ? [...bands.keys()] : [...bands.keys()].reverse()
+    const forwards = sweep % 2 === 0
+    const order = forwards ? [...bands.keys()] : [...bands.keys()].reverse()
     for (const depth of order) {
       const band = bands[depth]
       if (!band || band.length < 2) continue
-      const key = new Map(band.map((node) => [node.id, barycentre(node, downward ? preds : succs)]))
+      const key = new Map(band.map((node) => [node.id, barycentre(node, forwards ? preds : succs)]))
       band.sort((a, b) => key.get(a.id) - key.get(b.id))
       place(band)
     }
@@ -196,7 +204,7 @@ export function seedPositions(graph, options = {}) {
   // A hair of asymmetry, so two titles in identical situations do not sit
   // exactly on top of each other with no force able to separate them.
   nodes.forEach((node, index) => {
-    node.x += ((index % 7) - 3) * 0.5
+    node[across] += ((index % 7) - 3) * 0.5
   })
 
   return nodes
@@ -213,8 +221,12 @@ export function createSimulation(graph, options = {}) {
   const config = { ...DEFAULTS, ...options }
   const { nodes, links } = graph
 
+  // `along` carries the dependency depth and is constrained; `across` is free.
+  const [along, across] = config.depthAxis === 'y' ? ['y', 'x'] : ['x', 'y']
+  const vAlong = along === 'y' ? 'vy' : 'vx'
+  const vAcross = across === 'y' ? 'vy' : 'vx'
+
   let alpha = 1
-  const centre = 0
 
   function tick() {
     if (alpha <= config.alphaMin) return alpha
@@ -263,20 +275,24 @@ export function createSimulation(graph, options = {}) {
     // ------------------------------------------------- depth and centring --
     for (const node of nodes) {
       const wanted = node.depth * config.levelGap
-      node.vy += (wanted - node.y) * config.depthStrength * alpha
-      node.vx += (centre - node.x) * config.centreStrength * alpha
+      node[vAlong] += (wanted - node[along]) * config.depthStrength * alpha
+      node[vAcross] += -node[across] * config.centreStrength * alpha
     }
 
     // ------------------------------------------------------- integration --
     const band = config.levelGap * config.depthBand
     for (const node of nodes) {
       if (node.fx !== null) {
-        node.x = node.fx
+        node[across] = across === 'x' ? node.fx : node.fy
         // Even a dragged title stays inside its band. Letting the pointer carry
-        // one across another depth is the one move that would leave an edge
-        // pointing back up the diagram, and the promise that reading downward
-        // is a valid watch order is worth more than unrestricted dragging.
-        node.y = clamp(node.fy, node.depth * config.levelGap, band)
+        // one past another depth is the one move that would leave an edge
+        // pointing backwards, and the promise that reading along the graph is a
+        // valid watch order is worth more than unrestricted dragging.
+        node[along] = clamp(
+          along === 'x' ? node.fx : node.fy,
+          node.depth * config.levelGap,
+          band,
+        )
         node.vx = 0
         node.vy = 0
         continue
@@ -288,8 +304,8 @@ export function createSimulation(graph, options = {}) {
         node.vy = (node.vy / speed) * config.maxSpeed
       }
 
-      node.x += node.vx
-      node.y = clamp(node.y + node.vy, node.depth * config.levelGap, band)
+      node[across] += node[vAcross]
+      node[along] = clamp(node[along] + node[vAlong], node.depth * config.levelGap, band)
       node.vx *= config.friction
       node.vy *= config.friction
     }
@@ -299,9 +315,9 @@ export function createSimulation(graph, options = {}) {
     // soft enough to look organic will still let two nodes overlap — and
     // overlapping labels are most of what makes a graph look like a mess.
     //
-    // Twice, because the band clamp undoes the vertical half of any separation
-    // it is given: the second pass finds what is left still overlapping and,
-    // with the vertical route now closed, resolves it sideways.
+    // Twice, because the band clamp undoes the constrained half of any
+    // separation it is given: the second pass finds what is left overlapping
+    // and, with that route now closed, resolves it across instead.
     for (let pass = 0; pass < 2; pass += 1) {
       for (let i = 0; i < nodes.length; i += 1) {
         const a = nodes[i]
@@ -316,14 +332,13 @@ export function createSimulation(graph, options = {}) {
           const shift = (overlap / distance) * 0.5
           const mx = dx * shift
           const my = dy * shift
-          if (a.fx === null) {
-            a.x -= mx
-            a.y = clamp(a.y - my, a.depth * config.levelGap, band)
+          const move = (node, sx, sy) => {
+            node.x += sx
+            node.y += sy
+            node[along] = clamp(node[along], node.depth * config.levelGap, band)
           }
-          if (b.fx === null) {
-            b.x += mx
-            b.y = clamp(b.y + my, b.depth * config.levelGap, band)
-          }
+          if (a.fx === null) move(a, -mx, -my)
+          if (b.fx === null) move(b, mx, my)
         }
       }
     }
@@ -341,6 +356,13 @@ export function createSimulation(graph, options = {}) {
     /** Warm it back up — after a drag, or a change of what is being drawn. */
     reheat(to = 0.5) {
       alpha = Math.max(alpha, to)
+    },
+    /** Let go of every title that has been dragged into place. */
+    release() {
+      for (const node of nodes) {
+        node.fx = null
+        node.fy = null
+      }
     },
     settle(ticks = 400) {
       for (let step = 0; step < ticks && alpha > config.alphaMin; step += 1) tick()

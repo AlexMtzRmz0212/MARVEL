@@ -73,12 +73,21 @@ overflows on both axes at once.
 
 Nor is it a plain force layout, which would make a pretty cloud that says
 nothing about watch order. `frontend/src/lib/forceGraph.js` splits the
-difference: **forces on the horizontal, a hard constraint on the vertical.**
-Every title is held within a fraction of a level of its own dependency depth —
-under half, so consecutive bands cannot overlap — while repulsion and the link
-springs arrange each band freely. Drag a title and it moves; let go and it
-settles back somewhere that still obeys the edges. It cannot be dragged out of
-its band, so no edge ever points back up the graph.
+difference: **forces along one axis, a hard constraint on the other.** Every
+title is held within a fraction of a level of its own dependency depth — under
+half, so consecutive bands cannot overlap — while repulsion and the link
+springs arrange each band freely. It cannot be dragged out of its band, so no
+edge ever points backwards however hard the graph is pushed about.
+
+Which axis carries the depth is a setting rather than a taste, because the
+answer comes from the catalog: with sixteen depths and a hundred and twenty
+titles the graph is long and thin, so it is laid along the longer side of the
+screen. `depthAxis: 'x'` reads left to right, `'y'` top to bottom.
+
+Dropping a title leaves it where it was dropped and lets everything else
+redistribute around it — the point of moving one is to rearrange the graph for
+reading, not to flick it and watch it spring back. Double-click hands one back
+to the simulation; **Reset** hands back all of them.
 
 The module is pure and frame-independent, so the whole simulation runs headless
 in a test and gets measured. That is how its constants were chosen: over the
@@ -86,13 +95,15 @@ real catalog it settles in 386 ticks with all 139 edges pointing downward, no
 overlapping nodes and 144 edge crossings. `forceGraph.test.js` asserts the
 first two forever.
 
-Two other things do most of the work of keeping it readable. Positions are
+Three other things do most of the work of keeping it readable. Positions are
 seeded by a median sweep over each band before the forces ever run — a force
 layout barely reorders a band, so it inherits however many crossings it starts
-with, and seeding cut them by a quarter. And the canvas renders through React
+with, and seeding cut them by a quarter. The canvas renders through React
 exactly once: the simulation writes `transform` and the line endpoints straight
 to the DOM inside a `requestAnimationFrame` loop that stops as soon as the
-graph stops moving.
+graph stops moving. And until you touch it, the view refits itself every frame,
+so the graph fills whatever space the window gives it and there is never
+anything to scroll to.
 
 ### Two validators, one fixture
 
