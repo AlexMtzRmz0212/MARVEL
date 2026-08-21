@@ -8,6 +8,7 @@ import { OrderBuilderPage } from './features/builder/OrderBuilderPage'
 import { OrdersPage } from './features/builder/OrdersPage'
 import { PrereqGraphPage } from './features/prereq/PrereqGraphPage'
 import { ProgressPage } from './features/progress/ProgressPage'
+import { TimelinePage } from './features/timeline/TimelinePage'
 import { MovieDetailPage } from './pages/MovieDetailPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PrivacyPage } from './pages/legal/PrivacyPage'
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { path: 'orders', element: <OrdersPage /> },
       { path: 'orders/new', element: <OrderBuilderPage /> },
       { path: 'orders/:orderId', element: <OrderBuilderPage /> },
+      { path: 'timeline', element: <TimelinePage /> },
       { path: 'progress', element: <ProgressPage /> },
       // Inside the shell rather than beside it: the header belongs on both, and
       // there is no route to guard — every page above works signed out, backed

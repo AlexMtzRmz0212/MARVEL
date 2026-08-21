@@ -8,13 +8,14 @@ const NAV = [
   // `end` because "/" prefix-matches every route, which would otherwise leave
   // Catalog highlighted on every page.
   { to: '/', label: 'Catalog', end: true },
+  { to: '/timeline', label: 'Timeline' },
   { to: '/orders', label: 'My orders' },
   { to: '/progress', label: 'Progress' },
 ]
 
 function navClass({ isActive }) {
   return [
-    'meta px-2 py-1.5 transition-colors sm:px-3',
+    'meta px-1.5 py-1.5 transition-colors sm:px-3',
     isActive ? 'text-ink' : 'text-ink-dim hover:text-ink',
   ].join(' ')
 }
@@ -64,13 +65,18 @@ export function AppShell() {
           </NavLink>
 
           {/* Below `sm` the nav moves to its own row underneath. The logo, the
-           * three nav items and the account control together need ~414px of
-           * min-content, so on a 320-390px phone a single row cannot fit them:
-           * the document grew wider than the viewport, which is what let the
-           * browser pinch-zoom out past the layout. Rendering one nav or the
-           * other (rather than reordering a single one with `order`) keeps the
-           * focus order matching the visual order in both layouts, and the
+           * four nav items and the account control together need well over
+           * 414px of min-content, so on a 320-390px phone a single row cannot
+           * fit them: the document grew wider than the viewport, which is what
+           * let the browser pinch-zoom out past the layout. Rendering one nav or
+           * the other (rather than reordering a single one with `order`) keeps
+           * the focus order matching the visual order in both layouts, and the
            * hidden copy is `display:none`, so assistive tech only ever sees one.
+           *
+           * The second row is tight too: four labels at the desktop padding
+           * measure ~333px, so below `sm` the items and the row itself both
+           * lose a step of horizontal padding. That keeps the row inside 320px
+           * rather than scrolling or clipping the last tab.
            */}
           <nav className="hidden items-center gap-1 sm:flex">
             <NavLinks />
@@ -79,7 +85,7 @@ export function AppShell() {
           <UserMenu />
         </div>
 
-        <nav className="mx-auto -mt-1 flex max-w-[1400px] items-center gap-1 px-3 pb-2 sm:hidden">
+        <nav className="mx-auto -mt-1 flex max-w-[1400px] items-center px-2 pb-2 sm:hidden">
           <NavLinks />
         </nav>
       </header>

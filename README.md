@@ -63,6 +63,37 @@ edges visually skip backwards over intervening columns. Because the server sends
 it, the graph visualization is ~120 lines of SVG arithmetic with no graph
 library.
 
+### The whole-catalog graph: forces on one axis, a constraint on the other
+
+`/timeline` gives the page over to every title at once, as a graph you can push
+around. It does **not** reuse `dagLayout.js`: that engine gives every long edge
+its own reserved lane, which is right for forty nodes and catastrophic for a
+hundred and twenty — the cross axis swells past 3000px and the drawing
+overflows on both axes at once.
+
+Nor is it a plain force layout, which would make a pretty cloud that says
+nothing about watch order. `frontend/src/lib/forceGraph.js` splits the
+difference: **forces on the horizontal, a hard constraint on the vertical.**
+Every title is held within a fraction of a level of its own dependency depth —
+under half, so consecutive bands cannot overlap — while repulsion and the link
+springs arrange each band freely. Drag a title and it moves; let go and it
+settles back somewhere that still obeys the edges. It cannot be dragged out of
+its band, so no edge ever points back up the graph.
+
+The module is pure and frame-independent, so the whole simulation runs headless
+in a test and gets measured. That is how its constants were chosen: over the
+real catalog it settles in 386 ticks with all 139 edges pointing downward, no
+overlapping nodes and 144 edge crossings. `forceGraph.test.js` asserts the
+first two forever.
+
+Two other things do most of the work of keeping it readable. Positions are
+seeded by a median sweep over each band before the forces ever run — a force
+layout barely reorders a band, so it inherits however many crossings it starts
+with, and seeding cut them by a quarter. And the canvas renders through React
+exactly once: the simulation writes `transform` and the line endpoints straight
+to the DOM inside a `requestAnimationFrame` loop that stops as soon as the
+graph stops moving.
+
 ### Two validators, one fixture
 
 The order builder validates while you drag, which means a copy of the validator
@@ -80,8 +111,8 @@ backend/          FastAPI + the graph engine
   app/api/        routes
   tests/          97 tests, no infrastructure required
 frontend/         React + Vite + Tailwind v4
-  src/lib/        dagLayout.js, validateOrder.js
-  src/features/   catalog, prereq graph, order builder
+  src/lib/        dagLayout.js, forceGraph.js, validateOrder.js
+  src/features/   catalog, timeline, prereq graph, order builder
 fixtures/         shared across both test suites
 server.py         production entrypoint: API + built SPA in one process
 ```
@@ -155,5 +186,6 @@ the deploy that ships it.**
 ## Status
 
 Working: catalog with release/chronological/filtered views, title detail, the
-prerequisite graph, the custom order builder with live validation, and accounts
-syncing saved orders, watch progress and display preferences across devices.
+prerequisite graph, the whole-catalog force graph, the custom order builder
+with live validation, and accounts syncing saved orders, watch progress and
+display preferences across devices.
