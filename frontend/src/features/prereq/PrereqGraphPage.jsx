@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 
 import { usePrerequisites } from '../../api/catalog'
-import { ProgressBar } from '../../components/WatchToggle'
+import { CheckIcon, ProgressBar } from '../../components/WatchToggle'
 import { EmptyState, ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { accentFor, formatTotalRuntime } from '../../lib/format'
@@ -168,6 +168,10 @@ export function PrereqGraphPage() {
                 />
               </svg>
               Recommended
+            </span>
+            <span className="flex items-center gap-2">
+              <CheckIcon className="size-3.5 text-ok" />
+              Watched
             </span>
             <span className="text-ink-dim">
               Earliest on the left · hover a title to trace it, or a line for why

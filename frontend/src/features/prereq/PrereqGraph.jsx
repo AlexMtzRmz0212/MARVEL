@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 
+import { CheckIcon } from '../../components/WatchToggle'
 import { layoutDag } from '../../lib/dagLayout'
 import { accentFor, formatRuntime, phaseLabel, year } from '../../lib/format'
 
@@ -36,6 +37,7 @@ function Node({ node, nodeWidth, nodeHeight, state, onEnter, onLeave }) {
     >
       <Link
         to={`/movies/${node.id}`}
+        aria-label={node.watched ? `${node.title} (watched)` : undefined}
         onMouseEnter={onEnter}
         onMouseLeave={onLeave}
         onFocus={onEnter}
@@ -57,11 +59,19 @@ function Node({ node, nodeWidth, nodeHeight, state, onEnter, onLeave }) {
             backgroundColor: node.watched ? 'var(--color-ok)' : accent,
           }}
         />
+        {node.watched && (
+          <span
+            aria-hidden="true"
+            className="absolute top-1 right-1 grid size-4 place-items-center border border-ok/60 bg-ok/20 text-ok"
+          >
+            <CheckIcon className="size-2.5" />
+          </span>
+        )}
         <p
           className={[
             'line-clamp-2 text-xs leading-snug',
             node.is_target ? 'font-semibold text-ink' : 'text-ink',
-            node.watched ? 'text-ink-dim line-through decoration-ink-faint' : '',
+            node.watched ? 'pr-4 text-ink-dim line-through decoration-ok/70' : '',
           ].join(' ')}
         >
           {node.title}
@@ -269,6 +279,7 @@ export function PrereqChainList({ watchOrder, nodes }) {
           <li key={id}>
             <Link
               to={`/movies/${id}`}
+              aria-label={node.watched ? `${node.title} (watched)` : undefined}
               className="hairline flex items-center gap-3 border-b px-3 py-2.5 transition-colors last:border-b-0 hover:bg-surface"
             >
               <span className="meta w-6 shrink-0 tabular-nums">{index + 1}</span>
@@ -285,10 +296,11 @@ export function PrereqChainList({ watchOrder, nodes }) {
                     node.strength === 'essential' || node.watched ? 'none' : `1px solid ${accent}`,
                 }}
               />
+              {node.watched && <CheckIcon className="size-3.5 shrink-0 text-ok" />}
               <span
                 className={[
                   'min-w-0 flex-1 truncate text-sm',
-                  node.watched ? 'text-ink-faint line-through' : 'text-ink',
+                  node.watched ? 'text-ink-faint line-through decoration-ok/70' : 'text-ink',
                 ].join(' ')}
               >
                 {node.title}
