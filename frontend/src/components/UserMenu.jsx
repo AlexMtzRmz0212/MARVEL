@@ -36,7 +36,7 @@ export function UserMenu() {
     return (
       <NavLink
         to="/login"
-        className="meta ml-auto border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
+        className="meta border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
       >
         Sign in
       </NavLink>
@@ -45,7 +45,7 @@ export function UserMenu() {
 
   return (
     <>
-      <div ref={containerRef} className="relative ml-auto">
+      <div ref={containerRef} className="relative">
         <button
           type="button"
           onClick={() => setIsOpen((open) => !open)}

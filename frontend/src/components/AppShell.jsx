@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 
 import { clearSyncError, getSnapshot, subscribe } from '../lib/syncStatus'
+import { GlobalSearch } from './GlobalSearch'
 import { UserMenu } from './UserMenu'
 
 const NAV = [
@@ -82,7 +83,10 @@ export function AppShell() {
             <NavLinks />
           </nav>
 
-          <UserMenu />
+          <div className="ml-auto flex items-center gap-2">
+            <GlobalSearch />
+            <UserMenu />
+          </div>
         </div>
 
         <nav className="mx-auto -mt-1 flex max-w-[1400px] items-center px-2 pb-2 sm:hidden">
@@ -97,20 +101,26 @@ export function AppShell() {
       </main>
 
       <footer className="hairline border-t">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-6 gap-y-2 px-4 py-6 sm:px-6">
-          <p className="meta">Marvel Watch Order</p>
-          <nav className="flex flex-wrap items-center gap-x-4 gap-y-2" aria-label="Legal">
+        {/* A notch under `.meta` and faded further still: this is the one
+         * piece of chrome on every page that nobody is here to read, so it
+         * should sit at the very back rather than compete with the page. */}
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-4 text-[0.625rem] opacity-60 sm:px-6">
+          <p className="meta text-[0.625rem]">Marvel Watch Order</p>
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5" aria-label="Legal">
             <Link
               to="/privacy"
-              className="meta text-ink-dim transition-colors hover:text-ink"
+              className="meta text-[0.625rem] text-ink-faint transition-colors hover:text-ink-dim"
             >
               Privacy policy
             </Link>
-            <Link to="/terms" className="meta text-ink-dim transition-colors hover:text-ink">
+            <Link
+              to="/terms"
+              className="meta text-[0.625rem] text-ink-faint transition-colors hover:text-ink-dim"
+            >
               Terms of service
             </Link>
           </nav>
-          <p className="meta w-full text-ink-dim sm:w-auto">
+          <p className="meta w-full text-[0.625rem] text-ink-faint sm:w-auto">
             An unofficial fan project, not affiliated with Marvel or Disney.
           </p>
         </div>

@@ -60,7 +60,7 @@ export function GraphCanvas({
   graph,
   simulation,
   progress,
-  activeId,
+  activeIds,
   selectedId,
   hovering,
   related,
@@ -86,6 +86,14 @@ export function GraphCanvas({
   const drag = useRef(null)
   /** Set the first time the view is moved by hand. Stops the auto-fit. */
   const touched = useRef(false)
+
+  // Every pointer currently down, keyed by id — the only way to notice a
+  // second finger has landed, since each one is a separate pointerdown rather
+  // than something a single `drag` gesture already tracks.
+  const pointers = useRef(new Map())
+  /** Set while two fingers are down: a pinch, anchored to the graph point
+   *  under their midpoint so it stays under the fingers as they move. */
+  const pinch = useRef(null)
 
   const { nodes, links } = graph
 
@@ -285,10 +293,36 @@ export function GraphCanvas({
     run()
   }
 
+  /** Start (or restart) a pinch from whichever two pointers are down. */
+  function startPinch() {
+    const [a, b] = pointers.current.values()
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+    const distance = Math.hypot(a.x - b.x, a.y - b.y) || 1
+    const { x, y, k } = view.current
+    // The graph point under the midpoint, fixed for the life of the pinch —
+    // holding it in place under the moving midpoint gives zoom and two-finger
+    // pan in one gesture, the same way `zoomBy` anchors a wheel zoom.
+    pinch.current = { distance, k, anchor: { x: (mid.x - x) / k, y: (mid.y - y) / k } }
+  }
+
   // -------------------------------------------------------------- pointer --
   function onPointerDown(event, node = null) {
     if (event.button !== 0) return
     capture(event.currentTarget, event.pointerId, true)
+    pointers.current.set(event.pointerId, localPoint(event))
+
+    if (pointers.current.size >= 2) {
+      // A second finger just landed. Whatever single-pointer gesture the
+      // first one started — a pan, or a node picked up expecting a drag —
+      // gives way to the pinch.
+      if (drag.current?.node) {
+        drag.current.node.fx = null
+        drag.current.node.fy = null
+      }
+      drag.current = null
+      startPinch()
+      return
+    }
 
     drag.current = { node, start: localPoint(event), moved: false, view: { ...view.current } }
 
@@ -301,6 +335,29 @@ export function GraphCanvas({
   }
 
   function onPointerMove(event) {
+    if (pointers.current.has(event.pointerId)) {
+      pointers.current.set(event.pointerId, localPoint(event))
+    }
+
+    if (pinch.current && pointers.current.size >= 2) {
+      const [a, b] = pointers.current.values()
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+      const distance = Math.hypot(a.x - b.x, a.y - b.y) || 1
+      const k = Math.min(
+        Math.max(pinch.current.k * (distance / pinch.current.distance), MIN_ZOOM),
+        MAX_ZOOM,
+      )
+      touched.current = true
+      view.current = {
+        k,
+        x: mid.x - pinch.current.anchor.x * k,
+        y: mid.y - pinch.current.anchor.y * k,
+      }
+      applyView()
+      onZoom?.(k)
+      return
+    }
+
     const state = drag.current
     if (!state) return
 
@@ -329,12 +386,22 @@ export function GraphCanvas({
   }
 
   function onPointerUp(event) {
+    pointers.current.delete(event.pointerId)
+    // Either finger lifting ends the pinch outright, rather than trying to
+    // hand off to a one-finger pan mid-gesture.
+    if (pointers.current.size < 2) pinch.current = null
+
     const state = drag.current
     drag.current = null
     if (!state) return
     capture(event.currentTarget, event.pointerId, false)
 
-    if (!state.node) return
+    if (!state.node) {
+      // Never moved, so it was a click on empty space rather than a pan:
+      // the same "let go" a click on nothing gives everywhere else.
+      if (!state.moved) onSelect(null)
+      return
+    }
 
     if (state.moved) {
       // Left where it was dropped, and everything else redistributes around it.
@@ -440,7 +507,7 @@ export function GraphCanvas({
       <g ref={viewportRef}>
         <g fill="none">
           {links.map((link) => {
-            const lit = link.from === activeId || link.to === activeId
+            const lit = activeIds.has(link.from) || activeIds.has(link.to)
             // Only a hover fades the rest of the graph. The selection is
             // long-lived — dimming for it would mean arriving on a page whose
             // graph is already mostly greyed out, which is not a graph.
@@ -468,7 +535,7 @@ export function GraphCanvas({
 
         {nodes.map((node, index) => {
           const watched = isWatched(progress, node.id)
-          const active = node.id === activeId
+          const active = activeIds.has(node.id)
           const near = related.has(node.id)
           const dimmed = hovering && !active && !near
           const radius = radiusOf(node)
@@ -523,7 +590,7 @@ export function GraphCanvas({
                   strokeDasharray="2 2"
                 />
               )}
-              {(active || node.id === selectedId) && (
+              {active && (
                 <circle
                   r={radius + 5}
                   fill="none"

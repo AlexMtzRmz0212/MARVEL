@@ -40,17 +40,40 @@ const KEY = [
   { label: 'Watched', colour: 'var(--color-ok)' },
 ]
 
-function Control({ children, onClick, title }) {
+function Control({ children, onClick, title, active }) {
   return (
     <button
       type="button"
       onClick={onClick}
       title={title}
-      className="meta border border-hairline-strong bg-base/80 px-2 py-0.5 text-[0.625rem] text-ink-dim backdrop-blur transition-colors hover:text-ink"
+      aria-pressed={active}
+      className={[
+        'meta border bg-base/80 px-2 py-0.5 text-[0.625rem] backdrop-blur transition-colors',
+        active
+          ? 'border-hairline-strong text-ink'
+          : 'border-hairline-strong text-ink-dim hover:text-ink',
+      ].join(' ')}
     >
       {children}
     </button>
   )
+}
+
+/** Every title reachable by walking prerequisites and unlocks outward, however
+ *  far — the "whole tree" the connections toggle switches on. */
+function reachable(graph, id) {
+  const seen = new Set()
+  const queue = [id]
+  while (queue.length > 0) {
+    const current = queue.pop()
+    const neighbours = [...(graph.preds.get(current) ?? []), ...(graph.succs.get(current) ?? [])]
+    for (const next of neighbours) {
+      if (seen.has(next)) continue
+      seen.add(next)
+      queue.push(next)
+    }
+  }
+  return seen
 }
 
 /** What the colours mean, and nothing else. */
@@ -98,7 +121,11 @@ export function TimelinePage() {
   const [command, setCommand] = useState(null)
   const [zoom, setZoom] = useState(1)
   const [height, setHeight] = useState(null)
-  const [legendOpen, setLegendOpen] = useState(true)
+  const [legendOpen, setLegendOpen] = useState(false)
+  // Off by default: a click gives just the immediate prerequisites and
+  // unlocks, which is what most hovers are for. The toggle is for tracing a
+  // title's whole reach through the catalog.
+  const [deepConnections, setDeepConnections] = useState(false)
   // Held here rather than in the canvas because Reset is here: the button and
   // the state it clears belong together.
   const [pinned, setPinned] = useState(() => new Set())
@@ -163,16 +190,23 @@ export function TimelinePage() {
   }
 
   const graph = engine?.graph ?? null
-  const activeId = hoverId ?? selectedId
+  // Both stay lit together: a hover adds its own connections rather than
+  // replacing whatever the selection was already showing.
+  const activeIds = new Set([selectedId, hoverId].filter(Boolean))
 
   const related = new Set()
-  if (graph && activeId) {
-    for (const id of graph.preds.get(activeId) ?? []) related.add(id)
-    for (const id of graph.succs.get(activeId) ?? []) related.add(id)
+  if (graph) {
+    for (const id of activeIds) {
+      if (deepConnections) {
+        for (const id2 of reachable(graph, id)) related.add(id2)
+      } else {
+        for (const id2 of graph.preds.get(id) ?? []) related.add(id2)
+        for (const id2 of graph.succs.get(id) ?? []) related.add(id2)
+      }
+    }
   }
 
   const overall = graph ? progressFor(progress, graph.order) : null
-  const resume = graph?.nodes.find((node) => !isWatched(progress, node.id))
 
   function jump(id) {
     setSelectedId(id)
@@ -209,7 +243,7 @@ export function TimelinePage() {
             graph={engine.graph}
             simulation={engine.simulation}
             progress={progress}
-            activeId={activeId}
+            activeIds={activeIds}
             selectedId={selectedId}
             hovering={hoverId !== null}
             related={related}
@@ -229,7 +263,7 @@ export function TimelinePage() {
         )}
 
         {/* Over the graph rather than above it: a toolbar row would cost the
-            canvas its height, and there are only four controls. */}
+            canvas its height, and there are only three controls. */}
         <div className="pointer-events-none absolute top-3 right-3 flex flex-wrap items-center justify-end gap-1.5">
           {overall && (
             <span className="meta pointer-events-auto px-1 text-[0.625rem]">
@@ -237,11 +271,17 @@ export function TimelinePage() {
             </span>
           )}
           <div className="pointer-events-auto flex gap-1.5">
-            {resume && (
-              <Control onClick={() => jump(resume.id)} title="Jump to the next unwatched title">
-                Next unwatched
-              </Control>
-            )}
+            <Control
+              active={deepConnections}
+              onClick={() => setDeepConnections((value) => !value)}
+              title={
+                deepConnections
+                  ? 'Showing the whole tree of connections — click for just the direct ones'
+                  : 'Showing direct connections only — click for the whole tree'
+              }
+            >
+              {deepConnections ? 'Whole tree' : 'Direct only'}
+            </Control>
             <Control
               onClick={() => {
                 engine?.simulation.release()

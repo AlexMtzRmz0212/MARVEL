@@ -203,13 +203,14 @@ def _redundancy_warnings(graph: Graph, titles: dict[str, str]) -> list[str]:
     edge carrying a note is telling the reader something the longer path does
     not, and the `is_direct` flag it produces is what lets the UI highlight
     immediate prerequisites. So note-less redundant edges are warned about
-    individually, and annotated ones are summarised as a deliberate choice.
+    individually, and annotated ones are named individually too -- "kept
+    deliberately" is only useful to read if it says which edges it means.
     """
     essential_only = graph.essential_only()
     notes = {(edge.prerequisite_id, edge.movie_id): edge.note for edge in graph.edges}
 
     unexplained: list[str] = []
-    annotated = 0
+    annotated: list[str] = []
 
     for movie_id in sorted(graph.nodes):
         for candidate in graph.predecessors(movie_id):
@@ -227,21 +228,20 @@ def _redundancy_warnings(graph: Graph, titles: dict[str, str]) -> list[str]:
             if candidate not in reachable:
                 continue
 
-            if notes.get((candidate, movie_id)):
-                annotated += 1
+            note = notes.get((candidate, movie_id))
+            label = f"{titles.get(candidate, candidate)} -> {titles.get(movie_id, movie_id)}"
+            if note:
+                annotated.append(
+                    f'Redundant edge kept deliberately: {label} is already implied by another '
+                    f'path, but the note ("{note}") marks it as a direct prerequisite in the UI.'
+                )
             else:
                 unexplained.append(
-                    f"Redundant edge with no note: {titles.get(candidate, candidate)} -> "
-                    f"{titles.get(movie_id, movie_id)} is already implied by another path, "
+                    f"Redundant edge with no note: {label} is already implied by another path, "
                     f"and adds no explanation. Remove it or give it a note."
                 )
 
-    if annotated:
-        unexplained.append(
-            f"{annotated} redundant edge(s) kept deliberately: each is implied by another "
-            f"path but carries a note and marks a direct prerequisite in the UI."
-        )
-    return unexplained
+    return unexplained + annotated
 
 
 def _orphan_warnings(graph: Graph, titles: dict[str, str]) -> list[str]:
