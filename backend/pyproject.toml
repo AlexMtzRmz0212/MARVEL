@@ -28,15 +28,15 @@ dev = [
     "pytest>=8.3",
     # starlette's TestClient prefers httpx2; plain httpx emits a deprecation warning.
     "httpx2>=0.29",
+    # Both used by the local catalog editor's API (scripts/catalog_api.py) and
+    # the TMDb client it drives. Dev-only, which is why that API is a separate
+    # app rather than a router on app.main -- the serverless function must never
+    # import either of these.
     "requests>=2.32",
     "python-dotenv>=1.0",
     # Verifies TLS against the OS trust store, so HTTPS-inspecting antivirus
     # and corporate proxies do not break the enrichment script.
     "truststore>=0.10",
-    # Local-only GUI for editing the curated catalog (scripts/catalog_editor.py).
-    # A developer tool, never shipped to the serverless function.
-    "streamlit>=1.40",
-    "streamlit-sortables>=0.3",
     "ruff>=0.9",
 ]
 

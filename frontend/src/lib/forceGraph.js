@@ -227,10 +227,25 @@ export function createSimulation(graph, options = {}) {
   const vAcross = across === 'y' ? 'vy' : 'vx'
 
   let alpha = 1
+  // How far apart the whole layout is held, as a multiple of the settled
+  // spacing. Everything with a length in it is scaled by this together, so the
+  // graph grows without changing shape: the same drawing, with room between
+  // the labels. See `setSpread`.
+  let spread = 1
 
   function tick() {
     if (alpha <= config.alphaMin) return alpha
     alpha *= 1 - config.alphaDecay
+
+    const levelGap = config.levelGap * spread
+    const linkDistance = config.linkDistance * spread
+    const collideRadius = config.collideRadius * spread
+    const maxSpeed = config.maxSpeed * spread
+    // Cubed, not scaled: the repulsion between two nodes falls off as the
+    // square of the distance, so holding them `spread` times further apart
+    // takes `spread` cubed times the constant. Anything less and the links
+    // simply pull the graph back to the size it was.
+    const repulsion = config.repulsion * spread ** 3
 
     // --------------------------------------------------------- repulsion --
     for (let i = 0; i < nodes.length; i += 1) {
@@ -250,7 +265,7 @@ export function createSimulation(graph, options = {}) {
         }
 
         const distance = Math.sqrt(squared)
-        const push = (config.repulsion * alpha) / (squared * distance)
+        const push = (repulsion * alpha) / (squared * distance)
         a.vx -= dx * push
         a.vy -= dy * push
         b.vx += dx * push
@@ -265,7 +280,7 @@ export function createSimulation(graph, options = {}) {
       const dx = b.x - a.x
       const dy = b.y - a.y
       const distance = Math.sqrt(dx * dx + dy * dy) || 1
-      const pull = ((distance - config.linkDistance) / distance) * config.linkStrength * alpha
+      const pull = ((distance - linkDistance) / distance) * config.linkStrength * alpha
       a.vx += dx * pull
       a.vy += dy * pull
       b.vx -= dx * pull
@@ -274,13 +289,13 @@ export function createSimulation(graph, options = {}) {
 
     // ------------------------------------------------- depth and centring --
     for (const node of nodes) {
-      const wanted = node.depth * config.levelGap
+      const wanted = node.depth * levelGap
       node[vAlong] += (wanted - node[along]) * config.depthStrength * alpha
       node[vAcross] += -node[across] * config.centreStrength * alpha
     }
 
     // ------------------------------------------------------- integration --
-    const band = config.levelGap * config.depthBand
+    const band = levelGap * config.depthBand
     for (const node of nodes) {
       if (node.fx !== null) {
         node[across] = across === 'x' ? node.fx : node.fy
@@ -288,24 +303,20 @@ export function createSimulation(graph, options = {}) {
         // one past another depth is the one move that would leave an edge
         // pointing backwards, and the promise that reading along the graph is a
         // valid watch order is worth more than unrestricted dragging.
-        node[along] = clamp(
-          along === 'x' ? node.fx : node.fy,
-          node.depth * config.levelGap,
-          band,
-        )
+        node[along] = clamp(along === 'x' ? node.fx : node.fy, node.depth * levelGap, band)
         node.vx = 0
         node.vy = 0
         continue
       }
 
       const speed = Math.hypot(node.vx, node.vy)
-      if (speed > config.maxSpeed) {
-        node.vx = (node.vx / speed) * config.maxSpeed
-        node.vy = (node.vy / speed) * config.maxSpeed
+      if (speed > maxSpeed) {
+        node.vx = (node.vx / speed) * maxSpeed
+        node.vy = (node.vy / speed) * maxSpeed
       }
 
       node[across] += node[vAcross]
-      node[along] = clamp(node[along] + node[vAlong], node.depth * config.levelGap, band)
+      node[along] = clamp(node[along] + node[vAlong], node.depth * levelGap, band)
       node.vx *= config.friction
       node.vy *= config.friction
     }
@@ -326,7 +337,7 @@ export function createSimulation(graph, options = {}) {
           const dx = b.x - a.x
           const dy = b.y - a.y
           const distance = Math.hypot(dx, dy) || 0.01
-          const overlap = config.collideRadius * 2 - distance
+          const overlap = collideRadius * 2 - distance
           if (overlap <= 0) continue
 
           const shift = (overlap / distance) * 0.5
@@ -335,7 +346,7 @@ export function createSimulation(graph, options = {}) {
           const move = (node, sx, sy) => {
             node.x += sx
             node.y += sy
-            node[along] = clamp(node[along], node.depth * config.levelGap, band)
+            node[along] = clamp(node[along], node.depth * levelGap, band)
           }
           if (a.fx === null) move(a, -mx, -my)
           if (b.fx === null) move(b, mx, my)
@@ -356,6 +367,24 @@ export function createSimulation(graph, options = {}) {
     /** Warm it back up — after a drag, or a change of what is being drawn. */
     reheat(to = 0.5) {
       alpha = Math.max(alpha, to)
+    },
+    get spread() {
+      return spread
+    },
+    /**
+     * Hold the layout further apart, as a multiple of its settled spacing.
+     *
+     * The one thing a force graph cannot show at this density is 123 labels at
+     * once: the dots fit comfortably long before the words next to them do. So
+     * rather than shrink the type, stretch the drawing — every length in the
+     * simulation scales together, which moves the titles apart without moving
+     * any of them relative to the others.
+     *
+     * Cheaper than it looks: nothing is rebuilt and no position is thrown away,
+     * the forces simply have new targets and the graph walks out to them.
+     */
+    setSpread(value) {
+      spread = Math.max(1, value)
     },
     /** Let go of every title that has been dragged into place. */
     release() {

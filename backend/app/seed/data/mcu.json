@@ -2053,6 +2053,11 @@
           "id": "deadpool-2",
           "strength": "essential",
           "note": null
+        },
+        {
+          "id": "fantastic-four",
+          "strength": "recommended",
+          "note": null
         }
       ],
       "tmdb_id": 533535,

@@ -134,13 +134,18 @@ The catalog is authoritative for ids, phases, sagas, tiers, chronology and the
 dependency edges — the things APIs get wrong. TMDb fills in only posters,
 synopses, runtimes and its own id.
 
-Edit the catalog with the local editor (`catalog.bat` at the repo root, or
-`streamlit run scripts/catalog_editor.py` from `backend`). It organises and
-edits `app/seed/data/mcu.json`, validates with the same checks as
+Edit the catalog with the local editor: run `catalog.bat` at the repo root and
+it opens at `localhost:5173/editor.html`. It organises and edits
+`app/seed/data/mcu.json`, validates with the same checks as
 `app.seed.loader --check` before writing, and has a TMDb picker that shows every
 match so you choose the right one rather than trusting a blind first hit. Its
 Dependencies tab edits the graph directly: pick a title and connect or
 disconnect what it requires and what it unlocks, essential or recommended.
+
+The editor is a second Vite entry point (`frontend/editor.html`) talking to a
+small local FastAPI app (`backend/scripts/catalog_api.py`) on port 8010. Vite
+builds `index.html` only and that API is separate from `app.main`, so neither
+half of the tool exists in a production build.
 
 Needs `TMDB_API_KEY` in the root `.env` (see `.env.example`) for the picker. The
 editor writes back into the JSON so the result is reviewable as a diff.

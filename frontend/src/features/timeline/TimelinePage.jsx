@@ -27,6 +27,16 @@ import { GraphCanvas } from './GraphCanvas'
 const LABEL_ZOOM = 1.45
 
 /**
+ * How much further apart Spread holds the graph.
+ *
+ * Two and a bit is what it takes for a 30-character label at this type size to
+ * clear its neighbours rather than merely miss them; less looks like nothing
+ * happened, and much more scatters the bands so far that the shape of the
+ * catalog stops being legible at a glance.
+ */
+const SPREAD = 2.2
+
+/**
  * What the colours mean.
  *
  * Saga is the colour axis everywhere in the app — cards, the prerequisite
@@ -59,21 +69,65 @@ function Control({ children, onClick, title, active }) {
   )
 }
 
-/** Every title reachable by walking prerequisites and unlocks outward, however
- *  far — the "whole tree" the connections toggle switches on. */
-function reachable(graph, id) {
-  const seen = new Set()
-  const queue = [id]
-  while (queue.length > 0) {
-    const current = queue.pop()
-    const neighbours = [...(graph.preds.get(current) ?? []), ...(graph.succs.get(current) ?? [])]
-    for (const next of neighbours) {
-      if (seen.has(next)) continue
-      seen.add(next)
-      queue.push(next)
+/**
+ * The longest run of dependencies passing through a title — the "chain" the
+ * connections toggle switches on.
+ *
+ * Everything reachable from a title is the wrong answer even though it is the
+ * obvious one: this catalog is almost entirely one connected lump, so walking
+ * outward from anywhere in it lights nearly every title and says nothing. The
+ * useful question is not *what does this touch* but *what is the longest watch
+ * order this sits in* — the deepest chain of prerequisites behind it, joined to
+ * the deepest chain of things it goes on to unlock.
+ *
+ * Both halves are the standard longest-path pass over a DAG, which is only
+ * linear because `graph.order` is already a topological sort: reading it
+ * forwards, every prerequisite of a title has been answered before the title
+ * itself. Ties go to the first candidate found, so the same click always
+ * produces the same chain.
+ */
+function longestChain(graph, id) {
+  const { order, preds, succs } = graph
+
+  // Behind: the longest chain ending at each title, and the step it came from.
+  const behind = new Map()
+  const cameFrom = new Map()
+  for (const current of order) {
+    let best = 0
+    let from = null
+    for (const predecessor of preds.get(current) ?? []) {
+      const length = (behind.get(predecessor) ?? 0) + 1
+      if (length > best) {
+        best = length
+        from = predecessor
+      }
     }
+    behind.set(current, best)
+    cameFrom.set(current, from)
   }
-  return seen
+
+  // Ahead: the same thing read backwards.
+  const ahead = new Map()
+  const goesTo = new Map()
+  for (let index = order.length - 1; index >= 0; index -= 1) {
+    const current = order[index]
+    let best = 0
+    let to = null
+    for (const successor of succs.get(current) ?? []) {
+      const length = (ahead.get(successor) ?? 0) + 1
+      if (length > best) {
+        best = length
+        to = successor
+      }
+    }
+    ahead.set(current, best)
+    goesTo.set(current, to)
+  }
+
+  const chain = new Set([id])
+  for (let step = cameFrom.get(id); step; step = cameFrom.get(step)) chain.add(step)
+  for (let step = goesTo.get(id); step; step = goesTo.get(step)) chain.add(step)
+  return chain
 }
 
 /** What the colours mean, and nothing else. */
@@ -123,9 +177,14 @@ export function TimelinePage() {
   const [height, setHeight] = useState(null)
   const [legendOpen, setLegendOpen] = useState(false)
   // Off by default: a click gives just the immediate prerequisites and
-  // unlocks, which is what most hovers are for. The toggle is for tracing a
-  // title's whole reach through the catalog.
+  // unlocks, which is what most hovers are for. The toggle is for reading the
+  // longest watch order a title belongs to.
   const [deepConnections, setDeepConnections] = useState(false)
+  // Holds the graph further apart than it settles on its own, so there is room
+  // between the labels. Off by default: the compact layout is the one that
+  // fits the screen, and this is the answer to "I cannot read it", not the
+  // starting point.
+  const [spread, setSpread] = useState(false)
   // Held here rather than in the canvas because Reset is here: the button and
   // the state it clears belong together.
   const [pinned, setPinned] = useState(() => new Set())
@@ -198,7 +257,7 @@ export function TimelinePage() {
   if (graph) {
     for (const id of activeIds) {
       if (deepConnections) {
-        for (const id2 of reachable(graph, id)) related.add(id2)
+        for (const id2 of longestChain(graph, id)) related.add(id2)
       } else {
         for (const id2 of graph.preds.get(id) ?? []) related.add(id2)
         for (const id2 of graph.succs.get(id) ?? []) related.add(id2)
@@ -276,16 +335,34 @@ export function TimelinePage() {
               onClick={() => setDeepConnections((value) => !value)}
               title={
                 deepConnections
-                  ? 'Showing the whole tree of connections — click for just the direct ones'
-                  : 'Showing direct connections only — click for the whole tree'
+                  ? 'Showing the longest chain of dependencies through the title — click for just the direct ones'
+                  : 'Showing direct connections only — click for the longest chain through the title'
               }
             >
-              {deepConnections ? 'Whole tree' : 'Direct only'}
+              {deepConnections ? 'Longest chain' : 'Direct only'}
+            </Control>
+            <Control
+              active={spread}
+              onClick={() => {
+                const next = !spread
+                setSpread(next)
+                engine?.simulation.setSpread(next ? SPREAD : 1)
+                setCommand({ kind: 'spread', at: Date.now() })
+              }}
+              title={
+                spread
+                  ? 'Holding the titles apart — click to pack them back together'
+                  : 'Hold the titles further apart, so the labels have room'
+              }
+            >
+              Spread
             </Control>
             <Control
               onClick={() => {
                 engine?.simulation.release()
+                engine?.simulation.setSpread(1)
                 setPinned(new Set())
+                setSpread(false)
                 setCommand({ kind: 'reset', at: Date.now() })
               }}
               title="Let go of everything placed by hand and settle again"

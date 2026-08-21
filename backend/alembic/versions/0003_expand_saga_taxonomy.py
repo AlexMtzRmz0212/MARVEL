@@ -14,8 +14,8 @@ longer says anything useful.
 This is a literal 1:1 remap of the three old values -- 'infinity' ->
 'Infinity Saga', 'multiverse' -> 'Multiverse Saga', 'none' -> 'N/A' -- not a
 per-title reclassification. Existing adjacent titles land on 'N/A' and are
-expected to be re-tagged with their actual franchise by hand (via the
-Streamlit catalog editor) after this migration runs; the same is true of the
+expected to be re-tagged with their actual franchise by hand (via the local
+catalog editor) after this migration runs; the same is true of the
 `app.seed.data.mcu.json` snapshot's 'none' rows.
 """
 

@@ -97,6 +97,13 @@ export function GraphCanvas({
 
   const { nodes, links } = graph
 
+  // Direct mode: `related` is just the clicked node's immediate neighbours, so
+  // this is no different from lighting anything touching `activeIds`. Chain
+  // mode: `related` runs the length of the longest path through the title, and
+  // an edge belongs to it once *both* its ends do — one end alone would light
+  // every branch hanging off the chain as well as the chain itself.
+  const highlighted = new Set([...activeIds, ...related])
+
   // ------------------------------------------------------------- drawing --
   const paint = useCallback(() => {
     for (const node of nodes) {
@@ -213,6 +220,19 @@ export function GraphCanvas({
     if (command.kind === 'reset') {
       touched.current = false
       simulation.reheat(0.8)
+      run()
+      return
+    }
+
+    // The spacing has changed. A view still on auto-fit keeps refitting, so the
+    // whole graph stays in frame as it grows. A view the reader has already
+    // aimed is left alone — the point of holding titles apart is to read or
+    // drag them, and a camera that kept re-aiming itself at the selection
+    // while that settled would fight exactly that, snatching the view away
+    // the moment a drag interrupted it mid-motion. It spreads once; the view
+    // is the reader's from then on regardless of what still moves.
+    if (command.kind === 'spread') {
+      simulation.reheat(0.75)
       run()
       return
     }
@@ -507,7 +527,7 @@ export function GraphCanvas({
       <g ref={viewportRef}>
         <g fill="none">
           {links.map((link) => {
-            const lit = activeIds.has(link.from) || activeIds.has(link.to)
+            const lit = highlighted.has(link.from) && highlighted.has(link.to)
             // Only a hover fades the rest of the graph. The selection is
             // long-lived — dimming for it would mean arriving on a page whose
             // graph is already mostly greyed out, which is not a graph.

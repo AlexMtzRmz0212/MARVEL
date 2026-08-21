@@ -4,8 +4,8 @@ Trusted only for metadata fields -- poster, synopsis, runtime, release date, and
 TMDb id -- never for the fields the curated file owns: ids, phases, sagas, tiers,
 chronology and above all the prerequisite edges.
 
-This module is a library, imported by the Streamlit catalog editor
-(`scripts/catalog_editor.py`). The editor drives it interactively: it calls
+This module is a library, imported by the catalog editor's local API
+(`scripts/catalog_api.py`). The editor drives it interactively: it calls
 `search_candidates` to show the human every TMDb match for a title, and
 `fetch_details` to pull one chosen title's metadata. That human-in-the-loop step
 is what keeps a title like "X-Men: First Class" from silently matching a
