@@ -17,7 +17,7 @@ const BLANK = {
   release_date: '2008-01-01',
   phase: null,
   saga: 'N/A',
-  universe: 'Earth-616',
+  universe: 'Earth-199999',
   media_type: 'film',
   tier: 'core',
   runtime_min: null,

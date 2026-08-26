@@ -40,15 +40,20 @@ class Saga(StrEnum):
 
 
 class Universe(StrEnum):
-    """Marvel Comics Earth designations."""
+    """Marvel Comics Earth designations.
 
-    EARTH_616 = "Earth-616"
+    Earth-199999, not Earth-616, is Marvel's official designation for the film
+    universe -- 616 is the flagship comics continuity, a distinct branch. See
+    `MCU_UNIVERSES` and migration 0005.
+    """
+
+    EARTH_199999 = "Earth-199999"
     EARTH_10005 = "Earth-10005"
     EARTH_12070 = "Earth-12070"
     MULTIVERSE_TVA = "Multiverse / TVA"
-    EARTH_10005_AND_616 = "Earth-10005 & 616"
+    EARTH_10005_AND_199999 = "Earth-10005 & 199999"
     EARTH_TRN554 = "Earth-TRN554"
-    EARTH_616_BRANCH = "Earth-616 (Branch)"
+    EARTH_199999_BRANCH = "Earth-199999 (Branch)"
     EARTH_92131 = "Earth-92131"
     EARTH_1610 = "Earth-1610"
     NON_CANON = "Non-Canon"
@@ -56,9 +61,9 @@ class Universe(StrEnum):
     ANIMATED_MULTIVERSE = "Animated Multiverse"
     EARTH_121698 = "Earth-121698"
     EARTH_96283 = "Earth-96283"
-    MULTIVERSE_EARTH_616 = "Multiverse / Earth-616"
-    ALTERNATE_EARTH_616 = "Alternate Earth / 616"
-    EARTH_616_EARTH_838 = "Earth-616 / Earth-838"
+    MULTIVERSE_EARTH_199999 = "Multiverse / Earth-199999"
+    ALTERNATE_EARTH_199999 = "Alternate Earth / 199999"
+    EARTH_199999_EARTH_838 = "Earth-199999 / Earth-838"
     EARTH_10005_2029 = "Earth-10005 (2029)"
 
 
@@ -68,14 +73,14 @@ class Universe(StrEnum):
 # per the curated table; see `Tier`). This is what `include_adjacent` filters on.
 MCU_UNIVERSES = frozenset(
     {
-        Universe.EARTH_616,
-        Universe.EARTH_616_BRANCH,
+        Universe.EARTH_199999,
+        Universe.EARTH_199999_BRANCH,
         Universe.MULTIVERSE_TVA,
-        Universe.MULTIVERSE_EARTH_616,
-        Universe.ALTERNATE_EARTH_616,
-        Universe.EARTH_616_EARTH_838,
+        Universe.MULTIVERSE_EARTH_199999,
+        Universe.ALTERNATE_EARTH_199999,
+        Universe.EARTH_199999_EARTH_838,
         Universe.ANIMATED_MULTIVERSE,
-        Universe.EARTH_10005_AND_616,
+        Universe.EARTH_10005_AND_199999,
     }
 )
 

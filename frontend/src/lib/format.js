@@ -72,7 +72,7 @@ export const TIER_LABEL = {
 
 /**
  * Marvel Comics Earth designations are already display-ready strings (e.g.
- * "Earth-616", "Multiverse / TVA"), so there is no separate label table to
+ * "Earth-199999", "Multiverse / TVA"), so there is no separate label table to
  * keep in sync -- `movie.universe` is rendered as-is.
  */
 
