@@ -4,6 +4,7 @@ import { AppShell } from './components/AppShell'
 import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
 import { CatalogPage } from './features/catalog/CatalogPage'
+import { HomePage } from './features/home/HomePage'
 import { OrderBuilderPage } from './features/builder/OrderBuilderPage'
 import { OrdersPage } from './features/builder/OrdersPage'
 import { PrereqGraphPage } from './features/prereq/PrereqGraphPage'
@@ -18,11 +19,12 @@ export const router = createBrowserRouter([
   {
     element: <AppShell />,
     children: [
-      // The catalog is the landing page, rendered at "/" rather than reached by
-      // a redirect: a redirect left the address bar on /catalog, so every
-      // refresh and bookmark hit a path the app has to serve rather than the
-      // bare domain. /catalog stays mounted so older links keep resolving.
-      { index: true, element: <CatalogPage /> },
+      // "/" is the landing page and "/catalog" is the catalog, both rendered
+      // rather than redirected: a redirect would leave the address bar on a
+      // path the app has to serve, so every refresh and bookmark would go
+      // through it. The catalog kept this route from the days when it was the
+      // landing page, so no old link breaks.
+      { index: true, element: <HomePage /> },
       { path: 'catalog', element: <CatalogPage /> },
       { path: 'movies/:movieId', element: <MovieDetailPage /> },
       { path: 'movies/:movieId/prereqs', element: <PrereqGraphPage /> },

@@ -5,6 +5,7 @@ import { useEdges, useMovies } from '../../api/catalog'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { buildGraph, createSimulation, seedPositions } from '../../lib/forceGraph'
+import { claimSearch } from '../../lib/searchTarget'
 import { isWatched, progressFor, toggleWatched } from '../../lib/watchStorage'
 import { GraphCanvas } from './GraphCanvas'
 
@@ -21,6 +22,13 @@ import { GraphCanvas } from './GraphCanvas'
  * There is no panel and no status line, because two earlier versions of this
  * page had one and in both of them the graph came second to it. What a title is
  * called is on the title.
+ *
+ * The header's search lens is borrowed while this page is up (see
+ * `lib/searchTarget`): here a title is a bubble on screen, so a match flies to
+ * it and selects it rather than leaving for the title's own page. That also
+ * puts the lens on Ctrl-F, which is the shortcut for exactly this question and
+ * which the browser's own find cannot answer on a graph — the labels it would
+ * search are mostly not drawn, and the ones that are cannot be scrolled to.
  */
 
 /** Zoomed in at least this far, there is room to show every label at once. */
@@ -238,6 +246,37 @@ export function TimelinePage() {
     const resume = engine.graph.nodes.find((node) => !isWatched(progress, node.id))
     setSelectedId((resume ?? engine.graph.nodes[0])?.id ?? null)
   }, [engine, progress])
+
+  // Answer the header's search ourselves while this page is up.
+  //
+  // The handler is read through a ref so the claim is made once, on mount:
+  // re-claiming on every render would notify every subscriber sixty times a
+  // second while the graph settles. It declines a title the graph has not got,
+  // and the lens falls back to opening its page.
+  const findRef = useRef(null)
+  useEffect(() => {
+    findRef.current = {
+      find(movie) {
+        if (!engine?.graph.nodes.some((node) => node.id === movie.id)) return false
+        setSelectedId(movie.id)
+        setCommand({ kind: 'focus', id: movie.id, at: Date.now() })
+        return true
+      },
+      // Escape out of the search: back to the selected title, or to the graph
+      // itself if nothing is selected. The view does not move.
+      refocus() {
+        setCommand({ kind: 'refocus', id: selectedId, at: Date.now() })
+      },
+    }
+  })
+  useEffect(
+    () =>
+      claimSearch({
+        find: (movie) => findRef.current?.find(movie) ?? false,
+        refocus: () => findRef.current?.refocus(),
+      }),
+    [],
+  )
 
   if (moviesQuery.error || edgesQuery.error) {
     return (

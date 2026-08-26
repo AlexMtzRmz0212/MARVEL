@@ -30,6 +30,17 @@ const MAX_ZOOM = 3
 const CLICK_SLOP = 4
 
 /**
+ * Close enough that the title being flown to is unmistakably the one meant,
+ * and its neighbours are readable around it. A view already closer than this
+ * is left where it is: someone who has zoomed further in was reading
+ * something, and search should not pull them back out.
+ */
+const FOCUS_ZOOM = 1.6
+
+/** How long the flight to a searched title takes. */
+const GLIDE_MS = 480
+
+/**
  * Take or give back pointer capture, tolerating a refusal.
  *
  * Capture is what keeps a drag tracking once the pointer leaves the node, which
@@ -81,6 +92,8 @@ export function GraphCanvas({
   const linkRefs = useRef(new Map())
 
   const view = useRef({ x: 0, y: 0, k: 1 })
+  /** The flight to a searched title, if one is in the air. */
+  const glide = useRef(null)
   const box = useRef({ width: 0, height: 0 })
   const frame = useRef(0)
   const drag = useRef(null)
@@ -127,6 +140,12 @@ export function GraphCanvas({
     viewportRef.current?.setAttribute('transform', `translate(${x} ${y}) scale(${k})`)
   }, [])
 
+  const stopGlide = useCallback(() => {
+    if (!glide.current) return
+    cancelAnimationFrame(glide.current)
+    glide.current = null
+  }, [])
+
   const centre = useCallback(
     (point, zoom) => {
       const { width, height } = box.current
@@ -137,6 +156,61 @@ export function GraphCanvas({
       onZoom?.(k)
     },
     [applyView, onZoom],
+  )
+
+  /**
+   * The same move as `centre`, flown rather than cut.
+   *
+   * A search can land anywhere, including the far side of a graph the reader
+   * is zoomed right into, and arriving there instantly costs them any sense of
+   * where they just came from — the graph simply becomes a different graph. A
+   * short flight keeps the two views connected.
+   *
+   * Zoom travels geometrically (equal ratios per frame, not equal amounts), so
+   * a flight that also changes scale reads as one steady move rather than
+   * rushing at one end; the pan is expressed in the same terms, as the graph
+   * point held at the centre of the view.
+   *
+   * The destination is read again every frame rather than copied up front, so
+   * flying to a title while the graph is still settling arrives where the
+   * title actually is rather than where it was when the search was run.
+   */
+  const glideTo = useCallback(
+    (point, zoom) => {
+      const { width, height } = box.current
+      if (width < 1 || height < 1) return
+
+      stopGlide()
+      touched.current = true
+
+      const from = { ...view.current }
+      const fromPoint = {
+        x: (width / 2 - from.x) / from.k,
+        y: (height / 2 - from.y) / from.k,
+      }
+      const started = performance.now()
+
+      const step = () => {
+        const t = Math.min((performance.now() - started) / GLIDE_MS, 1)
+        // Ease in and out, so it neither jerks off the mark nor overshoots.
+        const eased = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
+
+        const k = from.k * (zoom / from.k) ** eased
+        const at = {
+          x: fromPoint.x + (point.x - fromPoint.x) * eased,
+          y: fromPoint.y + (point.y - fromPoint.y) * eased,
+        }
+        view.current = { k, x: width / 2 - at.x * k, y: height / 2 - at.y * k }
+        applyView()
+        onZoom?.(k)
+
+        if (t < 1) glide.current = requestAnimationFrame(step)
+        else glide.current = null
+      }
+
+      glide.current = requestAnimationFrame(step)
+    },
+    [applyView, onZoom, stopGlide],
   )
 
   const fit = useCallback(() => {
@@ -194,8 +268,11 @@ export function GraphCanvas({
 
   useEffect(() => {
     run()
-    return () => cancelAnimationFrame(frame.current)
-  }, [run])
+    return () => {
+      cancelAnimationFrame(frame.current)
+      stopGlide()
+    }
+  }, [run, stopGlide])
 
   // ---------------------------------------------------------- navigation --
   // Focus follows the selection, but only while the graph already has it:
@@ -237,8 +314,31 @@ export function GraphCanvas({
       return
     }
 
+    // Focus without motion: the reader is coming back from somewhere else on
+    // the page and the view they left is the one they expect to find. The
+    // canvas itself takes it when nothing is selected, so returning from the
+    // search cannot silently select a title nobody asked for.
+    if (command.kind === 'refocus') {
+      const element = nodeRefs.current.get(command.id) ?? svgRef.current
+      element?.focus({ preventScroll: true })
+      return
+    }
+
     const node = nodes.find((candidate) => candidate.id === command.id)
     if (!node) return
+
+    // Asked for by name rather than stepped to, so it is not enough to be
+    // technically on screen: someone who searched has to be able to tell which
+    // dot they were given. It goes to the middle, at a zoom that can be read.
+    if (command.kind === 'focus') {
+      glideTo(node, Math.max(view.current.k, FOCUS_ZOOM))
+      // Hand the keyboard to the title that was asked for, so the arrow keys
+      // carry on from it. The search field that sent us here has just closed,
+      // and without this focus would be left on the body with a selected node
+      // nothing can step away from.
+      nodeRefs.current.get(command.id)?.focus({ preventScroll: true })
+      return
+    }
 
     // Only if it is off screen. Recentring on something already in view makes
     // every arrow key throw the whole graph sideways under the reader.
@@ -249,7 +349,7 @@ export function GraphCanvas({
 
     touched.current = true
     centre(node, Math.max(k, 0.9))
-  }, [command, nodes, centre, fit, run, simulation])
+  }, [command, nodes, centre, fit, glideTo, run, simulation])
 
   const zoomBy = useCallback(
     (factor, at) => {
@@ -257,6 +357,7 @@ export function GraphCanvas({
       const k = Math.min(Math.max(previous * factor, MIN_ZOOM), MAX_ZOOM)
       if (k === previous) return
 
+      stopGlide()
       touched.current = true
       // Anchored on the pointer: the point under the cursor is the one that
       // stays put, which is the only zoom that feels like it is being aimed.
@@ -268,7 +369,7 @@ export function GraphCanvas({
       applyView()
       onZoom?.(k)
     },
-    [applyView, onZoom],
+    [applyView, onZoom, stopGlide],
   )
 
   // Wired by hand rather than with `onWheel`, because React registers wheel
@@ -328,6 +429,9 @@ export function GraphCanvas({
   // -------------------------------------------------------------- pointer --
   function onPointerDown(event, node = null) {
     if (event.button !== 0) return
+    // Touching the graph ends any flight in progress — the view is the
+    // reader's the moment they reach for it.
+    stopGlide()
     capture(event.currentTarget, event.pointerId, true)
     pointers.current.set(event.pointerId, localPoint(event))
 
@@ -497,7 +601,11 @@ export function GraphCanvas({
   return (
     <svg
       ref={svgRef}
-      className="size-full touch-none bg-base select-none"
+      className="size-full touch-none bg-base select-none focus:outline-none"
+      // Not a tab stop — a node holds that — but focusable by hand, so the
+      // page has somewhere to put the keyboard that is inside the graph
+      // without being one particular title.
+      tabIndex={-1}
       role="application"
       aria-label="Catalog dependency graph"
       onKeyDown={onKeyDown}

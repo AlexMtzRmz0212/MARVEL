@@ -6,9 +6,9 @@ import { GlobalSearch } from './GlobalSearch'
 import { UserMenu } from './UserMenu'
 
 const NAV = [
-  // `end` because "/" prefix-matches every route, which would otherwise leave
-  // Catalog highlighted on every page.
-  { to: '/', label: 'Catalog', end: true },
+  // No entry for "/": the wordmark to the left of these is the way home, and a
+  // fifth item does not fit the phone layout described below.
+  { to: '/catalog', label: 'Catalog' },
   { to: '/timeline', label: 'Timeline' },
   { to: '/orders', label: 'My orders' },
   { to: '/progress', label: 'Progress' },

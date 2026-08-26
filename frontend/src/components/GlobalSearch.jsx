@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useNavigate } from 'react-router'
 
 import { useMovies } from '../api/catalog'
 import { year } from '../lib/format'
+import { getSnapshot, subscribe } from '../lib/searchTarget'
 
 /**
  * Jump to any title from anywhere in the app.
@@ -28,10 +29,32 @@ function LensIcon() {
 export function GlobalSearch() {
   const navigate = useNavigate()
   const { data: movies } = useMovies()
+  const onPage = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const containerRef = useRef(null)
   const inputRef = useRef(null)
+  const buttonRef = useRef(null)
+
+  // Ctrl/Cmd-F, but only while a page is claiming the lens: everywhere else
+  // the page really is text and the browser's find is the better tool, and
+  // taking a shortcut people rely on to give them something worse is how you
+  // lose their trust in every other shortcut too.
+  useEffect(() => {
+    if (!onPage) return
+
+    const onFind = (event) => {
+      if (event.key !== 'f' || !(event.ctrlKey || event.metaKey) || event.altKey) return
+      event.preventDefault()
+      setOpen(true)
+      // Already open with something typed: select it, so a second Ctrl-F
+      // starts a fresh search rather than appending to the last one.
+      inputRef.current?.select()
+    }
+
+    document.addEventListener('keydown', onFind)
+    return () => document.removeEventListener('keydown', onFind)
+  }, [onPage])
 
   useEffect(() => {
     if (!open) return
@@ -41,7 +64,16 @@ export function GlobalSearch() {
       if (!containerRef.current?.contains(event.target)) setOpen(false)
     }
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') setOpen(false)
+      if (event.key !== 'Escape') return
+      close()
+      // Escape is "give me back what I was doing", so the keyboard goes back
+      // there too: to the page if it wants it — the timeline takes it into the
+      // graph, where the arrow keys work — and otherwise to the lens itself,
+      // which is where it came from. Leaving focus on the panel as it unmounts
+      // would drop it on the body, and the next Tab would restart from the top
+      // of the document.
+      if (onPage?.refocus) onPage.refocus()
+      else buttonRef.current?.focus()
     }
     document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onKeyDown)
@@ -49,7 +81,7 @@ export function GlobalSearch() {
       document.removeEventListener('pointerdown', onPointerDown)
       document.removeEventListener('keydown', onKeyDown)
     }
-  }, [open])
+  }, [open, onPage])
 
   function close() {
     setOpen(false)
@@ -58,6 +90,10 @@ export function GlobalSearch() {
 
   function go(movie) {
     close()
+    // The page gets first refusal. It declines for anything it cannot show —
+    // a title missing from the graph, say — and then this is an ordinary jump
+    // to the title's page like anywhere else in the app.
+    if (onPage?.find(movie)) return
     navigate(`/movies/${movie.id}`)
   }
 
@@ -71,11 +107,12 @@ export function GlobalSearch() {
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        aria-label="Search titles"
-        title="Search titles"
+        aria-label={onPage ? 'Find a title on this page' : 'Search titles'}
+        title={onPage ? 'Find a title on this page (Ctrl-F)' : 'Search titles'}
         className="grid size-7 place-items-center text-ink-faint transition-colors hover:text-ink"
       >
         <LensIcon />
@@ -91,7 +128,7 @@ export function GlobalSearch() {
             onKeyDown={(event) => {
               if (event.key === 'Enter' && results[0]) go(results[0])
             }}
-            placeholder="Search titles"
+            placeholder={onPage ? 'Find on this page' : 'Search titles'}
             className="hairline w-full border bg-base px-2.5 py-1.5 font-mono text-xs text-ink placeholder:text-ink-faint focus:border-hairline-strong focus:outline-none"
           />
 

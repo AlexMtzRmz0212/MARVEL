@@ -53,7 +53,9 @@ export function AuthForm({ mode }) {
     try {
       if (isRegister) await signUp({ email, password, displayName })
       else await signIn({ email, password })
-      navigate('/')
+      // The catalog rather than the landing page: someone who has just signed
+      // in came here to use the thing, not to be sold it.
+      navigate('/catalog')
     } catch (submitError) {
       setError(submitError.message ?? 'That did not work. Try again.')
       setIsBusy(false)
