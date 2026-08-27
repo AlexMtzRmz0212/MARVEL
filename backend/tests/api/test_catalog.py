@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from app.core.enums import MCU_UNIVERSES
+
 
 def test_health(client):
     response = client.get("/api/health")
@@ -84,18 +86,37 @@ def test_chronological_order_starts_in_the_past(client):
     ]
 
 
-def test_chronological_order_respects_every_prerequisite(client):
-    """The order the app ships must itself be a valid topological order."""
-    order = [movie["id"] for movie in client.get("/api/orders/chronological").json()["movies"]]
-    result = client.post("/api/orders/validate", json={"order": order}).json()
-    assert result["violations"] == []
-    assert result["is_valid"]
+def _validate_shipped_order(client, path, **params):
+    order = [movie["id"] for movie in client.get(path, params=params).json()["movies"]]
+    return client.post("/api/orders/validate", json={"order": order}).json()
 
 
-def test_release_order_is_also_internally_consistent(client):
-    order = [movie["id"] for movie in client.get("/api/orders/release").json()["movies"]]
-    result = client.post("/api/orders/validate", json={"order": order}).json()
-    assert [v for v in result["violations"] if v["severity"] == "error"] == []
+def test_the_complete_orders_are_valid_topological_orders(client):
+    """With nothing filtered out, both orders the app ships must satisfy the DAG."""
+    for path in ("/api/orders/chronological", "/api/orders/release"):
+        result = _validate_shipped_order(client, path, include_adjacent=True)
+        assert result["violations"] == []
+        assert result["is_valid"]
+
+
+def test_the_mcu_only_cut_drops_nothing_but_cross_continuity_prerequisites(client):
+    """The default cut filters on universe, and some prerequisites live outside it.
+
+    Deadpool & Wolverine needs Deadpool 2; No Way Home needs the Sony films. Those
+    sit outside MCU_UNIVERSES, so an order restricted to MCU continuity cannot
+    contain them and the validator is right to say so. A violation pointing at a
+    title the cut *does* include would be a real hole in the order, so that is
+    what this pins.
+    """
+    universe = {movie["id"]: movie["universe"] for movie in client.get("/api/movies").json()}
+
+    for path in ("/api/orders/chronological", "/api/orders/release"):
+        result = _validate_shipped_order(client, path)
+        assert result["violations"] == [
+            violation
+            for violation in result["violations"]
+            if universe[violation["prerequisite_id"]] not in MCU_UNIVERSES
+        ]
 
 
 # --------------------------------------------------------------------------- #

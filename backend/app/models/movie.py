@@ -40,7 +40,8 @@ class Movie(Base):
 
     phase: Mapped[int | None] = mapped_column(Integer)  # null outside the MCU
     saga: Mapped[str] = mapped_column(String(32), nullable=False)
-    universe: Mapped[str] = mapped_column(String(24), nullable=False)
+    # 32, not 24: "Multiverse / Earth-199999" is 25 characters. See migration 0005.
+    universe: Mapped[str] = mapped_column(String(32), nullable=False)
     media_type: Mapped[str] = mapped_column(String(16), nullable=False)
     tier: Mapped[str] = mapped_column(String(16), nullable=False)
 

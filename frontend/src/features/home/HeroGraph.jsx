@@ -92,9 +92,19 @@ const EDGES = [
 const MOVIES = TITLES.map((title) => ({ saga: 'Infinity Saga', tier: 'core', ...title }))
 const LINKS = EDGES.map(([from, to, strength = 'essential']) => ({ from, to, strength }))
 
-/** Matches the graph page: hubs are bigger, square-rooted so none can dominate. */
-function radiusOf(node) {
-  return 5 + Math.min(Math.sqrt(node.degree) * 2.2, 7)
+/**
+ * Matches the graph page: hubs are bigger, square-rooted so none can dominate.
+ *
+ * `scale` is what keeps the phone drawing from looking cramped. Everything drawn
+ * on top of the layout -- dots, type, strokes -- is sized in user units, and the
+ * narrow excerpt's frame is about a quarter the width of the wide one while both
+ * are shown at roughly the same physical size. A unit is therefore close to twice
+ * as many pixels on a phone, so identical numbers came out twice as large there:
+ * 20px labels over 16px dots, with "WandaVision" and "Loki" overprinting each
+ * other. Halving them puts every ornament within a pixel of its desktop size.
+ */
+function radiusOf(node, scale) {
+  return (5 + Math.min(Math.sqrt(node.degree) * 2.2, 7)) * scale
 }
 
 /**
@@ -129,7 +139,7 @@ export function HeroGraph({ className = '' }) {
   const frame = useRef(0)
 
   // Solved on the way in, so the frame is known before a pixel is drawn.
-  const { graph, simulation, view, still } = useMemo(() => {
+  const { graph, simulation, view, still, scale } = useMemo(() => {
     const built = buildGraph(
       wide ? MOVIES : MOVIES.filter((movie) => movie.compact),
       LINKS,
@@ -137,11 +147,16 @@ export function HeroGraph({ className = '' }) {
     // The narrow layout is shorter as well as turned: fewer titles per band
     // means the bands can sit closer together without the labels touching.
     const options = { depthAxis: wide ? 'x' : 'y', levelGap: wide ? 104 : 78 }
+    const scale = wide ? 1 : 0.5
 
     seedPositions(built, options)
     const engine = createSimulation(built, options)
     engine.settle(600)
-    const box = boundsOf(built.nodes, 46)
+    // `boundsOf` measures dot centres, so the margin is also the room the labels
+    // hang in: 52 because "WandaVision" reaches ~50 units either side of its own
+    // dot and at 46 the wide layout clipped its last letter against the frame.
+    // The narrow margin is halved with everything else it has to clear.
+    const box = boundsOf(built.nodes, wide ? 52 : 26)
 
     // Someone who has asked for less motion gets the settled layout as a still.
     // Everyone else gets it assembled in front of them, from the same starting
@@ -155,7 +170,7 @@ export function HeroGraph({ className = '' }) {
       engine.reheat(1)
     }
 
-    return { graph: built, simulation: engine, view: box, still: reduced }
+    return { graph: built, simulation: engine, view: box, still: reduced, scale }
   }, [wide])
 
   useEffect(() => {
@@ -205,10 +220,12 @@ export function HeroGraph({ className = '' }) {
               if (element) linkRefs.current.set(link.id, element)
               else linkRefs.current.delete(link.id)
             }}
-            strokeWidth={link.strength === 'essential' ? 1.4 : 1}
+            strokeWidth={(link.strength === 'essential' ? 1.4 : 1) * scale}
             // Dashed means recommended rather than required, the convention
             // every other graph in the app uses.
-            strokeDasharray={link.strength === 'essential' ? undefined : '4 4'}
+            strokeDasharray={
+              link.strength === 'essential' ? undefined : `${4 * scale} ${4 * scale}`
+            }
             opacity={link.strength === 'essential' ? 0.75 : 0.4}
           />
         ))}
@@ -223,17 +240,17 @@ export function HeroGraph({ className = '' }) {
           }}
         >
           <circle
-            r={radiusOf(node)}
+            r={radiusOf(node, scale)}
             fill={accentFor(node)}
             stroke="var(--color-base)"
-            strokeWidth="1.5"
+            strokeWidth={1.5 * scale}
           />
           {node.mark && (
             <text
-              y={radiusOf(node) + 15}
+              y={radiusOf(node, scale) + 15 * scale}
               textAnchor="middle"
               className="font-mono"
-              fontSize="15"
+              fontSize={15 * scale}
               fill="var(--color-ink-dim)"
             >
               {node.mark}

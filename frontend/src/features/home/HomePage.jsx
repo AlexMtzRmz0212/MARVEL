@@ -149,11 +149,11 @@ export function HomePage() {
 
         <div className="lg:col-span-7">
           {/* The two aspects are the two shapes the excerpt actually settles
-              into, measured rather than guessed: 0.71 turned vertically for the
-              phone, 2.71 laid out flat for everything else. A frame much
+              into, measured rather than guessed: 0.675 turned vertically for
+              the phone, 2.65 laid out flat for everything else. A frame much
               squarer than its drawing is mostly empty frame. */}
           <div className="hairline border bg-surface p-2 sm:p-3">
-            <div className="aspect-[5/7] bg-base sm:aspect-[12/5]">
+            <div className="aspect-[27/40] bg-base sm:aspect-[12/5]">
               <HeroGraph />
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-1 pt-3">

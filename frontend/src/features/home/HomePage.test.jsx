@@ -97,6 +97,39 @@ describe('HomePage', () => {
     expect(graph.querySelectorAll('g[transform]')).toHaveLength(9)
   })
 
+  it('never prints two labels on top of each other', () => {
+    // The phone frame is about a quarter the width of the wide one, so the
+    // ornaments are drawn at half size to come out at the same number of
+    // pixels. While they were not, "WandaVision" and "Loki" overlapped.
+    for (const wide of [true, false]) {
+      const { container, unmount } = show({ wide })
+
+      const labels = [...container.querySelectorAll('svg[role="img"] g[transform]')]
+        .map((group) => ({ group, text: group.querySelector('text') }))
+        .filter(({ text }) => text)
+        .map(({ group, text }) => {
+          const [x, y] = group.getAttribute('transform').match(/-?[\d.]+/g).map(Number)
+          const size = Number(text.getAttribute('font-size'))
+          // jsdom measures no glyphs. 0.6em a character is the usual estimate
+          // for a monospace face, and the labels are set in one.
+          const half = (text.textContent.length * size * 0.6) / 2
+          const top = y + Number(text.getAttribute('y')) - size
+          return { mark: text.textContent, x0: x - half, x1: x + half, y0: top, y1: top + size }
+        })
+
+      expect(labels.length).toBeGreaterThan(1)
+      const overlapping = labels.flatMap((a, index) =>
+        labels
+          .slice(index + 1)
+          .filter((b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1)
+          .map((b) => `${a.mark} over ${b.mark}`),
+      )
+      expect(overlapping).toEqual([])
+
+      unmount()
+    }
+  })
+
   it('sends each panel somewhere real', () => {
     show()
 

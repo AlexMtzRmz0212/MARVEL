@@ -86,6 +86,17 @@ def _quoted_list(values: tuple[str, ...]) -> str:
 def upgrade() -> None:
     op.drop_constraint(op.f("ck_movies_universe"), "movies", type_="check")
 
+    # 0001 sized this column for the longest old value ("Multiverse / Earth-616",
+    # 22). The renames below push the longest to "Multiverse / Earth-199999", 25,
+    # so the column has to grow before any row is rewritten.
+    op.alter_column(
+        "movies",
+        "universe",
+        existing_type=sa.String(length=24),
+        type_=sa.String(length=32),
+        existing_nullable=False,
+    )
+
     movies = sa.table("movies", sa.column("id", sa.String), sa.column("universe", sa.String))
     for old, new in OLD_TO_NEW.items():
         op.execute(movies.update().where(movies.c.universe == old).values(universe=new))
@@ -101,6 +112,14 @@ def downgrade() -> None:
     movies = sa.table("movies", sa.column("id", sa.String), sa.column("universe", sa.String))
     for old, new in OLD_TO_NEW.items():
         op.execute(movies.update().where(movies.c.universe == new).values(universe=old))
+
+    op.alter_column(
+        "movies",
+        "universe",
+        existing_type=sa.String(length=32),
+        type_=sa.String(length=24),
+        existing_nullable=False,
+    )
 
     op.create_check_constraint(
         op.f("ck_movies_universe"), "movies", f"universe IN ({_quoted_list(OLD_UNIVERSES)})"
