@@ -13,7 +13,7 @@ function Card({ movie, onEdit }) {
   const badges = [
     movie.phase ? `P${movie.phase}` : null,
     movie.tier,
-    movie.universe !== 'Earth-199999' ? movie.universe : null,
+    movie.universe,
   ].filter(Boolean)
 
   return (

@@ -99,10 +99,10 @@
       "title": "X-Men: First Class",
       "release_date": "2011-06-01",
       "phase": null,
-      "saga": "N/A",
+      "saga": "Fox X-Men Saga",
       "universe": "Earth-10005",
       "media_type": "film",
-      "tier": "adjacent",
+      "tier": "core",
       "runtime_min": 132,
       "prerequisites": [],
       "tmdb_id": 49538,
@@ -129,10 +129,10 @@
       "title": "X-Men: Days of Future Past",
       "release_date": "2014-05-15",
       "phase": null,
-      "saga": "N/A",
+      "saga": "Fox X-Men Saga",
       "universe": "Earth-10005",
       "media_type": "film",
-      "tier": "adjacent",
+      "tier": "core",
       "runtime_min": 132,
       "prerequisites": [],
       "tmdb_id": 127585,
@@ -144,7 +144,7 @@
       "title": "X-Men Origins: Wolverine",
       "release_date": "2009-04-28",
       "phase": null,
-      "saga": "N/A",
+      "saga": "Fox X-Men Saga",
       "universe": "Earth-10005",
       "media_type": "film",
       "tier": "optional",
@@ -221,6 +221,21 @@
       "synopsis": "The X-Men, a band of mutants who use their uncanny gifts to protect a world that hates and fears them, are challenged like never before, forced to face a dangerous and unexpected new future."
     },
     {
+      "id": "blade",
+      "title": "Blade",
+      "release_date": "1998-08-21",
+      "phase": null,
+      "saga": "Blade Trilogy",
+      "universe": "Earth-26320",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 120,
+      "prerequisites": [],
+      "tmdb_id": null,
+      "poster_url": null,
+      "synopsis": null
+    },
+    {
       "id": "x-men",
       "title": "X-Men",
       "release_date": "2000-07-13",
@@ -230,16 +245,31 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 104,
-      "prerequisites": [
-        {
-          "id": "x-men-dark-phoenix",
-          "strength": "recommended",
-          "note": null
-        }
-      ],
+      "prerequisites": [],
       "tmdb_id": 36657,
       "poster_url": "https://image.tmdb.org/t/p/w500/bRDAc4GogyS9ci3ow7UnInOcriN.jpg",
       "synopsis": "Two mutants, Rogue and Wolverine, come to a private academy for their kind whose resident superhero team, the X-Men, must oppose a terrorist organization with similar powers."
+    },
+    {
+      "id": "blade-ii",
+      "title": "Blade II",
+      "release_date": "2002-03-22",
+      "phase": null,
+      "saga": "Blade Trilogy",
+      "universe": "Earth-26320",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 117,
+      "prerequisites": [
+        {
+          "id": "blade",
+          "strength": "essential",
+          "note": "Opens on the hunt for Whistler, whom the first film left for dead"
+        }
+      ],
+      "tmdb_id": null,
+      "poster_url": null,
+      "synopsis": null
     },
     {
       "id": "spider-man",
@@ -255,6 +285,21 @@
       "tmdb_id": 557,
       "poster_url": "https://image.tmdb.org/t/p/w500/nXdAh5vUwERL4WGVMaee8RoDEAS.jpg",
       "synopsis": "After being bitten by a genetically altered spider at Oscorp, nerdy but endearing high school student Peter Parker is endowed with amazing powers to become the superhero known as Spider-Man."
+    },
+    {
+      "id": "daredevil-2003",
+      "title": "Daredevil",
+      "release_date": "2003-02-14",
+      "phase": null,
+      "saga": "Fox Daredevil",
+      "universe": "Earth-701306",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 103,
+      "prerequisites": [],
+      "tmdb_id": null,
+      "poster_url": null,
+      "synopsis": null
     },
     {
       "id": "x2-x-men-united",
@@ -297,6 +342,48 @@
       "tmdb_id": 558,
       "poster_url": "https://image.tmdb.org/t/p/w500/aGuvNAaaZuWXYQQ6N2v7DeuP6mB.jpg",
       "synopsis": "Peter Parker is going through a major identity crisis. Burned out from being Spider-Man, he decides to shelve his superhero alter ego, which leaves the city suffering in the wake of carnage left by the evil Doc Ock. In the meantime, Parker still can't act on his feelings for Mary Jane Watson, a girl he's loved since childhood. A certain anger begins to brew in his best friend Harry Osborn as well..."
+    },
+    {
+      "id": "blade-trinity",
+      "title": "Blade: Trinity",
+      "release_date": "2004-12-08",
+      "phase": null,
+      "saga": "Blade Trilogy",
+      "universe": "Earth-26320",
+      "media_type": "film",
+      "tier": "optional",
+      "runtime_min": 113,
+      "prerequisites": [
+        {
+          "id": "blade-ii",
+          "strength": "essential",
+          "note": null
+        }
+      ],
+      "tmdb_id": null,
+      "poster_url": null,
+      "synopsis": null
+    },
+    {
+      "id": "elektra",
+      "title": "Elektra",
+      "release_date": "2005-01-14",
+      "phase": null,
+      "saga": "Fox Daredevil",
+      "universe": "Earth-701306",
+      "media_type": "film",
+      "tier": "optional",
+      "runtime_min": 97,
+      "prerequisites": [
+        {
+          "id": "daredevil-2003",
+          "strength": "essential",
+          "note": "She is resurrected from the death Bullseye deals her there"
+        }
+      ],
+      "tmdb_id": null,
+      "poster_url": null,
+      "synopsis": null
     },
     {
       "id": "fantastic-four",

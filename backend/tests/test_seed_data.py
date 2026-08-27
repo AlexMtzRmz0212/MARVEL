@@ -111,7 +111,7 @@ def test_mcu_titles_all_carry_a_phase():
 
 def test_phase_and_saga_agree():
     for movie in CATALOG.movies:
-        if movie.tier.value == "adjacent" or movie.phase is None:
+        if movie.phase is None:
             continue
         expected = "Infinity Saga" if movie.phase <= 3 else "Multiverse Saga"
         assert movie.saga.value == expected, f"{movie.id}: phase {movie.phase} vs {movie.saga}"

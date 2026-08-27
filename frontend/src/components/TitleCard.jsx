@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 
 import { useWatchProgress } from '../hooks/useWatchProgress'
-import { MEDIA_LABEL, accentFor, formatRuntime, phaseLabel, year } from '../lib/format'
+import { MEDIA_LABEL, accentFor, formatRuntime, isOutsideMcu, phaseLabel, year } from '../lib/format'
 import { isWatched } from '../lib/watchStorage'
 import { WatchToggle } from './WatchToggle'
 
@@ -19,13 +19,13 @@ export function TitleCard({ movie, index }) {
   const watched = isWatched(progress, movie.id)
   const accent = accentFor(movie)
   const runtime = formatRuntime(movie.runtime_min)
-  const isAdjacent = movie.tier === 'adjacent'
+  const outsideMcu = isOutsideMcu(movie)
 
   return (
     <Link
       to={`/movies/${movie.id}`}
       className={`group hairline relative flex flex-col overflow-hidden border bg-surface transition-colors hover:border-hairline-strong ${
-        isAdjacent ? 'opacity-70 hover:opacity-100' : ''
+        outsideMcu ? 'opacity-70 hover:opacity-100' : ''
       }`}
     >
       <span

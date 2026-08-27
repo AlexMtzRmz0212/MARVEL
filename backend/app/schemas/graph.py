@@ -4,7 +4,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.core.enums import MediaType, Saga, Strength, Tier
+from app.core.enums import MediaType, Saga, Strength, Tier, Universe
 
 
 class GraphNode(BaseModel):
@@ -20,6 +20,7 @@ class GraphNode(BaseModel):
     release_date: date
     phase: int | None
     saga: Saga
+    universe: Universe
     media_type: MediaType
     tier: Tier
     runtime_min: int | None

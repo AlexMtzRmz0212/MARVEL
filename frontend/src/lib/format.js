@@ -41,7 +41,9 @@ export function formatTotalRuntime(minutes) {
 export const SAGA_LABEL = Object.fromEntries(
   [
     'Animated Multiverse',
+    'Blade Trilogy',
     'Defenders Saga',
+    'Fox Daredevil',
     'Fox X-Men Saga',
     'Infinity Saga',
     'Infinity Saga Era',
@@ -67,7 +69,28 @@ export const TIER_LABEL = {
   core: 'Core',
   supporting: 'Supporting',
   optional: 'Optional',
-  adjacent: 'Adjacent',
+}
+
+/**
+ * Mirrors MCU_UNIVERSES in app/core/enums.py, the single definition of "the MCU
+ * proper" and what `include_adjacent=false` filters on server-side. Duplicated
+ * here for the same reason validate_order is: the UI has to answer this per
+ * render, and a round trip per card is absurd. Keep the two lists in step.
+ */
+const MCU_UNIVERSES = new Set([
+  'Earth-199999',
+  'Earth-199999 (Branch)',
+  'Multiverse / TVA',
+  'Multiverse / Earth-199999',
+  'Alternate Earth / 199999',
+  'Earth-199999 / Earth-838',
+  'Animated Multiverse',
+  'Earth-10005 & 199999',
+])
+
+/** Outside MCU continuity: Fox, Sony, New Line, the animated universes. */
+export function isOutsideMcu(movie) {
+  return Boolean(movie?.universe) && !MCU_UNIVERSES.has(movie.universe)
 }
 
 /**
@@ -78,7 +101,6 @@ export const TIER_LABEL = {
 
 /** Saga drives the accent colour everywhere: cards, graph nodes, progress. */
 export function accentFor(movie) {
-  if (movie.tier === 'adjacent') return 'var(--color-adjacent)'
   if (movie.saga === 'Multiverse Saga') return 'var(--color-multiverse)'
   if (movie.saga === 'Infinity Saga') return 'var(--color-infinity)'
   return 'var(--color-adjacent)'

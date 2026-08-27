@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 
-import { accentFor } from '../../lib/format'
+import { accentFor, isOutsideMcu } from '../../lib/format'
 import { boundsOf } from '../../lib/forceGraph'
 import { isWatched } from '../../lib/watchStorage'
 
@@ -732,7 +732,7 @@ export function GraphCanvas({
                 fill={watched ? 'var(--color-ok)' : accentFor(node)}
                 stroke="var(--color-base)"
                 strokeWidth="1.5"
-                opacity={node.tier === 'adjacent' && !active ? 0.55 : 1}
+                opacity={isOutsideMcu(node) && !active ? 0.55 : 1}
               />
               <text
                 y={radius + 11}

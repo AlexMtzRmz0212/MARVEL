@@ -15,6 +15,7 @@ def _to_node(title: Title, chain_node: graph_engine.ChainNode, watched: bool | N
         release_date=title.release_date,
         phase=title.phase,
         saga=title.saga,
+        universe=title.universe,
         media_type=title.media_type,
         tier=title.tier,
         runtime_min=title.runtime_min,

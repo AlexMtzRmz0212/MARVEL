@@ -22,10 +22,10 @@ def test_catalog_returns_every_title(client):
 
 def test_catalog_defaults_to_release_order(client):
     # /api/movies is the whole catalog, Tier B included, so the very first
-    # release is X-Men (2000) rather than Iron Man -- see
+    # release is Blade (1998) rather than Iron Man -- see
     # test_release_order_starts_with_iron_man for the Marvel Studios-only cut.
     movies = client.get("/api/movies").json()
-    assert movies[0]["id"] == "x-men"
+    assert movies[0]["id"] == "blade"
     dates = [movie["release_date"] for movie in movies]
     assert dates == sorted(dates)
 
@@ -70,9 +70,9 @@ def test_release_order_is_sorted_by_date(client):
 
 
 def test_chronological_order_starts_in_the_past(client):
-    # include_adjacent defaults to False, so the two tier='adjacent' X-Men
-    # titles are filtered out here even though they sit in that range of the
-    # raw catalog order (see test_seed_data.py for the unfiltered assertion).
+    # include_adjacent defaults to False and filters on universe, so the two
+    # Earth-10005 X-Men titles are dropped here even though they sit in that
+    # range of the raw catalog order (see test_seed_data.py, unfiltered).
     movies = client.get("/api/orders/chronological").json()["movies"]
     assert [movie["id"] for movie in movies[:6]] == [
         "captain-america-the-first-avenger",

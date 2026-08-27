@@ -124,15 +124,11 @@ export function MovieDetailPage() {
             <dt className="sr-only">Tier</dt>
             <dd>{TIER_LABEL[movie.tier]}</dd>
           </div>
-          {movie.universe !== 'Earth-199999' && (
-            <>
-              <span aria-hidden="true">·</span>
-              <div>
-                <dt className="sr-only">Universe</dt>
-                <dd>{movie.universe}</dd>
-              </div>
-            </>
-          )}
+          <span aria-hidden="true">·</span>
+          <div>
+            <dt className="sr-only">Universe</dt>
+            <dd>{movie.universe}</dd>
+          </div>
           <span aria-hidden="true">·</span>
           <div>
             <dt className="sr-only">Release number</dt>

@@ -24,7 +24,9 @@ class Saga(StrEnum):
     """
 
     ANIMATED_MULTIVERSE = "Animated Multiverse"
+    BLADE_TRILOGY = "Blade Trilogy"
     DEFENDERS_SAGA = "Defenders Saga"
+    FOX_DAREDEVIL = "Fox Daredevil"
     FOX_X_MEN_SAGA = "Fox X-Men Saga"
     INFINITY_SAGA = "Infinity Saga"
     INFINITY_SAGA_ERA = "Infinity Saga Era"
@@ -65,12 +67,15 @@ class Universe(StrEnum):
     ALTERNATE_EARTH_199999 = "Alternate Earth / 199999"
     EARTH_199999_EARTH_838 = "Earth-199999 / Earth-838"
     EARTH_10005_2029 = "Earth-10005 (2029)"
+    EARTH_26320 = "Earth-26320"
+    EARTH_701306 = "Earth-701306"
 
 
-# Earth-616 and its direct branches/crossovers/multiverse-official designations --
-# what "the MCU proper" means once tier stopped doubling as that signal (tier now
-# also grades adjacent-universe titles by importance within their own franchise,
-# per the curated table; see `Tier`). This is what `include_adjacent` filters on.
+# Earth-199999 and its direct branches/crossovers/multiverse-official designations.
+# This is the single definition of "the MCU proper", and what `include_adjacent`
+# filters on. `Tier` used to carry a second, weaker version of the same signal in
+# its `ADJACENT` member; that member is gone, because a title's continuity is a
+# fact about its universe and nothing else. See `Tier`.
 MCU_UNIVERSES = frozenset(
     {
         Universe.EARTH_199999,
@@ -92,17 +97,28 @@ class MediaType(StrEnum):
 
 
 class Tier(StrEnum):
-    """How necessary a title is to the through-line.
+    """How necessary a title is to the through-line *of its own continuity*.
+
+    The catalog is not one story. Its edge set is a couple of dozen disconnected
+    components -- the MCU and everything wired into it, then Blade, then Fox's
+    Daredevil, and so on -- so "the spine" below means the spine of whichever
+    franchise the title belongs to, not one global one. `core` on `blade` and
+    `core` on `iron-man` are claims about different spines.
 
     Distinct from `Strength`, which grades a single dependency edge. A title can
     be `CORE` in its own right while being only a `RECOMMENDED` prerequisite for
     some particular other title.
+
+    There is deliberately no `ADJACENT` member. It used to mean "outside MCU
+    continuity entirely", which is a fact about `universe`, not about how much
+    the title matters -- and it only ever tagged two of the twenty-odd non-MCU
+    titles, the rest of which were already graded on their own franchise. See
+    `MCU_UNIVERSES`, which is what actually answers that question.
     """
 
     CORE = "core"  # the main spine; skipping it leaves a hole
     SUPPORTING = "supporting"  # meaningful, but the spine survives without it
     OPTIONAL = "optional"  # enjoyable, largely self-contained
-    ADJACENT = "adjacent"  # outside MCU continuity entirely
 
 
 class Strength(StrEnum):
