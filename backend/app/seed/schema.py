@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from app.core.enums import MediaType, Saga, Strength, Tier, Universe
 from app.core.graph import (
@@ -36,6 +36,59 @@ class SeedPrerequisite(BaseModel):
     note: str | None = Field(default=None, max_length=280)
 
 
+class SeedCreditEpisode(BaseModel):
+    """One episode of a series that keeps something back for the credits."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    episode: int = Field(ge=1)
+    name: str | None = Field(default=None, max_length=200)
+    count: int = Field(default=1, ge=1, le=5)
+    note: str | None = Field(default=None, max_length=280)
+
+
+class SeedCreditScenes(BaseModel):
+    """What plays during and after the credits.
+
+    Absent from a title means *not researched*, which is not the same claim as
+    ``{"count": 0}`` -- that one says somebody sat through the credits and there
+    was nothing there. The UI keeps the distinction: it says "nothing after the
+    credits" for the zero and stays silent for the absence, because a tool that
+    guesses on your behalf is worse than one that admits it does not know.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    count: int | None = Field(default=None, ge=0, le=5)
+    note: str | None = Field(default=None, max_length=280)
+    episodes: list[SeedCreditEpisode] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _one_place_to_count(self) -> SeedCreditScenes:
+        """A season's total is the sum of its episodes, never a second figure.
+
+        Same rule as chrono_order and release_order: anything derivable is
+        derived, so a hand-written number cannot drift from the list under it.
+        """
+        if self.episodes:
+            if self.count is not None:
+                raise ValueError("drop `count`; it is the sum of the episode counts")
+            numbers = [episode.episode for episode in self.episodes]
+            if len(set(numbers)) != len(numbers):
+                raise ValueError("an episode is listed twice")
+            if numbers != sorted(numbers):
+                raise ValueError("list episodes in broadcast order")
+        elif self.count is None:
+            raise ValueError("needs a `count`, or a non-empty `episodes` list")
+        return self
+
+    @property
+    def total(self) -> int:
+        if self.count is not None:
+            return self.count
+        return sum(episode.count for episode in self.episodes)
+
+
 class SeedMovie(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -51,6 +104,7 @@ class SeedMovie(BaseModel):
     poster_url: str | None = Field(default=None, max_length=500)
     synopsis: str | None = None
     tmdb_id: int | None = None
+    credit_scenes: SeedCreditScenes | None = None
     prerequisites: list[SeedPrerequisite] = Field(default_factory=list)
 
 
@@ -122,6 +176,20 @@ def validate_catalog(seed: SeedFile) -> ValidatedCatalog:
         else:
             tmdb_seen[movie.tmdb_id] = movie.id
     problems.extend(sorted(tmdb_duplicates))
+
+    # -- credits scenes ------------------------------------------------------
+    #
+    # A per-episode breakdown on a film is not a typo the type system can catch:
+    # both shapes are valid `SeedCreditScenes`, and only the media type says
+    # which one is meaningful.
+    problems.extend(
+        f"{movie.id}: per-episode credits scenes only make sense for a series, "
+        f"and this is a {movie.media_type.value}"
+        for movie in seed.movies
+        if movie.credit_scenes is not None
+        and movie.credit_scenes.episodes
+        and movie.media_type is not MediaType.SERIES
+    )
 
     if not seed.movies:
         problems.append("The seed file contains no titles.")

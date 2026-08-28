@@ -95,6 +95,53 @@ def test_films_have_a_runtime_and_series_runtimes_are_season_totals():
             )
 
 
+def test_a_seasons_credit_scene_total_is_the_sum_of_its_episodes():
+    """The count is derived, never written twice.
+
+    Same rule as chrono_order and release_order: a hand-written total beside a
+    per-episode list is a second copy of the same fact, and the two would drift
+    the first time an episode was added.
+    """
+    for movie in CATALOG.movies:
+        scenes = movie.credit_scenes
+        if scenes is None or not scenes.episodes:
+            continue
+        assert scenes.count is None, f"{movie.id} writes a total it should be deriving"
+        assert scenes.total == sum(episode.count for episode in scenes.episodes)
+
+
+def test_per_episode_credit_scenes_only_appear_on_series():
+    for movie in CATALOG.movies:
+        if movie.credit_scenes and movie.credit_scenes.episodes:
+            assert movie.media_type.value == "series", (
+                f"{movie.id} is a {movie.media_type.value} with a per-episode breakdown"
+            )
+
+
+def test_credit_scenes_are_recorded_for_the_titles_people_ask_about():
+    """A spot check on the data, not the shape.
+
+    Absent means "nobody has checked", so these assertions are the difference
+    between the field being wired up and the field being *answered* for the
+    titles anyone actually sits through the credits for.
+    """
+    recorded = {movie.id: movie.credit_scenes for movie in CATALOG.movies}
+
+    assert recorded["guardians-of-the-galaxy-vol-2"].total == 5
+    assert recorded["the-avengers"].total == 2
+    # Recorded, and none: the credits play out over a sound, not a scene.
+    assert recorded["avengers-endgame"].total == 0
+    assert recorded["avengers-endgame"].note
+
+    wandavision = recorded["wandavision"]
+    assert [episode.episode for episode in wandavision.episodes] == [7, 8, 9]
+    assert wandavision.total == 4
+
+    # Every Netflix and ABC season, unanimously: nothing to wait for.
+    assert recorded["daredevil-season-1"].total == 0
+    assert recorded["agents-of-shield-season-7"].total == 0
+
+
 def test_mcu_titles_all_carry_a_phase():
     """Only the two core sagas carry phase semantics -- see `test_phase_and_saga_agree`.
 

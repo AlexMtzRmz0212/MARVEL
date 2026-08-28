@@ -55,6 +55,30 @@ def test_movie_detail_includes_both_directions(client):
     assert "captain-america-the-winter-soldier" in unlocked_ids
 
 
+def test_summaries_carry_a_credit_scene_count_and_detail_carries_the_episodes(client):
+    """The card needs a number; only the detail page needs the breakdown.
+
+    A per-episode list on all 128 summaries would be paid for on the catalog
+    page, which uses none of it.
+    """
+    summaries = {movie["id"]: movie for movie in client.get("/api/movies").json()}
+    assert summaries["wandavision"]["credit_scenes"] == 4
+    assert "credit_scene_episodes" not in summaries["wandavision"]
+
+    detail = client.get("/api/movies/wandavision").json()
+    assert detail["credit_scenes"] == 4
+    episodes = detail["credit_scene_episodes"]
+    assert [episode["episode"] for episode in episodes] == [7, 8, 9]
+    assert episodes[-1]["count"] == 2
+    assert episodes[0]["name"] == "Breaking the Fourth Wall"
+
+
+def test_a_recorded_zero_is_not_the_same_as_an_unrecorded_title(client):
+    """null and 0 are different answers, and the API keeps them apart."""
+    assert client.get("/api/movies/avengers-endgame").json()["credit_scenes"] == 0
+    assert client.get("/api/movies/avengers-doomsday").json()["credit_scenes"] is None
+
+
 def test_unknown_movie_is_404(client):
     assert client.get("/api/movies/not-a-real-film").status_code == 404
 

@@ -39,8 +39,25 @@ def sort_key(chrono_order: int | None, release_order: int) -> int:
 
 
 @dataclass(frozen=True, slots=True)
+class CreditSceneEpisode:
+    """One episode of a series that holds something back for the credits."""
+
+    episode: int
+    name: str | None
+    count: int
+    note: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class Title:
-    """One catalog entry. Mirrors the `Movie` ORM model."""
+    """One catalog entry. Mirrors the `Movie` ORM model.
+
+    With one deliberate exception: the three `credit_scene*` fields have no
+    column behind them. `movies` exists in Postgres to be a foreign key for
+    watch progress and saved orders; the catalog itself is served from the JSON
+    on every path, so a column nothing reads would be dead weight and a
+    migration for nothing.
+    """
 
     id: MovieId
     title: str
@@ -56,6 +73,12 @@ class Title:
     tmdb_id: int | None
     release_order: int
     chrono_order: int | None
+
+    # None is "nobody has checked", 0 is "checked, there is nothing". Kept flat
+    # rather than nested so the API schemas validate straight off this record.
+    credit_scenes: int | None = None
+    credit_scene_note: str | None = None
+    credit_scene_episodes: tuple[CreditSceneEpisode, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,6 +163,17 @@ def build_catalog(path: Path = DEFAULT_SEED_PATH) -> Catalog:
             tmdb_id=movie.tmdb_id,
             release_order=validated.release_order[movie.id],
             chrono_order=validated.chrono_order[movie.id],
+            credit_scenes=movie.credit_scenes.total if movie.credit_scenes else None,
+            credit_scene_note=movie.credit_scenes.note if movie.credit_scenes else None,
+            credit_scene_episodes=tuple(
+                CreditSceneEpisode(
+                    episode=episode.episode,
+                    name=episode.name,
+                    count=episode.count,
+                    note=episode.note,
+                )
+                for episode in (movie.credit_scenes.episodes if movie.credit_scenes else ())
+            ),
         )
         for movie in validated.movies
     ]

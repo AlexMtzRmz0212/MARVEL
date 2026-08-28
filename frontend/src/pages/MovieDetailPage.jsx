@@ -10,6 +10,7 @@ import {
   SAGA_LABEL,
   TIER_LABEL,
   accentFor,
+  creditScenesLabel,
   formatDate,
   formatRuntime,
   phaseLabel,
@@ -44,6 +45,68 @@ function LinkRow({ item, accent }) {
   )
 }
 
+/**
+ * The wink: what is left after the picture ends.
+ *
+ * `credit_scenes` is null when nobody has checked and 0 when somebody did and
+ * there was nothing, and the difference is the whole point of the field -- "we
+ * don't know" and "don't wait around" are different answers to sit through
+ * eight minutes of credits for. Null renders nothing at all.
+ *
+ * A season is a dozen hours, so a count on its own would be useless: for a
+ * series the answer has to name the episodes, which is what the seed file
+ * stores and what the total is summed from.
+ */
+function CreditScenes({ movie, accent }) {
+  const total = movie.credit_scenes
+  const episodes = movie.credit_scene_episodes ?? []
+  const note = movie.credit_scene_note
+
+  // A bare count is already in the header. This section is for what a count
+  // cannot say, so a film with nothing to add does not get an empty band.
+  if (total === null || total === undefined) return null
+  if (episodes.length === 0 && !note) return null
+
+  return (
+    <section className="hairline border-b py-8">
+      <h2 className="meta hairline flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b pb-2">
+        After the credits
+        <span className="text-ink-dim">
+          {total === 0 ? 'None' : `${total} scene${total === 1 ? '' : 's'}`}
+          {episodes.length > 0 &&
+            ` in ${episodes.length} episode${episodes.length === 1 ? '' : 's'}`}
+        </span>
+      </h2>
+
+      {episodes.length > 0 && (
+        <ul>
+          {episodes.map((episode) => (
+            <li
+              key={episode.episode}
+              className="hairline flex items-baseline gap-3 border-b py-3 last:border-b-0"
+            >
+              <span className="meta shrink-0 tabular-nums" style={{ color: accent }}>
+                Ep {episode.episode}
+              </span>
+              <div className="min-w-0 flex-1">
+                {episode.name && <p className="text-sm text-ink">{episode.name}</p>}
+                {episode.note && (
+                  <p className="mt-0.5 text-xs leading-relaxed text-ink-dim">{episode.note}</p>
+                )}
+              </div>
+              <span className="meta shrink-0 tabular-nums">
+                {episode.count} scene{episode.count === 1 ? '' : 's'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {note && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-dim">{note}</p>}
+    </section>
+  )
+}
+
 function Panel({ title, count, empty, children }) {
   return (
     <section>
@@ -71,6 +134,7 @@ export function MovieDetailPage() {
   const accent = accentFor(movie)
   const runtime = formatRuntime(movie.runtime_min)
   const watched = isWatched(progress, movie.id)
+  const creditScenes = creditScenesLabel(movie.credit_scenes)
 
   return (
     <article className="py-8">
@@ -129,6 +193,15 @@ export function MovieDetailPage() {
             <dt className="sr-only">Universe</dt>
             <dd>{movie.universe}</dd>
           </div>
+          {creditScenes && (
+            <>
+              <span aria-hidden="true">·</span>
+              <div>
+                <dt className="sr-only">Credits scenes</dt>
+                <dd>{creditScenes}</dd>
+              </div>
+            </>
+          )}
           <span aria-hidden="true">·</span>
           <div>
             <dt className="sr-only">Release number</dt>
@@ -148,6 +221,8 @@ export function MovieDetailPage() {
           <span aria-hidden="true">&rarr;</span>
         </Link>
       </header>
+
+      <CreditScenes movie={movie} accent={accent} />
 
       <div className="grid gap-10 py-8 md:grid-cols-2">
         <Panel

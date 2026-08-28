@@ -134,6 +134,13 @@ The catalog is authoritative for ids, phases, sagas, tiers, chronology and the
 dependency edges — the things APIs get wrong. TMDb fills in only posters,
 synopses, runtimes and its own id.
 
+It also records what is left after the picture ends. A film carries a count; a
+season carries the episodes that hold something back, and its total is summed
+from them rather than written down a second time to drift. An absent field means
+nobody has checked, which is not the claim a recorded `0` makes — so the catalog
+grid marks only a positive count, and the title page is the only place that ever
+says there is nothing to wait for.
+
 Edit the catalog with the local editor: run `catalog.bat` at the repo root and
 it opens at `localhost:5173/editor.html`. It organises and edits
 `app/seed/data/mcu.json`, validates with the same checks as
@@ -201,7 +208,7 @@ the deploy that ships it.**
 
 ## Status
 
-Working: catalog with release/chronological/filtered views, title detail, the
-prerequisite graph, the whole-catalog force graph, the custom order builder
-with live validation, and accounts syncing saved orders, watch progress and
-display preferences across devices.
+Working: catalog with release/chronological/filtered views, title detail with
+its credits-scene breakdown, the prerequisite graph, the whole-catalog force
+graph, the custom order builder with live validation, and accounts syncing
+saved orders, watch progress and display preferences across devices.

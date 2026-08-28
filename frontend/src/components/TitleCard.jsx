@@ -1,7 +1,15 @@
 import { Link } from 'react-router'
 
 import { useWatchProgress } from '../hooks/useWatchProgress'
-import { MEDIA_LABEL, accentFor, formatRuntime, isOutsideMcu, phaseLabel, year } from '../lib/format'
+import {
+  MEDIA_LABEL,
+  accentFor,
+  creditScenesLabel,
+  formatRuntime,
+  isOutsideMcu,
+  phaseLabel,
+  year,
+} from '../lib/format'
 import { isWatched } from '../lib/watchStorage'
 import { WatchToggle } from './WatchToggle'
 
@@ -20,6 +28,7 @@ export function TitleCard({ movie, index }) {
   const accent = accentFor(movie)
   const runtime = formatRuntime(movie.runtime_min)
   const outsideMcu = isOutsideMcu(movie)
+  const creditScenes = movie.credit_scenes
 
   return (
     <Link
@@ -59,6 +68,16 @@ export function TitleCard({ movie, index }) {
         <div className="absolute top-1.5 right-1.5">
           <WatchToggle movieId={movie.id} watched={watched} title={movie.title} size="sm" />
         </div>
+
+        {/* The wink: something is still coming after the picture ends. Drawn
+         * only for a positive count -- a recorded zero and an unrecorded title
+         * both leave the corner empty, and the detail page tells them apart. */}
+        {creditScenes > 0 && (
+          <span className="absolute bottom-1.5 left-1.5 border border-hairline-strong bg-base/85 px-1 py-0.5 font-mono text-[10px] leading-none tabular-nums text-ink-dim">
+            <span aria-hidden="true">+{creditScenes}</span>
+            <span className="sr-only">{creditScenesLabel(creditScenes)}</span>
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-3 pl-4">

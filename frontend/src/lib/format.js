@@ -33,6 +33,19 @@ export function formatTotalRuntime(minutes) {
 }
 
 /**
+ * Scenes during or after the credits.
+ *
+ * `null`/`undefined` is "the catalog has not checked" and 0 is "checked, there
+ * is nothing" -- two different answers, so this returns null for the first and
+ * a sentence for the second rather than folding them together.
+ */
+export function creditScenesLabel(count) {
+  if (count === null || count === undefined) return null
+  if (count === 0) return 'No credits scene'
+  return `${count} credits scene${count === 1 ? '' : 's'}`
+}
+
+/**
  * Saga values are already display-ready strings (e.g. "Infinity Saga",
  * "Fox X-Men Saga"), same convention as `movie.universe` below -- this table
  * only exists for call sites that want a `SAGA_LABEL[x]` lookup with a safe

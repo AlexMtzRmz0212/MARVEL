@@ -13,6 +13,13 @@
     "The loader asserts that this array order is itself a valid topological sort",
     "of the edges below -- that single check catches most authoring mistakes.",
     "",
+    "`credit_scenes` is the wink: how much is left after the picture ends. A",
+    "missing field means nobody has checked; `{\"count\": 0}` means somebody sat",
+    "through the credits and there was nothing. Those are different claims and",
+    "the UI shows them differently, so do not write a zero to mean 'unknown'.",
+    "A series lists the episodes instead and the total is summed from them --",
+    "never write both, the loader refuses it.",
+    "",
     "Edges are kept transitively reduced: if A requires B and B requires C, the",
     "A->C edge is omitted. Redundant edges clutter the graph visualisation, and",
     "the loader warns about them.",
@@ -38,6 +45,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 124,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [],
       "tmdb_id": 1771,
       "poster_url": "https://image.tmdb.org/t/p/w500/vSNxAJTlD0r02V9sPYpOjqDZXUK.jpg",
@@ -68,6 +78,9 @@
       "media_type": "series",
       "tier": "core",
       "runtime_min": 343,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 61550,
       "poster_url": "https://image.tmdb.org/t/p/w500/gqyjmfFOrKY8iouNTXWj9KW7cC5.jpg",
@@ -83,6 +96,9 @@
       "media_type": "series",
       "tier": "core",
       "runtime_min": 434,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agent-carter-season-one",
@@ -104,6 +120,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 132,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 49538,
       "poster_url": "https://image.tmdb.org/t/p/w500/hNEokmUke0dazoBhttFN0o3L7Xv.jpg",
@@ -119,6 +138,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 115,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [],
       "tmdb_id": 617126,
       "poster_url": "https://image.tmdb.org/t/p/w500/nf5qaSEvyYSNeFH0YhSs5EsBLX9.jpg",
@@ -134,6 +156,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 132,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [],
       "tmdb_id": 127585,
       "poster_url": "https://image.tmdb.org/t/p/w500/tYfijzolzgoMOtegh1Y7j2Enorg.jpg",
@@ -149,6 +174,10 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 107,
+      "credit_scenes": {
+        "count": 1,
+        "note": "Prints shipped with different tags, so which one you saw depended on the cinema."
+      },
       "prerequisites": [],
       "tmdb_id": 2080,
       "poster_url": "https://image.tmdb.org/t/p/w500/yj8LbTju1p7CUJg7US2unSBk33s.jpg",
@@ -164,6 +193,9 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 144,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [],
       "tmdb_id": 246655,
       "poster_url": "https://image.tmdb.org/t/p/w500/ikA8UhYdTGpqbatFa93nIf6noSr.jpg",
@@ -179,6 +211,9 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 114,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "x-men-apocalypse",
@@ -200,6 +235,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 124,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [],
       "tmdb_id": 299537,
       "poster_url": "https://image.tmdb.org/t/p/w500/AtsgWhDnHTq68L0lLsUrCnM7TjG.jpg",
@@ -215,6 +253,15 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": null,
+      "credit_scenes": {
+        "episodes": [
+          {
+            "episode": 10,
+            "name": "Tolerance Is Extinction - Part 3",
+            "count": 1
+          }
+        ]
+      },
       "prerequisites": [],
       "tmdb_id": 138502,
       "poster_url": "https://image.tmdb.org/t/p/w500/2HKBc5UiFw8JrruHq8S1Y7TnlW0.jpg",
@@ -230,6 +277,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 120,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 36647,
       "poster_url": "https://image.tmdb.org/t/p/w500/oWT70TvbsmQaqyphCZpsnQR7R32.jpg",
@@ -245,6 +295,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 104,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 36657,
       "poster_url": "https://image.tmdb.org/t/p/w500/bRDAc4GogyS9ci3ow7UnInOcriN.jpg",
@@ -260,6 +313,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 117,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "blade",
@@ -281,6 +337,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 121,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 557,
       "poster_url": "https://image.tmdb.org/t/p/w500/nXdAh5vUwERL4WGVMaee8RoDEAS.jpg",
@@ -296,6 +355,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 103,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 9480,
       "poster_url": "https://image.tmdb.org/t/p/w500/oCDBwSkntYamuw8VJIxMRCtDBmi.jpg",
@@ -311,6 +373,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 133,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "x-men",
@@ -332,6 +397,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 127,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "spider-man",
@@ -353,6 +421,9 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 113,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "blade-ii",
@@ -374,6 +445,9 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 97,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "daredevil-2003",
@@ -395,6 +469,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 106,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [],
       "tmdb_id": 9738,
       "poster_url": "https://image.tmdb.org/t/p/w500/4YMcYEFS8sFuW3soP1HVmgR3cSm.jpg",
@@ -410,6 +487,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 104,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [],
       "tmdb_id": 36668,
       "poster_url": "https://image.tmdb.org/t/p/w500/a2xicU8DpKtRizOHjQLC1JyCSRS.jpg",
@@ -425,6 +505,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 139,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "spider-man-2",
@@ -446,6 +529,9 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 92,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [
         {
           "id": "fantastic-four",
@@ -467,6 +553,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 126,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [],
       "tmdb_id": 1726,
       "poster_url": "https://image.tmdb.org/t/p/w500/78lPtwv72eTNqFW9COBYI0dWDJa.jpg",
@@ -482,6 +571,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 124,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [
         {
           "id": "iron-man",
@@ -503,6 +595,10 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 114,
+      "credit_scenes": {
+        "count": 0,
+        "note": "The Tony Stark scene plays just before the credits rather than after them."
+      },
       "prerequisites": [],
       "tmdb_id": 1724,
       "poster_url": "https://image.tmdb.org/t/p/w500/gKzYx79y0AQTL4UAk1cBQJ3nvrm.jpg",
@@ -539,6 +635,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 115,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [],
       "tmdb_id": 10195,
       "poster_url": "https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg",
@@ -575,6 +674,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 143,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "iron-man-2",
@@ -632,6 +734,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 136,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [],
       "tmdb_id": 1930,
       "poster_url": "https://image.tmdb.org/t/p/w500/jexoNYnPd6vVrmygwF6QZmWPFdu.jpg",
@@ -647,6 +752,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 130,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [
         {
           "id": "the-avengers",
@@ -668,6 +776,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 126,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [
         {
           "id": "x-men-the-last-stand",
@@ -689,6 +800,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 303,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "the-avengers",
@@ -710,6 +824,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 112,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "the-avengers",
@@ -731,6 +848,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 388,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-s1-ep1-7",
@@ -773,6 +893,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 136,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "the-avengers",
@@ -794,6 +917,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 218,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-s1-ep8-16",
@@ -820,6 +946,10 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 141,
+      "credit_scenes": {
+        "count": 1,
+        "note": "A trailer for another studio's film rather than a scene of its own."
+      },
       "prerequisites": [
         {
           "id": "the-amazing-spider-man",
@@ -841,6 +971,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 121,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [
         {
           "id": "thor-the-dark-world",
@@ -862,6 +995,10 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 137,
+      "credit_scenes": {
+        "count": 5,
+        "note": "Five of them, more than any other Marvel film."
+      },
       "prerequisites": [
         {
           "id": "guardians-of-the-galaxy",
@@ -883,6 +1020,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 434,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-s1-ep17-21",
@@ -904,6 +1044,9 @@
       "media_type": "series",
       "tier": "core",
       "runtime_min": 712,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "the-avengers",
@@ -925,6 +1068,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 388,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-s2-ep1-10",
@@ -946,6 +1092,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 141,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [
         {
           "id": "captain-america-the-winter-soldier",
@@ -972,6 +1121,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 132,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-s2-ep11-19",
@@ -993,6 +1145,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 117,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "avengers-age-of-ultron",
@@ -1014,6 +1169,9 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 100,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 166424,
       "poster_url": "https://image.tmdb.org/t/p/w500/cDroz5qSlP8xZ6tOpeYoPkBvKyL.jpg",
@@ -1029,6 +1187,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 698,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "daredevil-season-1",
@@ -1050,6 +1211,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 434,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-s2-ep20-22",
@@ -1071,6 +1235,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 108,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [],
       "tmdb_id": 293660,
       "poster_url": "https://image.tmdb.org/t/p/w500/3E53WEZJqP6aM84D8CckXx4pIHw.jpg",
@@ -1086,6 +1253,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 712,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "daredevil-season-1",
@@ -1107,6 +1277,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 704,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "jessica-jones-season-1",
@@ -1128,6 +1301,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 390,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-s3-ep1-10",
@@ -1149,6 +1325,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 147,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "avengers-age-of-ultron",
@@ -1175,6 +1354,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 134,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [
         {
           "id": "captain-america-civil-war",
@@ -1196,6 +1378,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 135,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "captain-america-civil-war",
@@ -1217,6 +1402,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 130,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-s3-ep11-19",
@@ -1243,6 +1431,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 133,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "captain-america-civil-war",
@@ -1264,6 +1455,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 726,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 62127,
       "poster_url": "https://image.tmdb.org/t/p/w500/usGfoL4RfX15f1sQcX3Sgw4YRf4.jpg",
@@ -1279,6 +1473,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 115,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [],
       "tmdb_id": 284052,
       "poster_url": "https://image.tmdb.org/t/p/w500/uGBVj3bEbCoZbDjjl9wTxcygko1.jpg",
@@ -1294,6 +1491,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 960,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-s3-ep20-22",
@@ -1315,6 +1515,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 336,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-season-4",
@@ -1336,6 +1539,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 394,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "daredevil-season-2",
@@ -1372,6 +1578,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 699,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "daredevil-season-2",
@@ -1393,6 +1602,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 503,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 67466,
       "poster_url": "https://image.tmdb.org/t/p/w500/hMsaGkDyCM3Y3EWcdYK5Uu8qEok.jpg",
@@ -1408,6 +1620,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 425,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 66190,
       "poster_url": "https://image.tmdb.org/t/p/w500/nluzawv8wEo0AeECpnLo3wO2YLZ.jpg",
@@ -1423,6 +1638,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 131,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "thor-the-dark-world",
@@ -1454,6 +1672,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 673,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "jessica-jones-season-1",
@@ -1475,6 +1696,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 120,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [
         {
           "id": "deadpool",
@@ -1496,6 +1720,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 763,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "luke-cage-season-1",
@@ -1522,6 +1749,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 526,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "iron-fist-season-1",
@@ -1548,6 +1778,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 676,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "daredevil-season-2",
@@ -1574,6 +1807,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 627,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "runaways-season-1",
@@ -1595,6 +1831,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 685,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "the-punisher-season-1",
@@ -1616,6 +1855,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 409,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "cloak-and-dagger-season-1",
@@ -1637,6 +1879,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 117,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [],
       "tmdb_id": 324857,
       "poster_url": "https://image.tmdb.org/t/p/w500/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg",
@@ -1652,6 +1897,9 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 963,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-season-4",
@@ -1673,6 +1921,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 119,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "ant-man",
@@ -1699,6 +1950,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 149,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [
         {
           "id": "thor-ragnarok",
@@ -1740,6 +1994,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 576,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-season-5",
@@ -1761,6 +2018,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 573,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "agents-of-shield-season-6",
@@ -1782,6 +2042,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 487,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "runaways-season-2",
@@ -1803,6 +2066,9 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 516,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 88987,
       "poster_url": "https://image.tmdb.org/t/p/w500/8fPIcaRIZgsoBcgA5yAm3GNz61M.jpg",
@@ -1818,6 +2084,9 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 94,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [],
       "tmdb_id": 340102,
       "poster_url": "https://image.tmdb.org/t/p/w500/xiDGcXJTvu1lazFRYip6g1eLt9c.jpg",
@@ -1833,6 +2102,10 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 181,
+      "credit_scenes": {
+        "count": 0,
+        "note": "No scene. The credits close on the sound of Tony hammering in his workshop."
+      },
       "prerequisites": [
         {
           "id": "avengers-infinity-war",
@@ -1864,6 +2137,10 @@
       "media_type": "series",
       "tier": "core",
       "runtime_min": null,
+      "credit_scenes": {
+        "count": 0,
+        "note": "Nothing but a \"Loki will return in season 2\" card at the end of the finale."
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -1885,6 +2162,15 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": null,
+      "credit_scenes": {
+        "episodes": [
+          {
+            "episode": 9,
+            "name": "What If... the Watcher Broke His Oath?",
+            "count": 1
+          }
+        ]
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -1911,6 +2197,26 @@
       "media_type": "series",
       "tier": "core",
       "runtime_min": null,
+      "credit_scenes": {
+        "episodes": [
+          {
+            "episode": 7,
+            "name": "Breaking the Fourth Wall",
+            "count": 1
+          },
+          {
+            "episode": 8,
+            "name": "Previously On",
+            "count": 1
+          },
+          {
+            "episode": 9,
+            "name": "The Series Finale",
+            "count": 2,
+            "note": "One mid-credits, one buried after the crew credits."
+          }
+        ]
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -1932,6 +2238,20 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": null,
+      "credit_scenes": {
+        "episodes": [
+          {
+            "episode": 5,
+            "name": "Truth",
+            "count": 1
+          },
+          {
+            "episode": 6,
+            "name": "One World, One People",
+            "count": 1
+          }
+        ]
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -1953,6 +2273,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 132,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -1974,6 +2297,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 156,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -1995,6 +2321,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 129,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -2016,6 +2345,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 148,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "spider-man-far-from-home",
@@ -2047,6 +2379,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 126,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "spider-man-no-way-home",
@@ -2078,6 +2413,9 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 105,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "spider-man-no-way-home",
@@ -2099,6 +2437,16 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": null,
+      "credit_scenes": {
+        "episodes": [
+          {
+            "episode": 6,
+            "name": "So This Is Christmas?",
+            "count": 1,
+            "note": "The Rogers: The Musical number, performed in full."
+          }
+        ]
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -2125,6 +2473,10 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 128,
+      "credit_scenes": {
+        "count": 1,
+        "note": "A montage runs through the credits; the scene itself is right at the end."
+      },
       "prerequisites": [
         {
           "id": "loki",
@@ -2161,6 +2513,15 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": null,
+      "credit_scenes": {
+        "episodes": [
+          {
+            "episode": 6,
+            "name": "Gods and Monsters",
+            "count": 1
+          }
+        ]
+      },
       "prerequisites": [],
       "tmdb_id": 92749,
       "poster_url": "https://image.tmdb.org/t/p/w500/x6FsYvt33846IQnDSFxla9j0RX8.jpg",
@@ -2176,6 +2537,15 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": null,
+      "credit_scenes": {
+        "episodes": [
+          {
+            "episode": 5,
+            "name": "Maya",
+            "count": 1
+          }
+        ]
+      },
       "prerequisites": [
         {
           "id": "hawkeye",
@@ -2197,6 +2567,15 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": null,
+      "credit_scenes": {
+        "episodes": [
+          {
+            "episode": 6,
+            "name": "No Normal",
+            "count": 1
+          }
+        ]
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -2223,6 +2602,36 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": null,
+      "credit_scenes": {
+        "note": "One after each of the first four episodes, then nothing until the finale.",
+        "episodes": [
+          {
+            "episode": 1,
+            "name": "A Normal Amount of Rage",
+            "count": 1
+          },
+          {
+            "episode": 2,
+            "name": "Superhuman Law",
+            "count": 1
+          },
+          {
+            "episode": 3,
+            "name": "The People vs. Emil Blonsky",
+            "count": 1
+          },
+          {
+            "episode": 4,
+            "name": "Is This Not Real Magic?",
+            "count": 1
+          },
+          {
+            "episode": 9,
+            "name": "Whose Show Is This?",
+            "count": 1
+          }
+        ]
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -2249,6 +2658,9 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 119,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "avengers-endgame",
@@ -2291,6 +2703,10 @@
       "media_type": "special",
       "tier": "optional",
       "runtime_min": 55,
+      "credit_scenes": {
+        "count": 0,
+        "note": "Left out on purpose: the special ends where its story ends."
+      },
       "prerequisites": [],
       "tmdb_id": 894205,
       "poster_url": "https://image.tmdb.org/t/p/w500/mvIvNKRIJPPS7WSFarFhOAGIVnU.jpg",
@@ -2306,6 +2722,10 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 162,
+      "credit_scenes": {
+        "count": 1,
+        "note": "Mid-credits only. Nothing at the very end."
+      },
       "prerequisites": [
         {
           "id": "black-panther",
@@ -2332,6 +2752,9 @@
       "media_type": "special",
       "tier": "optional",
       "runtime_min": 45,
+      "credit_scenes": {
+        "count": 1
+      },
       "prerequisites": [
         {
           "id": "guardians-of-the-galaxy-vol-2",
@@ -2358,6 +2781,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 125,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "ant-man-and-the-wasp",
@@ -2389,6 +2815,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 150,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "the-guardians-of-the-galaxy-holiday-special",
@@ -2410,6 +2839,10 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": null,
+      "credit_scenes": {
+        "count": 0,
+        "note": "Skipped deliberately; the story is meant to close."
+      },
       "prerequisites": [
         {
           "id": "captain-marvel",
@@ -2436,6 +2869,10 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 105,
+      "credit_scenes": {
+        "count": 1,
+        "note": "Mid-credits only. Nothing at the very end."
+      },
       "prerequisites": [
         {
           "id": "ms-marvel",
@@ -2467,6 +2904,10 @@
       "media_type": "series",
       "tier": "core",
       "runtime_min": 313,
+      "credit_scenes": {
+        "count": 0,
+        "note": "None. The finale is meant to land as an ending."
+      },
       "prerequisites": [
         {
           "id": "loki",
@@ -2514,6 +2955,10 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 253,
+      "credit_scenes": {
+        "count": 0,
+        "note": "The finale signs off with a montage instead."
+      },
       "prerequisites": [
         {
           "id": "what-if-season-2",
@@ -2535,6 +2980,14 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": null,
+      "credit_scenes": {
+        "episodes": [
+          {
+            "episode": 6,
+            "count": 1
+          }
+        ]
+      },
       "prerequisites": [
         {
           "id": "black-panther-wakanda-forever",
@@ -2556,6 +3009,10 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": null,
+      "credit_scenes": {
+        "count": 0,
+        "note": "None in any episode, by the showrunner's choice."
+      },
       "prerequisites": [
         {
           "id": "wandavision",
@@ -2577,6 +3034,14 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": null,
+      "credit_scenes": {
+        "episodes": [
+          {
+            "episode": 9,
+            "count": 1
+          }
+        ]
+      },
       "prerequisites": [
         {
           "id": "echo",
@@ -2608,6 +3073,10 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 119,
+      "credit_scenes": {
+        "count": 1,
+        "note": "Mid-credits only. Nothing at the very end."
+      },
       "prerequisites": [
         {
           "id": "the-falcon-and-the-winter-soldier",
@@ -2639,6 +3108,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 127,
+      "credit_scenes": {
+        "count": 2
+      },
       "prerequisites": [
         {
           "id": "hawkeye",
@@ -2696,6 +3168,9 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 137,
+      "credit_scenes": {
+        "count": 0
+      },
       "prerequisites": [
         {
           "id": "the-wolverine",
