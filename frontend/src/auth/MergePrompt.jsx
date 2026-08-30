@@ -14,7 +14,7 @@ export function MergePrompt({ merge }) {
           <button
             type="button"
             onClick={dismissSummary}
-            className="meta shrink-0 text-ink-faint transition-colors hover:text-ink"
+            className="label shrink-0 text-ink-faint transition-colors hover:text-ink"
           >
             Dismiss
           </button>
@@ -59,14 +59,14 @@ export function MergePrompt({ merge }) {
           <button
             type="button"
             onClick={accept}
-            className="meta border border-hairline-strong px-4 py-2 text-ink transition-colors hover:bg-raised"
+            className="label border border-hairline-strong px-4 py-2 text-ink transition-colors hover:bg-raised"
           >
             Merge into my account
           </button>
           <button
             type="button"
             onClick={decline}
-            className="meta px-4 py-2 text-ink-faint transition-colors hover:text-ink-dim"
+            className="label px-4 py-2 text-ink-faint transition-colors hover:text-ink-dim"
           >
             Keep separate
           </button>

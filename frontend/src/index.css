@@ -68,13 +68,25 @@
 }
 
 @layer components {
-  /* Small-caps mono, used for every piece of metadata in the app. */
+  /* Small-caps mono, used for every piece of metadata in the app.
+   *
+   * Metadata only. A control is an instruction, not data, and setting the two
+   * in the same face was the tell: letterspaced all-caps mono on a nav item or
+   * a button is decoration borrowed from the data, not a description of it.
+   * Anything clickable takes `.label` below instead. */
   .meta {
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-ink-faint);
+  }
+
+  /* Interactive labels: nav items, buttons, link CTAs. Sans and sentence case,
+   * sized to hold the same visual weight `.meta` had in these positions. */
+  .label {
+    font-size: 0.8125rem;
+    line-height: 1.15;
   }
 
   .hairline {

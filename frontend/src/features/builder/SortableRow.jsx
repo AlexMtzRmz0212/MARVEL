@@ -68,7 +68,7 @@ export function SortableRow({ movie, index, severity, onRemove }) {
         // never fires.
         onPointerDown={(event) => event.stopPropagation()}
         aria-label={`Remove ${movie.title}`}
-        className="meta shrink-0 px-2 py-1 text-ink-faint transition-colors hover:text-danger"
+        className="label shrink-0 px-2 py-1 text-ink-faint transition-colors hover:text-danger"
       >
         Remove
       </button>

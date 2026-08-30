@@ -63,7 +63,7 @@ export function DeleteAccountDialog({ onClose }) {
         </p>
 
         <label className="mt-5 block">
-          <span className="meta">Confirm your password</span>
+          <span className="label">Confirm your password</span>
           <input
             ref={inputRef}
             type="password"
@@ -76,7 +76,7 @@ export function DeleteAccountDialog({ onClose }) {
         </label>
 
         {error && (
-          <p role="alert" className="meta mt-3 text-danger">
+          <p role="alert" className="mt-3 text-xs leading-relaxed text-danger">
             {error}
           </p>
         )}
@@ -85,14 +85,14 @@ export function DeleteAccountDialog({ onClose }) {
           <button
             type="submit"
             disabled={isDeleting || password.length === 0}
-            className="meta border border-danger px-4 py-2 text-danger transition-colors hover:bg-danger hover:text-base disabled:cursor-not-allowed disabled:opacity-40"
+            className="label border border-danger px-4 py-2 text-danger transition-colors hover:bg-danger hover:text-base disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isDeleting ? 'Deleting…' : 'Delete my account'}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="meta px-4 py-2 text-ink-dim transition-colors hover:text-ink"
+            className="label px-4 py-2 text-ink-dim transition-colors hover:text-ink"
           >
             Cancel
           </button>

@@ -12,13 +12,13 @@ import { LegalLayout, Section } from './LegalLayout'
 export function PrivacyPage() {
   return (
     <LegalLayout title="Privacy policy" updated="18 August 2026">
-      <Section title="The short version">
+      <Section title="Summary">
         <p>
           You can use this entire site without an account, and if you do, nothing you record ever
           leaves your browser. Creating an account stores your email address and your viewing data
-          on the server so it follows you between devices. There is no analytics, no advertising
-          and no third-party tracking of any kind, and you can delete everything from inside the
-          app at any time.
+          on the server so it follows you between devices. The site runs no analytics, carries no advertising and
+          embeds no third-party trackers, and you can delete everything from inside the app at any
+          time.
         </p>
       </Section>
 
@@ -67,8 +67,9 @@ export function PrivacyPage() {
           </li>
         </ul>
         <p>
-          That is the complete list. No IP address history, no device fingerprint and no
-          behavioural profile is built from your use of the site.
+          That is the complete list. Your IP address is not logged as history, your device is not
+          fingerprinted, and nothing about how you use the site is turned into a behavioural
+          profile.
         </p>
       </Section>
 
@@ -109,8 +110,9 @@ export function PrivacyPage() {
           To delete everything, open the account menu in the header and choose{' '}
           <span className="text-ink">Delete account</span>. You will be asked to confirm your
           password, and then your account row, your display name, all of your watch progress and
-          every custom order are erased from the database immediately. There is no soft delete, no
-          recovery window and no retained copy, so the action cannot be undone.
+          every custom order are erased from the database immediately. The rows are deleted outright
+          rather than flagged, nothing is kept in reserve for a recovery window, and no copy is
+          retained anywhere, so the action cannot be undone.
         </p>
         <p>
           If you signed out without deleting, your data stays in your account until you come back

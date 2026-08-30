@@ -9,7 +9,7 @@ function Toggle({ active, onClick, children, accent }) {
       onClick={onClick}
       aria-pressed={active}
       className={[
-        'meta border px-2.5 py-1 transition-colors',
+        'label border px-2.5 py-1 transition-colors',
         active
           ? 'border-transparent text-base'
           : 'border-hairline text-ink-faint hover:border-hairline-strong hover:text-ink-dim',
@@ -24,7 +24,7 @@ function Toggle({ active, onClick, children, accent }) {
 function Group({ label, children }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="meta mr-1 text-ink-dim">{label}</span>
+      <span className="label mr-1 text-ink-dim">{label}</span>
       {children}
     </div>
   )
@@ -139,7 +139,7 @@ export function FilterBar({
           <button
             type="button"
             onClick={reset}
-            className="meta text-ink-faint underline underline-offset-4 transition-colors hover:text-ink"
+            className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink"
           >
             Clear
           </button>

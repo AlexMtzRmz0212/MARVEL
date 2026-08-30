@@ -16,7 +16,7 @@ const NAV = [
 
 function navClass({ isActive }) {
   return [
-    'meta px-1.5 py-1.5 transition-colors sm:px-3',
+    'label px-1.5 py-1.5 transition-colors sm:px-3',
     isActive ? 'text-ink' : 'text-ink-dim hover:text-ink',
   ].join(' ')
 }
@@ -44,7 +44,7 @@ function SyncErrorBanner() {
         <button
           type="button"
           onClick={clearSyncError}
-          className="meta shrink-0 text-ink-dim transition-colors hover:text-ink"
+          className="label shrink-0 text-ink-dim transition-colors hover:text-ink"
         >
           Dismiss
         </button>
@@ -109,13 +109,13 @@ export function AppShell() {
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5" aria-label="Legal">
             <Link
               to="/privacy"
-              className="meta text-[0.625rem] text-ink-faint transition-colors hover:text-ink-dim"
+              className="label text-[0.6875rem] text-ink-faint transition-colors hover:text-ink-dim"
             >
               Privacy policy
             </Link>
             <Link
               to="/terms"
-              className="meta text-[0.625rem] text-ink-faint transition-colors hover:text-ink-dim"
+              className="label text-[0.6875rem] text-ink-faint transition-colors hover:text-ink-dim"
             >
               Terms of service
             </Link>

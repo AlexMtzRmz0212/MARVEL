@@ -134,13 +134,13 @@ export function HomePage() {
           <div className="mt-8 flex flex-wrap gap-2">
             <Link
               to="/catalog"
-              className="meta bg-ink px-5 py-2.5 text-base transition-opacity hover:opacity-85"
+              className="label bg-ink px-5 py-2.5 text-base transition-opacity hover:opacity-85"
             >
               Open the catalog
             </Link>
             <Link
               to="/timeline"
-              className="meta border border-hairline-strong px-5 py-2.5 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
+              className="label border border-hairline-strong px-5 py-2.5 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
             >
               See the map
             </Link>
@@ -195,15 +195,7 @@ export function HomePage() {
             >
               <feature.Mark />
               <div>
-                <h3 className="text-sm text-ink">
-                  {feature.name}
-                  <span
-                    aria-hidden="true"
-                    className="ml-1.5 inline-block text-ink-faint transition-transform group-hover:translate-x-0.5"
-                  >
-                    &rarr;
-                  </span>
-                </h3>
+                <h3 className="text-sm text-ink">{feature.name}</h3>
                 <p className="mt-1.5 text-xs leading-relaxed text-ink-dim">{feature.line}</p>
               </div>
             </Link>

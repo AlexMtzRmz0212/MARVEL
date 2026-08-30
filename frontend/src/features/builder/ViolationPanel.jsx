@@ -40,7 +40,7 @@ export function ViolationPanel({ result, titles, missingCount, onApplySuggestion
               <button
                 type="button"
                 onClick={onApplySuggestion}
-                className="meta border border-hairline-strong px-3 py-1 text-ink-dim transition-colors hover:border-danger hover:text-ink"
+                className="label border border-hairline-strong px-3 py-1 text-ink-dim transition-colors hover:border-danger hover:text-ink"
               >
                 Fix the order
               </button>

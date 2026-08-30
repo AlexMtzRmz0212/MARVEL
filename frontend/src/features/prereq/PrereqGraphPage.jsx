@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 
 import { usePrerequisites } from '../../api/catalog'
+import { BackLink } from '../../components/BackLink'
 import { CheckIcon, ProgressBar } from '../../components/WatchToggle'
 import { EmptyState, ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
@@ -54,20 +55,14 @@ export function PrereqGraphPage() {
 
   return (
     <article className="py-8">
-      <Link
-        to={`/movies/${movieId}`}
-        className="meta text-ink-faint transition-colors hover:text-ink"
-      >
-        &larr; {movie.title}
-      </Link>
+      <BackLink to={`/movies/${movieId}`}>{movie.title}</BackLink>
 
       <header className="hairline mt-4 flex flex-col gap-6 border-b pb-6">
-        <div>
-          <p className="meta">Watch before</p>
-          <h1 className="mt-1 text-3xl leading-tight font-medium tracking-tight text-ink">
-            {movie.title}
-          </h1>
-        </div>
+        {/* The whole heading, rather than an eyebrow reading "Watch before"
+            stacked over the bare title: one sentence says what the page is. */}
+        <h1 className="text-3xl leading-tight font-medium tracking-tight text-balance text-ink">
+          Watch before {movie.title}
+        </h1>
 
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="flex flex-wrap gap-6">
@@ -94,7 +89,7 @@ export function PrereqGraphPage() {
               onClick={() => setEssentialOnly((value) => !value)}
               aria-pressed={essentialOnly}
               className={[
-                'meta border px-3 py-1.5 transition-colors',
+                'label border px-3 py-1.5 transition-colors',
                 essentialOnly
                   ? 'border-transparent bg-ink text-base'
                   : 'border-hairline-strong text-ink-dim hover:text-ink',
@@ -104,7 +99,7 @@ export function PrereqGraphPage() {
             </button>
             <Link
               to={`/orders/new?start=${movieId}&name=${encodeURIComponent(`Watching ${movie.title}`)}`}
-              className="meta border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+              className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
             >
               Build an order from this
             </Link>
@@ -134,7 +129,7 @@ export function PrereqGraphPage() {
               <button
                 type="button"
                 onClick={() => markManyWatched(watchOrder)}
-                className="meta border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+                className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
               >
                 Mark all {chainProgress.remaining} watched
               </button>

@@ -7,7 +7,7 @@ export function NotFoundPage() {
       <h1 className="mt-2 text-2xl font-medium text-ink">No such page</h1>
       <Link
         to="/catalog"
-        className="meta mt-6 inline-block border border-hairline-strong px-4 py-2 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
+        className="label mt-6 inline-block border border-hairline-strong px-4 py-2 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
       >
         Back to the catalog
       </Link>

@@ -16,13 +16,13 @@ import { WatchToggle } from './WatchToggle'
 /**
  * A catalog entry.
  *
- * Designed to look deliberate with no poster art, because the curated seed
- * ships without any: the artwork slot becomes a large mono index number in the
- * saga accent, which reads as a catalogue number rather than a missing image.
- * When `poster_url` is filled in by the enrichment script, the same slot shows
- * the poster instead with no layout change.
+ * The artwork slot holds the poster when `poster_url` is set and a neutral
+ * placeholder mark when it is not, with no layout change between the two. The
+ * placeholder is deliberately not a number: an oversized index numeral in the
+ * slot reads as decoration rather than as a missing image, and the card already
+ * carries its identifying metadata underneath.
  */
-export function TitleCard({ movie, index }) {
+export function TitleCard({ movie }) {
   const progress = useWatchProgress()
   const watched = isWatched(progress, movie.id)
   const accent = accentFor(movie)
@@ -57,12 +57,25 @@ export function TitleCard({ movie, index }) {
             ].join(' ')}
           />
         ) : (
-          <span
-            className="font-mono text-5xl font-light tabular-nums opacity-25 transition-opacity group-hover:opacity-40"
-            style={{ color: accent }}
+          // No artwork on file. A framed mark in the saga accent, so the slot
+          // reads as an empty sleeve in a catalogue rather than a broken image.
+          <svg
+            viewBox="0 0 48 64"
+            aria-hidden="true"
+            className="h-2/5 w-auto opacity-30 transition-opacity group-hover:opacity-45"
+            fill="none"
           >
-            {String(index + 1).padStart(2, '0')}
-          </span>
+            <rect
+              x="1"
+              y="1"
+              width="46"
+              height="62"
+              stroke="var(--color-hairline-strong)"
+              strokeWidth="2"
+            />
+            <path d="M1 46 L17 30 L31 44 L38 37 L47 46" stroke={accent} strokeWidth="2" />
+            <circle cx="32" cy="17" r="5" stroke={accent} strokeWidth="2" />
+          </svg>
         )}
 
         <div className="absolute top-1.5 right-1.5">

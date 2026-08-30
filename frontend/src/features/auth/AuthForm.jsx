@@ -72,7 +72,7 @@ export function AuthForm({ mode }) {
 
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
         <label className="block">
-          <span className="meta">Email</span>
+          <span className="label">Email</span>
           <input
             type="email"
             required
@@ -84,7 +84,7 @@ export function AuthForm({ mode }) {
         </label>
 
         <label className="block">
-          <span className="meta">Password</span>
+          <span className="label">Password</span>
           <input
             type="password"
             required
@@ -94,12 +94,14 @@ export function AuthForm({ mode }) {
             onChange={(event) => setPassword(event.target.value)}
             className={inputClass}
           />
-          {isRegister && <span className="meta mt-1.5 block">At least 8 characters.</span>}
+          {isRegister && (
+            <span className="mt-1.5 block text-xs leading-relaxed text-ink-faint">At least 8 characters.</span>
+          )}
         </label>
 
         {isRegister && (
           <label className="block">
-            <span className="meta">Display name (optional)</span>
+            <span className="label">Display name (optional)</span>
             <input
               type="text"
               maxLength={80}
@@ -120,13 +122,13 @@ export function AuthForm({ mode }) {
         <button
           type="submit"
           disabled={isBusy}
-          className="meta mt-2 border border-hairline-strong px-4 py-2.5 text-ink transition-colors hover:bg-raised disabled:opacity-50"
+          className="label mt-2 border border-hairline-strong px-4 py-2.5 text-ink transition-colors hover:bg-raised disabled:opacity-50"
         >
           {isBusy ? copy.busy : copy.submit}
         </button>
       </form>
 
-      <p className="meta mt-6">
+      <p className="mt-6 text-xs leading-relaxed text-ink-faint">
         {copy.switchText}{' '}
         <Link to={copy.switchTo} className="text-ink-dim underline underline-offset-4 hover:text-ink">
           {copy.switchLabel}

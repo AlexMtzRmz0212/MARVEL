@@ -66,7 +66,7 @@ function Control({ children, onClick, title, active }) {
       title={title}
       aria-pressed={active}
       className={[
-        'meta border bg-base/80 px-2 py-0.5 text-[0.625rem] backdrop-blur transition-colors',
+        'label border bg-base/80 px-2 py-0.5 text-[0.6875rem] backdrop-blur transition-colors',
         active
           ? 'border-hairline-strong text-ink'
           : 'border-hairline-strong text-ink-dim hover:text-ink',
@@ -160,7 +160,7 @@ function Legend({ open, onToggle }) {
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="meta border border-hairline-strong bg-base/80 px-2 py-0.5 text-[0.625rem] text-ink-dim backdrop-blur transition-colors hover:text-ink"
+        className="label border border-hairline-strong bg-base/80 px-2 py-0.5 text-[0.6875rem] text-ink-dim backdrop-blur transition-colors hover:text-ink"
       >
         {open ? 'Hide key' : 'Key'}
       </button>
@@ -374,8 +374,8 @@ export function TimelinePage() {
               onClick={() => setDeepConnections((value) => !value)}
               title={
                 deepConnections
-                  ? 'Showing the longest chain of dependencies through the title — click for just the direct ones'
-                  : 'Showing direct connections only — click for the longest chain through the title'
+                  ? 'Showing the longest chain of dependencies through the title. Click for just the direct ones.'
+                  : 'Showing direct connections only. Click for the longest chain through the title.'
               }
             >
               {deepConnections ? 'Longest chain' : 'Direct only'}
@@ -390,7 +390,7 @@ export function TimelinePage() {
               }}
               title={
                 spread
-                  ? 'Holding the titles apart — click to pack them back together'
+                  ? 'Holding the titles apart. Click to pack them back together.'
                   : 'Hold the titles further apart, so the labels have room'
               }
             >

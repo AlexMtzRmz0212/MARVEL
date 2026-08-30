@@ -36,7 +36,7 @@ export function UserMenu() {
     return (
       <NavLink
         to="/login"
-        className="meta border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
+        className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
       >
         Sign in
       </NavLink>
@@ -51,7 +51,7 @@ export function UserMenu() {
           onClick={() => setIsOpen((open) => !open)}
           aria-expanded={isOpen}
           aria-haspopup="menu"
-          className="meta max-w-[12rem] truncate px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+          className="label max-w-[12rem] truncate px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
         >
           {label(user)}
         </button>
@@ -74,7 +74,7 @@ export function UserMenu() {
                 await signOut();
                 navigate("/");
               }}
-              className="meta mt-3 w-full border border-hairline-strong px-3 py-1.5 text-ink transition-colors hover:bg-raised"
+              className="label mt-3 w-full border border-hairline-strong px-3 py-1.5 text-ink transition-colors hover:bg-raised"
             >
               Sign out
             </button>
@@ -86,7 +86,7 @@ export function UserMenu() {
                 setIsOpen(false);
                 setIsDeleting(true);
               }}
-              className="meta hairline mt-3 w-full border-t pt-3 text-left text-danger transition-colors hover:text-ink"
+              className="label hairline mt-3 w-full border-t pt-3 text-left text-danger transition-colors hover:text-ink"
             >
               Delete account
             </button>

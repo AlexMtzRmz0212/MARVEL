@@ -144,7 +144,7 @@ function Builder({ orderId, existing, searchParams }) {
 
       <div className="hairline flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 flex-1">
-          <label className="meta" htmlFor="order-name">
+          <label className="label" htmlFor="order-name">
             Order name
           </label>
           <input
@@ -172,7 +172,7 @@ function Builder({ orderId, existing, searchParams }) {
             type="button"
             onClick={handleSave}
             disabled={movieIds.length === 0 || saveOrder.isPending}
-            className="meta border border-hairline-strong px-4 py-2 text-ink transition-colors hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40"
+            className="label border border-hairline-strong px-4 py-2 text-ink transition-colors hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40"
           >
             {saveOrder.isPending ? 'Saving…' : 'Save order'}
           </button>

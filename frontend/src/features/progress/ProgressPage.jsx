@@ -130,13 +130,13 @@ export function ProgressPage() {
           onClick={() => {
             if (confirm('Clear all watch progress? This cannot be undone.')) clearAll()
           }}
-          className="meta text-ink-faint underline underline-offset-4 transition-colors hover:text-danger"
+          className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-danger"
         >
           Reset progress
         </button>
       )}
 
-      <p className="meta mt-8 max-w-xl leading-relaxed">
+      <p className="mt-8 max-w-xl text-xs leading-relaxed text-ink-faint">
         {user ? (
           <>Saved to your account and synced across your devices.</>
         ) : (

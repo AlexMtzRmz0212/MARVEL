@@ -3,6 +3,15 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Iterator
+from types import SimpleNamespace
+
+import pytest
+from sqlalchemy import insert
+from sqlalchemy.orm import Session
+
+from app.main import _missing_movie_id
+from app.models.movie import Movie
 
 CHAIN = ["iron-man", "the-incredible-hulk", "iron-man-2"]
 
@@ -315,3 +324,107 @@ def test_import_reassigns_an_id_owned_by_someone_else(api, registered):
 
     assert result["orders_imported"] == 1
     assert api.get("/api/me/orders").json()[0]["id"] != stolen
+
+
+# --------------------------------------------------------------------------- #
+# A database behind the seed file
+# --------------------------------------------------------------------------- #
+
+
+@pytest.fixture
+def absent_from_movies(db: Session) -> Iterator[str]:
+    """A catalog id whose `movies` row has been removed.
+
+    Reproduces the one drift that actually happens: the JSON catalog knows the
+    title, the foreign-key target does not, because a deploy shipped a new
+    catalog without running the seed loader. `_known()` waves the id through --
+    it checks the catalog, not the table -- and the INSERT then fails.
+
+    Restored afterwards: `movies` is session-scoped reference data, and the
+    `db` fixture only truncates the per-user tables.
+    """
+    row = db.get(Movie, "thor")
+    snapshot = {column.name: getattr(row, column.name) for column in Movie.__table__.columns}
+    db.delete(row)
+    db.commit()
+    try:
+        yield "thor"
+    finally:
+        # The failed flush leaves this session pending a rollback, because the
+        # `get_db` override hands the app the very session the test holds. A
+        # real request never sees that state -- `get_db` closes its session in
+        # its own `finally`, which rolls the transaction back and returns the
+        # connection -- so this is the fixture paying for sharing one.
+        db.rollback()
+        db.execute(insert(Movie).values(**snapshot))
+        db.commit()
+
+
+def test_progress_for_a_title_missing_from_the_database_is_a_named_409(
+    api, registered, absent_from_movies
+):
+    """Not a 500. The client did nothing wrong; the server's data is stale."""
+    response = api.put(
+        f"/api/me/watch-progress/{absent_from_movies}",
+        json={"watched_at": "2026-01-01T00:00:00Z"},
+    )
+
+    assert response.status_code == 409, response.text
+    assert "reseeding" in response.json()["detail"]
+
+
+def test_an_order_naming_a_title_missing_from_the_database_is_a_named_409(
+    api, registered, absent_from_movies
+):
+    """The same drift reaches the database down a second path."""
+    response = api.post(
+        "/api/me/orders", json={"name": "Broken", "movie_ids": ["iron-man", absent_from_movies]}
+    )
+
+    assert response.status_code == 409, response.text
+    assert "reseeding" in response.json()["detail"]
+
+
+def test_a_title_absent_from_the_catalog_is_still_a_422(api, registered):
+    """The guard in `_known` still owns the case it can actually answer.
+
+    Only ids the catalog does not know are the client's mistake, and those keep
+    naming themselves in a 422 rather than falling through to the handler.
+    """
+    response = api.put(
+        "/api/me/watch-progress/not-a-real-title", json={"watched_at": "2026-01-01T00:00:00Z"}
+    )
+
+    assert response.status_code == 422
+    assert "not-a-real-title" in response.json()["detail"]
+
+
+def test_the_missing_id_is_read_out_of_the_postgres_detail_line():
+    """SQLite cannot reach this branch, and it is the one worth having.
+
+    The DETAIL string below is copied verbatim from a real production failure,
+    so this pins the parser to the wording psycopg actually hands over rather
+    than to a guess at it.
+    """
+
+    class _Diag:
+        message_detail = 'Key (movie_id)=(blade) is not present in table "movies".'
+
+    class _Orig(Exception):
+        sqlstate = "23503"
+        diag = _Diag()
+
+    assert _missing_movie_id(SimpleNamespace(orig=_Orig())) == "blade"
+
+
+def test_a_violation_on_another_column_is_not_reported_as_a_missing_title():
+    """Only `movie_id` means a stale catalog. Anything else must not claim it does."""
+
+    class _Diag:
+        message_detail = 'Key (user_id)=(ff706564) is not present in table "users".'
+
+    class _Orig(Exception):
+        sqlstate = "23503"
+        diag = _Diag()
+
+    assert _missing_movie_id(SimpleNamespace(orig=_Orig())) is None

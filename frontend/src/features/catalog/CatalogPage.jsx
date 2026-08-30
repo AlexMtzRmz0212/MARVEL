@@ -88,7 +88,7 @@ export function CatalogPage() {
               onClick={() => setParam('order', item.key === 'release' ? null : item.key)}
               aria-pressed={order === item.key}
               className={[
-                'meta px-4 py-2 transition-colors',
+                'label px-4 py-2 transition-colors',
                 order === item.key
                   ? 'bg-ink text-base'
                   : 'text-ink-faint hover:bg-raised hover:text-ink-dim',
@@ -123,12 +123,9 @@ export function CatalogPage() {
 
       {visibleMovies && visibleMovies.length > 0 && (
         <ul className="grid grid-cols-2 gap-3 py-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
-          {visibleMovies.map((movie, index) => (
+          {visibleMovies.map((movie) => (
             <li key={movie.id}>
-              <TitleCard
-                movie={movie}
-                index={order === 'chronological' ? (movie.chrono_order ?? index) : movie.release_order}
-              />
+              <TitleCard movie={movie} />
             </li>
           ))}
         </ul>

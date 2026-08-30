@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router'
 
 import { useMovie } from '../api/catalog'
+import { BackLink } from '../components/BackLink'
 import { WatchToggle } from '../components/WatchToggle'
 import { ErrorState, LoadingState } from '../components/states'
 import { useWatchProgress } from '../hooks/useWatchProgress'
@@ -138,19 +139,10 @@ export function MovieDetailPage() {
 
   return (
     <article className="py-8">
-      <Link to="/catalog" className="meta text-ink-faint transition-colors hover:text-ink">
-        &larr; Catalog
-      </Link>
+      <BackLink to="/catalog">Catalog</BackLink>
 
       <header className="hairline mt-4 border-b pb-8">
-        <div className="flex items-center gap-2">
-          <span aria-hidden="true" className="h-4 w-[3px]" style={{ backgroundColor: accent }} />
-          <p className="meta" style={{ color: accent }}>
-            {SAGA_LABEL[movie.saga]}
-          </p>
-        </div>
-
-        <div className="mt-3 flex items-start gap-4">
+        <div className="flex items-start gap-4">
           <h1 className="flex-1 text-3xl leading-tight font-medium tracking-tight text-ink sm:text-4xl">
             {movie.title}
           </h1>
@@ -160,6 +152,14 @@ export function MovieDetailPage() {
         </div>
 
         <dl className="meta mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+          {/* Saga leads the row rather than sitting above the title as a
+              separate label: it is one more field about this title, and the
+              accent it is drawn in is what makes it findable at a glance. */}
+          <div>
+            <dt className="sr-only">Saga</dt>
+            <dd style={{ color: accent }}>{SAGA_LABEL[movie.saga]}</dd>
+          </div>
+          <span aria-hidden="true">·</span>
           <div>
             <dt className="sr-only">Released</dt>
             <dd>{formatDate(movie.release_date)}</dd>
@@ -215,10 +215,9 @@ export function MovieDetailPage() {
 
         <Link
           to={`/movies/${movie.id}/prereqs`}
-          className="mt-6 inline-flex items-center gap-2 border border-hairline-strong px-4 py-2 text-sm text-ink transition-colors hover:bg-raised"
+          className="mt-6 inline-flex items-center border border-hairline-strong px-4 py-2 text-sm text-ink transition-colors hover:bg-raised"
         >
           View the full prerequisite chain
-          <span aria-hidden="true">&rarr;</span>
         </Link>
       </header>
 

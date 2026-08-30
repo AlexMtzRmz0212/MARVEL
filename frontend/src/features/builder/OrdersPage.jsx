@@ -24,7 +24,7 @@ export function OrdersPage() {
         </div>
         <Link
           to="/orders/new"
-          className="meta shrink-0 self-start border border-hairline-strong px-4 py-2 text-ink transition-colors hover:bg-raised sm:self-auto"
+          className="label shrink-0 self-start border border-hairline-strong px-4 py-2 text-ink transition-colors hover:bg-raised sm:self-auto"
         >
           New order
         </Link>
@@ -56,7 +56,7 @@ export function OrdersPage() {
                   type="button"
                   onClick={() => deleteOrder.mutate(order.id)}
                   disabled={deleteOrder.isPending}
-                  className="meta shrink-0 px-2 py-1 text-ink-faint transition-colors hover:text-danger disabled:opacity-40"
+                  className="label shrink-0 px-2 py-1 text-ink-faint transition-colors hover:text-danger disabled:opacity-40"
                 >
                   Delete
                 </button>
@@ -66,7 +66,7 @@ export function OrdersPage() {
         </ul>
       )}
 
-      <p className="meta mt-8 max-w-xl leading-relaxed">
+      <p className="mt-8 max-w-xl text-xs leading-relaxed text-ink-faint">
         {user ? (
           <>Saved to your account and synced across your devices.</>
         ) : (
