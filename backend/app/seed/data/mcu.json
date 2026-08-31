@@ -252,7 +252,7 @@
       "universe": "Earth-92131",
       "media_type": "series",
       "tier": "supporting",
-      "runtime_min": null,
+      "runtime_min": 343,
       "credit_scenes": {
         "episodes": [
           {
@@ -2136,7 +2136,7 @@
       "universe": "Multiverse / TVA",
       "media_type": "series",
       "tier": "core",
-      "runtime_min": null,
+      "runtime_min": 302,
       "credit_scenes": {
         "count": 0,
         "note": "Nothing but a \"Loki will return in season 2\" card at the end of the finale."
@@ -2161,7 +2161,7 @@
       "universe": "Animated Multiverse",
       "media_type": "series",
       "tier": "optional",
-      "runtime_min": null,
+      "runtime_min": 323,
       "credit_scenes": {
         "episodes": [
           {
@@ -2196,7 +2196,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "core",
-      "runtime_min": null,
+      "runtime_min": 363,
       "credit_scenes": {
         "episodes": [
           {
@@ -2237,7 +2237,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "supporting",
-      "runtime_min": null,
+      "runtime_min": 330,
       "credit_scenes": {
         "episodes": [
           {
@@ -2436,7 +2436,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "supporting",
-      "runtime_min": null,
+      "runtime_min": 297,
       "credit_scenes": {
         "episodes": [
           {
@@ -2512,7 +2512,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "optional",
-      "runtime_min": null,
+      "runtime_min": 302,
       "credit_scenes": {
         "episodes": [
           {
@@ -2536,7 +2536,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "optional",
-      "runtime_min": null,
+      "runtime_min": 213,
       "credit_scenes": {
         "episodes": [
           {
@@ -2566,7 +2566,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "supporting",
-      "runtime_min": null,
+      "runtime_min": 289,
       "credit_scenes": {
         "episodes": [
           {
@@ -2601,7 +2601,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "optional",
-      "runtime_min": null,
+      "runtime_min": 309,
       "credit_scenes": {
         "note": "One after each of the first four episodes, then nothing until the finale.",
         "episodes": [
@@ -2681,7 +2681,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "optional",
-      "runtime_min": null,
+      "runtime_min": 53,
       "prerequisites": [
         {
           "id": "guardians-of-the-galaxy-vol-2",
@@ -2838,7 +2838,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "supporting",
-      "runtime_min": null,
+      "runtime_min": 262,
       "credit_scenes": {
         "count": 0,
         "note": "Skipped deliberately; the story is meant to close."
@@ -2979,7 +2979,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "optional",
-      "runtime_min": null,
+      "runtime_min": 305,
       "credit_scenes": {
         "episodes": [
           {
@@ -3008,7 +3008,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "supporting",
-      "runtime_min": null,
+      "runtime_min": 379,
       "credit_scenes": {
         "count": 0,
         "note": "None in any episode, by the showrunner's choice."
@@ -3033,7 +3033,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "supporting",
-      "runtime_min": null,
+      "runtime_min": 455,
       "credit_scenes": {
         "episodes": [
           {
@@ -3146,7 +3146,7 @@
       "universe": "Earth-199999",
       "media_type": "series",
       "tier": "optional",
-      "runtime_min": null,
+      "runtime_min": 267,
       "prerequisites": [
         {
           "id": "she-hulk-attorney-at-law",

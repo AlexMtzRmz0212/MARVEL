@@ -77,18 +77,30 @@ def test_chronological_order_starts_in_the_1940s_then_1995():
     ]
 
 
+# Series told in shorts, where a whole season legitimately runs under the floor
+# below. I Am Groot is ten five-minute shorts across two seasons: 53 minutes is
+# the real total, not one episode written into the field by mistake. Every other
+# series in the catalog is hour-long drama or half-hour comedy, so the floor
+# still means something for the other fifty-two.
+SHORTS_SERIES = {"i-am-groot"}
+
+
 def test_films_have_a_runtime_and_series_runtimes_are_season_totals():
     """A series either carries a whole-season total or nothing at all.
 
     `enrich_tmdb.py` sums episode runtimes where TMDb exposes them, so the field
     means minutes-for-the-season. The floor is what distinguishes that from a
-    single episode length written into the same field by mistake -- the shortest
-    season in the catalog is still several hours long.
+    single episode length written into the same field by mistake -- every season
+    in the catalog bar the shorts is several hours long.
     """
     for movie in CATALOG.movies:
         if movie.media_type.value == "film":
             assert movie.runtime_min, f"{movie.id} is a film with no runtime"
-        elif movie.media_type.value == "series" and movie.runtime_min is not None:
+        elif (
+            movie.media_type.value == "series"
+            and movie.runtime_min is not None
+            and movie.id not in SHORTS_SERIES
+        ):
             assert movie.runtime_min > 120, (
                 f"{movie.id} has a series runtime of {movie.runtime_min} min, which reads as "
                 f"one episode rather than a season total"

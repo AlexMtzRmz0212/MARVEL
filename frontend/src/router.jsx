@@ -4,6 +4,7 @@ import { AppShell } from './components/AppShell'
 import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
 import { CatalogPage } from './features/catalog/CatalogPage'
+import { ComparePage } from './features/compare/ComparePage'
 import { HomePage } from './features/home/HomePage'
 import { OrderBuilderPage } from './features/builder/OrderBuilderPage'
 import { OrdersPage } from './features/builder/OrdersPage'
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
       // landing page, so no old link breaks.
       { index: true, element: <HomePage /> },
       { path: 'catalog', element: <CatalogPage /> },
+      { path: 'compare', element: <ComparePage /> },
       { path: 'movies/:movieId', element: <MovieDetailPage /> },
       { path: 'movies/:movieId/prereqs', element: <PrereqGraphPage /> },
       { path: 'orders', element: <OrdersPage /> },

@@ -57,8 +57,38 @@ def get(session: requests.Session, path: str, api_key: str, **params: Any) -> di
     return response.json()
 
 
-# "Loki: Season 2" is one catalog entry but is a season of one TMDb show.
+# "Loki: Season 2" is one catalog entry but is a season of one TMDb show, and
+# "I Am Groot: Seasons 1 & 2" is two of them.
+SEASONS_PATTERN = re.compile(r"^(?P<base>.+):\s*Seasons\s+(?P<first>\d+)\s*&\s*(?P<last>\d+)$")
 SEASON_PATTERN = re.compile(r"^(?P<base>.+):\s*Season\s+(?P<season>\d+)$")
+
+
+def parse_seasons(title: str) -> tuple[str, list[int]] | None:
+    """The show's name and the seasons a catalog title covers, if it names any.
+
+    None means the title names no season at all -- "Loki", "WandaVision" -- which
+    is not the same as covering none. See :func:`fetch_details`.
+    """
+    plural = SEASONS_PATTERN.match(title)
+    if plural:
+        first, last = int(plural.group("first")), int(plural.group("last"))
+        return plural.group("base"), list(range(first, last + 1))
+
+    single = SEASON_PATTERN.match(title)
+    if single:
+        return single.group("base"), [int(single.group("season"))]
+
+    return None
+
+
+def episode_runtime_total(season_payload: dict[str, Any]) -> int:
+    """Minutes across a season payload's episodes; 0 when TMDb lists none."""
+    episodes = season_payload.get("episodes")
+    if not isinstance(episodes, list):
+        return 0
+    return sum(
+        episode["runtime"] for episode in episodes if isinstance(episode.get("runtime"), int)
+    )
 
 
 def search_endpoints(media_type: str) -> list[str]:
@@ -158,19 +188,18 @@ def title_candidates(title: str) -> list[str]:
 def resolve(
     session: requests.Session, api_key: str, title: str, year: int, media_type: str
 ) -> tuple[str, int, int | None] | None:
-    """Find a title on TMDb. Returns (kind, tmdb_id, season_number)."""
-    season_match = SEASON_PATTERN.match(title)
-    if season_match:
+    """Find a title on TMDb. Returns (kind, tmdb_id, season_numbers)."""
+    parsed = parse_seasons(title)
+    if parsed:
         # Search for the show, not the season -- "Loki: Season 2" matches nothing.
-        base = season_match.group("base")
-        season = int(season_match.group("season"))
+        base, seasons = parsed
         for candidate_title in title_candidates(base):
             # A later season's year will not match the show's first-air year.
             show_id = search(session, api_key, "tv", candidate_title, year) or search(
                 session, api_key, "tv", candidate_title, None
             )
             if show_id:
-                return ("tv", show_id, season)
+                return ("tv", show_id, seasons)
         return None
 
     for candidate_title in title_candidates(title):
@@ -213,18 +242,24 @@ def fetch_details(
     api_key: str,
     kind: str,
     tmdb_id: int,
-    season: int | None,
+    seasons: list[int] | None,
     media_type: str,
 ) -> dict[str, Any]:
-    if season is not None:
-        payload = get(session, f"/tv/{tmdb_id}/season/{season}", api_key)
+    # One named season is addressable directly, and its own payload is the
+    # better source for the date. Anything else -- no season named, or several
+    # covered by one entry -- reads the show, so that the date a caller already
+    # has on file is never disturbed by which seasons happen to be totalled.
+    only_season = seasons[0] if seasons and len(seasons) == 1 else None
+
+    if only_season is not None:
+        payload = get(session, f"/tv/{tmdb_id}/season/{only_season}", api_key)
     else:
         payload = get(session, f"/{kind}/{tmdb_id}", api_key)
 
     poster_path = payload.get("poster_path")
 
     # TMDb uses different date fields per endpoint.
-    if season is not None:
+    if only_season is not None:
         tmdb_release_date = payload.get("air_date")
     elif kind == "tv":
         tmdb_release_date = payload.get("first_air_date")
@@ -243,19 +278,33 @@ def fetch_details(
         "release_date": normalize_release_date(tmdb_release_date),
     }
 
-    # For series, sum the runtimes of the episodes in the season. For other
+    # For series, total the episodes of the seasons the entry covers. For other
     # types, use the single value from TMDb.
+    #
+    # A series entry naming no season means the show's first one: this catalog
+    # gives later seasons their own line, so "Loki" and "Loki: Season 2" are two
+    # entries, not one. Defaulting to season 1 rather than giving up is the
+    # whole of the fix here -- `/tv/{id}` carries no usable total of its own
+    # (`episode_run_time` is empty for every modern show), so the old code fell
+    # through both branches and silently wrote nothing at all. That left the
+    # sixteen Disney+ series the catalog names after themselves with a null
+    # runtime while every ": Season N" entry beside them was filled.
     if media_type == "series":
-        if season is not None:
-            episodes = payload.get("episodes")
-            if isinstance(episodes, list):
-                total_runtime = sum(
-                    e.get("runtime") or 0
-                    for e in episodes
-                    if isinstance(e.get("runtime"), int)
-                )
-                if total_runtime > 0:
-                    details["runtime_min"] = total_runtime
+        if only_season is not None:
+            total_runtime = episode_runtime_total(payload)
+        else:
+            total_runtime = 0
+            for number in seasons or [1]:
+                try:
+                    total_runtime += episode_runtime_total(
+                        get(session, f"/tv/{tmdb_id}/season/{number}", api_key)
+                    )
+                except TmdbError:
+                    # A show whose seasons are not numbered as assumed should
+                    # cost the caller a runtime, not the whole fetch.
+                    continue
+        if total_runtime > 0:
+            details["runtime_min"] = total_runtime
     elif runtime_min:
         details["runtime_min"] = runtime_min
 

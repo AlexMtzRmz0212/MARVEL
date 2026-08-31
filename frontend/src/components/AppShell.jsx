@@ -6,17 +6,17 @@ import { GlobalSearch } from './GlobalSearch'
 import { UserMenu } from './UserMenu'
 
 const NAV = [
-  // No entry for "/": the wordmark to the left of these is the way home, and a
-  // fifth item does not fit the phone layout described below.
+  // No entry for "/": the wordmark to the left of these is the way home.
   { to: '/catalog', label: 'Catalog' },
   { to: '/timeline', label: 'Timeline' },
+  { to: '/compare', label: 'Compare' },
   { to: '/orders', label: 'My orders' },
   { to: '/progress', label: 'Progress' },
 ]
 
 function navClass({ isActive }) {
   return [
-    'label px-1.5 py-1.5 transition-colors sm:px-3',
+    'label shrink-0 px-1.5 py-1.5 whitespace-nowrap transition-colors md:px-3',
     isActive ? 'text-ink' : 'text-ink-dim hover:text-ink',
   ].join(' ')
 }
@@ -65,21 +65,27 @@ export function AppShell() {
             <span className="meta hidden sm:inline">Watch Order</span>
           </NavLink>
 
-          {/* Below `sm` the nav moves to its own row underneath. The logo, the
-           * four nav items and the account control together need well over
-           * 414px of min-content, so on a 320-390px phone a single row cannot
-           * fit them: the document grew wider than the viewport, which is what
-           * let the browser pinch-zoom out past the layout. Rendering one nav or
-           * the other (rather than reordering a single one with `order`) keeps
-           * the focus order matching the visual order in both layouts, and the
+          {/* Below `md` the nav moves to its own row underneath. The logo, the
+           * nav items and the account control together need well over 414px of
+           * min-content, so on a 320-390px phone a single row cannot fit them:
+           * the document grew wider than the viewport, which is what let the
+           * browser pinch-zoom out past the layout. Rendering one nav or the
+           * other (rather than reordering a single one with `order`) keeps the
+           * focus order matching the visual order in both layouts, and the
            * hidden copy is `display:none`, so assistive tech only ever sees one.
            *
-           * The second row is tight too: four labels at the desktop padding
-           * measure ~333px, so below `sm` the items and the row itself both
-           * lose a step of horizontal padding. That keeps the row inside 320px
-           * rather than scrolling or clipping the last tab.
+           * The breakpoint is `md` rather than `sm` because the row has five
+           * items now: at the desktop padding they measure ~430px, which with
+           * the wordmark, the search lens and the account control no longer
+           * clears 640px.
+           *
+           * The second row cannot fit five either -- ~370px against a 320px
+           * phone -- so it scrolls sideways, and the items refuse to shrink so
+           * a label is never squeezed to nothing. The overflow is the nav's
+           * own, not the document's, which is the part that mattered: the page
+           * itself still never grows wider than the viewport.
            */}
-          <nav className="hidden items-center gap-1 sm:flex">
+          <nav className="hidden items-center gap-1 md:flex">
             <NavLinks />
           </nav>
 
@@ -89,7 +95,7 @@ export function AppShell() {
           </div>
         </div>
 
-        <nav className="mx-auto -mt-1 flex max-w-[1400px] items-center px-2 pb-2 sm:hidden">
+        <nav className="mx-auto -mt-1 flex max-w-[1400px] items-center overflow-x-auto px-2 pb-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
           <NavLinks />
         </nav>
       </header>
