@@ -62,6 +62,12 @@ export function PrivacyPage() {
             watched titles fade or hide, so the catalog looks the same wherever you open it.
           </li>
           <li>
+            <span className="text-ink">Share link.</span> Only if you create one. It is a random
+            token that lets whoever holds the link see your display name and which titles you have
+            marked watched, so the two of you can compare. Nothing is shared until you make a link,
+            and revoking it stops every copy of it working at once.
+          </li>
+          <li>
             <span className="text-ink">Account creation date.</span> Recorded once, for support and
             debugging.
           </li>
@@ -90,26 +96,42 @@ export function PrivacyPage() {
 
       <Section title="Who else sees your data">
         <p>
-          Nobody. Your data is not sold, rented or shared, and there are no third-party analytics,
-          advertising or marketing services embedded in the site. The application and its database
-          run on hosting infrastructure that necessarily processes the data in order to store and
-          serve it, and it is used for nothing else.
+          Nobody, unless you decide otherwise. Your data is not sold, rented or shared, and there
+          are no third-party analytics, advertising or marketing services embedded in the site. The
+          application and its database run on hosting infrastructure that necessarily processes the
+          data in order to store and serve it, and it is used for nothing else.
+        </p>
+        <p>
+          The one exception is entirely yours to make. If you create a share link from{' '}
+          <Link to="/progress/compare" className="text-ink underline underline-offset-4">
+            Compare progress
+          </Link>
+          , anyone holding that link can see your display name and which titles you have marked
+          watched. They cannot see your email address, your ratings, your notes or your custom
+          orders, and they do not need an account to look. The link works until you revoke or
+          replace it, which takes effect immediately; if you have never made one, nothing about you
+          is reachable this way at all.
         </p>
       </Section>
 
       <Section title="How to delete your data">
         <p>
           You can remove individual pieces at any time: untick a title to drop its watch progress,
-          or delete a custom order from{' '}
+          delete a custom order from{' '}
           <Link to="/orders" className="text-ink underline underline-offset-4">
             My orders
+          </Link>
+          , or revoke a share link from{' '}
+          <Link to="/progress/compare" className="text-ink underline underline-offset-4">
+            Compare progress
           </Link>
           .
         </p>
         <p>
           To delete everything, open the account menu in the header and choose{' '}
           <span className="text-ink">Delete account</span>. You will be asked to confirm your
-          password, and then your account row, your display name, all of your watch progress and
+          password, and then your account row, your display name, any share link, all of your watch
+          progress and
           every custom order are erased from the database immediately. The rows are deleted outright
           rather than flagged, nothing is kept in reserve for a recovery window, and no copy is
           retained anywhere, so the action cannot be undone.

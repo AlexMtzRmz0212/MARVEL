@@ -31,6 +31,15 @@ class User(Base):
     display_name: Mapped[str | None] = mapped_column(String(80))
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
 
+    # The opt-in "compare progress with me" link, or NULL when sharing is off.
+    #
+    # Stored in the clear, unlike the password beside it, and deliberately: this
+    # is a capability URL, so the owner has to be able to read it back to copy
+    # it, which a hash forecloses. What it unlocks is scoped to match -- the
+    # display name and which titles have been ticked, never the email, the
+    # ratings or the notes (see app/schemas/share.py).
+    share_token: Mapped[str | None] = mapped_column(String(24), unique=True)
+
     # A JSON blob rather than a column per setting: these are small display
     # choices, they arrive free inside GET /api/auth/me (which the SPA already
     # calls once at boot), and one migration covers every preference added

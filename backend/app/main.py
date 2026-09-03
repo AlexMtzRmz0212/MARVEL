@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
-from app.api.routes import auth, graph, health, me, movies, orders
+from app.api.routes import auth, graph, health, me, movies, orders, share
 from app.core.config import get_settings
 from app.core.graph import CycleError
 
@@ -157,6 +157,7 @@ def create_app() -> FastAPI:
         graph.router,
         auth.router,
         me.router,
+        share.router,
     ):
         app.include_router(router, prefix=API_PREFIX)
 

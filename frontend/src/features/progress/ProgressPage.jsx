@@ -73,6 +73,14 @@ export function ProgressPage() {
         <div className="mt-4 max-w-md">
           <ProgressBar percent={overall.percent} />
         </div>
+        <p className="mt-4">
+          <Link
+            to="/progress/compare"
+            className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
+          >
+            Compare with a friend
+          </Link>
+        </p>
       </div>
 
       <div className="grid gap-10 py-8 md:grid-cols-2">

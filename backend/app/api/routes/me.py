@@ -9,6 +9,7 @@ also reads correctly, and keeps every authenticated route under one prefix.
 
 from __future__ import annotations
 
+import secrets
 import uuid
 from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime
@@ -33,6 +34,7 @@ from app.schemas.me import (
     WatchProgressBulk,
     WatchProgressEntry,
 )
+from app.schemas.share import ShareLinkOut
 
 router = APIRouter(prefix="/me", tags=["me"])
 
@@ -124,9 +126,7 @@ def _free_name(db: Session, user: User, wanted: str) -> tuple[str, bool]:
     path: a merge must never fail wholesale because one order shares a name with
     something already in the account.
     """
-    taken = set(
-        db.scalars(select(CustomOrder.name).where(CustomOrder.user_id == user.id)).all()
-    )
+    taken = set(db.scalars(select(CustomOrder.name).where(CustomOrder.user_id == user.id)).all())
     if wanted not in taken:
         return wanted, False
 
@@ -325,9 +325,7 @@ def reset_watch_progress(user: CurrentUserDep, db: DbDep) -> None:
 
 
 @router.patch("/preferences", response_model=UserOut)
-def update_preferences(
-    payload: PreferencesUpdate, user: CurrentUserDep, db: DbDep
-) -> UserOut:
+def update_preferences(payload: PreferencesUpdate, user: CurrentUserDep, db: DbDep) -> UserOut:
     """Merge semantics: keys left unset keep their current value."""
     # Reassigning rather than mutating: SQLAlchemy does not track in-place
     # changes to a plain JSON value, so a mutated dict never flushes.
@@ -335,6 +333,52 @@ def update_preferences(
     db.commit()
     db.refresh(user)
     return UserOut.model_validate(user)
+
+
+# --------------------------------------------------------------------------
+# share link
+# --------------------------------------------------------------------------
+
+
+@router.get("/share", response_model=ShareLinkOut)
+def get_share_link(user: CurrentUserDep) -> ShareLinkOut:
+    """The caller's own token, or null if they have never opted in."""
+    return ShareLinkOut(token=user.share_token)
+
+
+@router.post("/share", response_model=ShareLinkOut)
+def create_share_link(user: CurrentUserDep, db: DbDep) -> ShareLinkOut:
+    """Mint a token, or rotate the existing one.
+
+    Rotating is the only way to invalidate a link that has spread further than
+    intended without turning sharing off entirely, so create and rotate are
+    deliberately the same call.
+
+    token_urlsafe(16) is 22 characters of base64url over 128 bits, which fits
+    the String(24) column with room to spare and is far past guessing. The retry
+    is for the collision that will never happen: at that width a birthday
+    collision needs on the order of 2^64 accounts, but a bare unique violation
+    would surface to the user as "That already exists." from the handler in
+    main.py, which explains nothing here.
+    """
+    for _ in range(3):
+        candidate = secrets.token_urlsafe(16)
+        if db.scalar(select(User.id).where(User.share_token == candidate)) is None:
+            user.share_token = candidate
+            db.commit()
+            return ShareLinkOut(token=candidate)
+
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Could not allocate a share link. Please try again.",
+    )
+
+
+@router.delete("/share", status_code=status.HTTP_204_NO_CONTENT)
+def revoke_share_link(user: CurrentUserDep, db: DbDep) -> None:
+    """Turn sharing off. Every link handed out so far stops resolving at once."""
+    user.share_token = None
+    db.commit()
 
 
 # --------------------------------------------------------------------------
@@ -377,9 +421,7 @@ def import_local_data(
     orders_skipped = 0
     orders_renamed: list[str] = []
 
-    owned_ids = set(
-        db.scalars(select(CustomOrder.id).where(CustomOrder.user_id == user.id)).all()
-    )
+    owned_ids = set(db.scalars(select(CustomOrder.id).where(CustomOrder.user_id == user.id)).all())
 
     for incoming in payload.orders:
         order_id = incoming.id

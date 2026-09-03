@@ -35,10 +35,14 @@ import { useOrderGraph } from './useOrderGraph'
 function initialState(existing, searchParams) {
   if (existing) return { name: existing.name, movieIds: existing.movie_ids }
 
+  // A comma-separated list, so one id and many read the same way. Started as
+  // "build an order from this chain" with a single id; "build an order from
+  // what neither of you has seen" wants a whole list, and every link written
+  // against the single-id form still means what it did.
   const start = searchParams.get('start')
   return {
     name: searchParams.get('name') || 'My watch order',
-    movieIds: start ? [start] : [],
+    movieIds: start ? start.split(',').filter(Boolean) : [],
   }
 }
 
