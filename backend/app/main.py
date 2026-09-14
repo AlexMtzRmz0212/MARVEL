@@ -6,7 +6,7 @@ import re
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 from app.api.routes import auth, friends, graph, health, me, movies, orders, share
 from app.core.config import get_settings
@@ -148,6 +148,36 @@ def create_app() -> FastAPI:
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": "The write violated a database constraint."},
+        )
+
+    @app.exception_handler(OperationalError)
+    async def handle_operational_error(_: Request, exc: OperationalError) -> JSONResponse:
+        """The database could not be reached, so the request never ran.
+
+        This differs from the IntegrityError above in the way that matters to
+        whoever is reading the log: nothing was attempted and nothing was rolled
+        back. The connection itself failed -- a rotated password, a suspended
+        Neon endpoint, a DATABASE_URL pointing at something that is not
+        listening.
+
+        Without this handler the exception leaves the app as a bare 500 and the
+        SPA renders "Request failed with status 500" over whichever form the user
+        was looking at, naming neither the subsystem nor the environment. That is
+        how a stale password in backend/.env comes to look like a bug in the
+        login code, and it is the reason this handler exists.
+
+        503 rather than 500: the request was well formed and the code is not
+        broken, so the honest answer is that a dependency is unavailable and
+        retrying later may work.
+
+        Logging the exception in full does not put the credential in the log.
+        psycopg names the host, the port and the role in these messages but never
+        the password, and SQLAlchemy masks it in any URL it renders itself.
+        """
+        logger.exception("Database unreachable; the request never ran")
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"detail": "The server could not reach its database. Try again shortly."},
         )
 
     for router in (
