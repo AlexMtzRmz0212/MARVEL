@@ -31,7 +31,7 @@ from app.main import app
 
 # Importing for the side effect of registering the mappers: Base.metadata is
 # only complete once every model module has been imported.
-from app.models import custom_order, user, watch_progress  # noqa: F401
+from app.models import custom_order, friendship, user, watch_progress  # noqa: F401
 from app.models.movie import Movie
 
 
@@ -118,7 +118,13 @@ def db(engine: Engine) -> Iterator[Session]:
     finally:
         session.close()
         with engine.begin() as connection:
-            for table in ("custom_order_items", "custom_orders", "watch_progress", "users"):
+            for table in (
+                "custom_order_items",
+                "custom_orders",
+                "watch_progress",
+                "friendships",
+                "users",
+            ):
                 connection.exec_driver_sql(f"DELETE FROM {table}")
 
 

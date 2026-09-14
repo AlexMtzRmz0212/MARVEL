@@ -68,6 +68,17 @@ export function PrivacyPage() {
             and revoking it stops every copy of it working at once.
           </li>
           <li>
+            <span className="text-ink">Friend code.</span> A random code issued to every account, so
+            somebody you give it to can send you a friend request. On its own it discloses nothing,
+            not even that an account exists, and you can replace it at any time.
+          </li>
+          <li>
+            <span className="text-ink">Friends and friend requests.</span> Who you have asked to be
+            friends with, who has asked you, and who has accepted. Kept so that both of you can see
+            each other&rsquo;s watch progress. Declining a request or removing a friend deletes the
+            record rather than marking it, so nothing is retained about a friendship that ended.
+          </li>
+          <li>
             <span className="text-ink">Account creation date.</span> Recorded once, for support and
             debugging.
           </li>
@@ -112,6 +123,17 @@ export function PrivacyPage() {
           replace it, which takes effect immediately; if you have never made one, nothing about you
           is reachable this way at all.
         </p>
+        <p>
+          Accepting a friend request from{' '}
+          <Link to="/friends" className="text-ink underline underline-offset-4">
+            Friends
+          </Link>{' '}
+          discloses exactly the same things to that one person, and nothing further: your display
+          name and which titles you have marked watched, never your email address, your ratings,
+          your notes or your custom orders. It only happens once you accept. Somebody holding your
+          friend code can ask, and until you say yes they learn nothing at all. Removing a friend
+          ends it for both of you immediately.
+        </p>
       </Section>
 
       <Section title="How to delete your data">
@@ -121,17 +143,21 @@ export function PrivacyPage() {
           <Link to="/orders" className="text-ink underline underline-offset-4">
             My orders
           </Link>
-          , or revoke a share link from{' '}
+          , revoke a share link from{' '}
           <Link to="/progress/compare" className="text-ink underline underline-offset-4">
             Compare progress
+          </Link>
+          , or remove a friend or replace your friend code from{' '}
+          <Link to="/friends" className="text-ink underline underline-offset-4">
+            Friends
           </Link>
           .
         </p>
         <p>
           To delete everything, open the account menu in the header and choose{' '}
           <span className="text-ink">Delete account</span>. You will be asked to confirm your
-          password, and then your account row, your display name, any share link, all of your watch
-          progress and
+          password, and then your account row, your display name, any share link, your friend code,
+          every friendship and pending request you were part of, all of your watch progress and
           every custom order are erased from the database immediately. The rows are deleted outright
           rather than flagged, nothing is kept in reserve for a recovery window, and no copy is
           retained anywhere, so the action cannot be undone.

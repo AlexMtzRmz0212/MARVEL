@@ -5,6 +5,7 @@ models that have actually been imported.
 """
 
 from app.models.custom_order import CustomOrder, CustomOrderItem
+from app.models.friendship import Friendship
 from app.models.movie import Movie, Prerequisite
 from app.models.user import User
 from app.models.watch_progress import WatchProgress
@@ -12,6 +13,7 @@ from app.models.watch_progress import WatchProgress
 __all__ = [
     "CustomOrder",
     "CustomOrderItem",
+    "Friendship",
     "Movie",
     "Prerequisite",
     "User",

@@ -1,2 +1,0 @@
-- fetch from TMDb and  then from OMDb
-- create GH Action

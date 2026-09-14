@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 
+import { useAuth } from '../auth/AuthContext'
 import { clearSyncError, getSnapshot, subscribe } from '../lib/syncStatus'
 import { GlobalSearch } from './GlobalSearch'
 import { UserMenu } from './UserMenu'
@@ -12,17 +13,25 @@ const NAV = [
   { to: '/compare', label: 'Compare' },
   { to: '/orders', label: 'My orders' },
   { to: '/progress', label: 'Progress' },
+  // The one entry that is not always here. Friends is the only feature in the
+  // app with no guest half -- a friendship is between two accounts, and a
+  // browser holding localStorage is not one of them -- so for a signed-out
+  // visitor this would be a nav item leading to a locked door. Every other page
+  // works signed out, and the nav should keep saying so.
+  { to: '/friends', label: 'Friends', accountOnly: true },
 ]
 
 function navClass({ isActive }) {
   return [
-    'label shrink-0 px-1.5 py-1.5 whitespace-nowrap transition-colors md:px-3',
+    'label shrink-0 px-1.5 py-1.5 whitespace-nowrap transition-colors lg:px-3',
     isActive ? 'text-ink' : 'text-ink-dim hover:text-ink',
   ].join(' ')
 }
 
 function NavLinks() {
-  return NAV.map((item) => (
+  const { user } = useAuth()
+
+  return NAV.filter((item) => !item.accountOnly || user).map((item) => (
     <NavLink key={item.to} to={item.to} end={item.end} className={navClass}>
       {item.label}
     </NavLink>
@@ -65,7 +74,7 @@ export function AppShell() {
             <span className="meta hidden sm:inline">Watch Order</span>
           </NavLink>
 
-          {/* Below `md` the nav moves to its own row underneath. The logo, the
+          {/* Below `lg` the nav moves to its own row underneath. The logo, the
            * nav items and the account control together need well over 414px of
            * min-content, so on a 320-390px phone a single row cannot fit them:
            * the document grew wider than the viewport, which is what let the
@@ -74,18 +83,20 @@ export function AppShell() {
            * focus order matching the visual order in both layouts, and the
            * hidden copy is `display:none`, so assistive tech only ever sees one.
            *
-           * The breakpoint is `md` rather than `sm` because the row has five
-           * items now: at the desktop padding they measure ~430px, which with
-           * the wordmark, the search lens and the account control no longer
-           * clears 640px.
+           * The breakpoint was `md` at five items, where they measured ~430px
+           * at the desktop padding. A signed-in visitor now has six, ~515px,
+           * which alongside the wordmark, the search lens and the account
+           * control no longer clears 768px -- so it is `lg`. Between the two
+           * breakpoints the nav simply takes the second row, which it was
+           * already built to do.
            *
-           * The second row cannot fit five either -- ~370px against a 320px
+           * That second row cannot fit six either -- ~440px against a 320px
            * phone -- so it scrolls sideways, and the items refuse to shrink so
            * a label is never squeezed to nothing. The overflow is the nav's
            * own, not the document's, which is the part that mattered: the page
            * itself still never grows wider than the viewport.
            */}
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-1 lg:flex">
             <NavLinks />
           </nav>
 
@@ -95,7 +106,7 @@ export function AppShell() {
           </div>
         </div>
 
-        <nav className="mx-auto -mt-1 flex max-w-[1400px] items-center overflow-x-auto px-2 pb-2 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
+        <nav className="mx-auto -mt-1 flex max-w-[1400px] items-center overflow-x-auto px-2 pb-2 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
           <NavLinks />
         </nav>
       </header>

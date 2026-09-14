@@ -105,6 +105,41 @@ graph stops moving. And until you touch it, the view refits itself every frame,
 so the graph fills whatever space the window gives it and there is never
 anything to scroll to.
 
+### Two people, and no way to look either of them up
+
+Comparing progress with somebody needs a way for one account to address another,
+and both of the obvious ones are enumeration vectors: an endpoint that answers
+"is there a user at this address" is an address oracle, and a public handle makes
+every account guessable by hand. So there are two mechanisms and neither is a
+directory.
+
+A **share link** is a capability URL. A random token the owner mints and hands
+out; whoever holds it sees a display name and a set of watched ids, no account
+required. Revoking it stops every copy at once.
+
+A **friend code** is the opposite shape: holding one grants nothing at all, not
+even confirmation that the account exists. The most it buys is the right to send
+a request, and nothing is disclosed until that request is accepted. Which is why
+the code is issued to every account automatically while the share token is
+opt-in, and why the code has no off switch — rotating it invalidates every copy
+anybody holds, and that is the only control the threat model needs.
+
+`friendships` stores each relationship **once**, with the pair canonically
+ordered by uuid and a CHECK that says so. That one constraint makes the composite
+primary key a real uniqueness guarantee — without it, two people pressing "add"
+at the same moment end up with a request each that the other cannot see — and its
+strict inequality rules out self-friendship for free. `requested_by_id` carries
+the direction the ordering destroyed, which is the whole difference between
+"accept or decline" and "waiting on them".
+
+Both paths end at the same place: the compare page reduces a friend and a pasted
+link to the same `{name, watchedIds}` and nothing below that knows which is
+which. What it draws is a four-way split that generalises to any number of
+people — everyone, nobody, you alone, and everything left over — where the
+two-person wording falls out of the same branches. The many-person test exists
+because it does not: the shorter ternary that passes every two-person case files
+a title you and one of three friends have seen under "only you".
+
 ### Two validators, one fixture
 
 The order builder validates while you drag, which means a copy of the validator
@@ -120,10 +155,10 @@ backend/          FastAPI + the graph engine
   app/core/       graph.py (pure), config, enums
   app/seed/       curated catalog, validation, Postgres loader
   app/api/        routes
-  tests/          97 tests, no infrastructure required
+  tests/          185 tests, no infrastructure required
 frontend/         React + Vite + Tailwind v4
   src/lib/        dagLayout.js, forceGraph.js, validateOrder.js
-  src/features/   catalog, timeline, prereq graph, order builder
+  src/features/   catalog, timeline, prereq graph, order builder, friends
 fixtures/         shared across both test suites
 server.py         production entrypoint: API + built SPA in one process
 ```
@@ -190,6 +225,11 @@ anything already in the account wins.
 
 Sessions are an HttpOnly cookie carrying a JWT, same origin in both dev and
 production, so no token is ever visible to JavaScript.
+
+Friends are the one feature with no signed-out half, because a friendship is
+between two accounts and a browser holding `localStorage` is not one of them. The
+nav item is hidden rather than shown as a locked door, and comparing against a
+share link still works with no account at either end.
 
 ### Database setup
 

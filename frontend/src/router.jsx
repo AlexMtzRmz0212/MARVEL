@@ -5,6 +5,8 @@ import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
 import { CatalogPage } from './features/catalog/CatalogPage'
 import { ComparePage } from './features/compare/ComparePage'
+import { FriendProfilePage } from './features/friends/FriendProfilePage'
+import { FriendsPage } from './features/friends/FriendsPage'
 import { HomePage } from './features/home/HomePage'
 import { OrderBuilderPage } from './features/builder/OrderBuilderPage'
 import { OrdersPage } from './features/builder/OrdersPage'
@@ -31,6 +33,11 @@ export const router = createBrowserRouter([
       { path: 'compare', element: <ComparePage /> },
       { path: 'movies/:movieId', element: <MovieDetailPage /> },
       { path: 'movies/:movieId/prereqs', element: <PrereqGraphPage /> },
+      { path: 'friends', element: <FriendsPage /> },
+      // A friend's profile is addressed by their account id rather than by
+      // anything guessable, and the page renders nothing at all unless the two
+      // are still friends -- so a leaked url is a sentence, not a disclosure.
+      { path: 'friends/:friendId', element: <FriendProfilePage /> },
       { path: 'orders', element: <OrdersPage /> },
       { path: 'orders/new', element: <OrderBuilderPage /> },
       { path: 'orders/:orderId', element: <OrderBuilderPage /> },

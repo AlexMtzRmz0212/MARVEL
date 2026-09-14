@@ -14,6 +14,12 @@ import { CompareProgressPage } from './CompareProgressPage'
  * which title lands in which bucket, that a filter really narrows the list
  * rather than restyling it, and that a revoked link reads as a sentence instead
  * of an error boundary.
+ *
+ * The split is now computed over any number of people, which gives the ternary
+ * a second way to be quietly wrong: the two-person wording has to keep falling
+ * out of the same branches the many-person wording uses. So the same catalogue
+ * is asserted twice, once against a link and once against two friends, and the
+ * second block pins the relabelling as well as the counts.
  */
 
 const MOVIES = [
@@ -27,8 +33,16 @@ vi.mock('../../api/catalog', () => ({
   useMovies: () => ({ data: MOVIES }),
 }))
 
-// A mutable handle so each test can decide what the link resolves to.
+// Mutable handles so each test can decide what the link and the friends
+// endpoints resolve to.
 const sharedResult = { data: null, error: null, isPending: false }
+const friendsResult = { data: [], isPending: false }
+const friendsProgressResult = { data: [], isPending: false }
+
+vi.mock('../../api/friends', () => ({
+  useFriends: () => friendsResult,
+  useFriendsProgress: () => friendsProgressResult,
+}))
 
 vi.mock('../../api/share', async (importOriginal) => ({
   // tokenFromInput is pure parsing and is worth exercising for real.
@@ -70,6 +84,8 @@ beforeEach(() => {
   sharedResult.data = null
   sharedResult.error = null
   sharedResult.isPending = false
+  friendsResult.data = []
+  friendsProgressResult.data = []
 })
 
 describe('CompareProgressPage', () => {
@@ -98,9 +114,9 @@ describe('CompareProgressPage', () => {
       expect(total).toBe(MOVIES.length)
     })
 
-    it('names the other person on their own bar', () => {
+    it('names the other person over their column and on their own bar', () => {
       show()
-      expect(screen.getByText('Peter')).toBeInTheDocument()
+      expect(screen.getAllByText('Peter')).toHaveLength(2)
     })
 
     it('narrows the list to one bucket at a time', () => {
@@ -144,12 +160,79 @@ describe('CompareProgressPage', () => {
     })
   })
 
-  describe('without a link', () => {
-    it('asks for one instead of comparing nothing', () => {
+  describe('without anybody to compare against', () => {
+    it('asks for somebody instead of comparing nothing', () => {
       show({ url: '/progress/compare' })
 
-      expect(screen.getByText(/Paste a link above/i)).toBeInTheDocument()
+      expect(screen.getByText(/Pick a friend above, or paste a link/i)).toBeInTheDocument()
       expect(document.querySelector('dl')).toBeNull()
+    })
+  })
+
+  describe('with friends picked from the list', () => {
+    beforeEach(() => {
+      // Mine: Alpha and Bravo. MJ: Bravo and Charlie. Ned: Bravo only.
+      markManyWatched(['a', 'b'])
+      friendsResult.data = [
+        { user_id: 'f1', display_name: 'MJ', watched_count: 2 },
+        { user_id: 'f2', display_name: 'Ned', watched_count: 1 },
+      ]
+      friendsProgressResult.data = [
+        { user_id: 'f1', display_name: 'MJ', watched_ids: ['b', 'c'] },
+        { user_id: 'f2', display_name: 'Ned', watched_ids: ['b'] },
+      ]
+    })
+
+    it('relabels the buckets once there is more than one other person', () => {
+      show({ url: '/progress/compare?friends=f1,f2' })
+
+      // Bravo is the only title all three have. Alpha is yours alone. Charlie
+      // is MJ's alone, which is "some of you" rather than "only them" now.
+      // Delta is nobody's.
+      expect(counts()).toEqual({
+        Everyone: '1',
+        'Only you': '1',
+        'Some of you': '1',
+        Nobody: '1',
+      })
+    })
+
+    it('draws a column per person and names them in the legend', () => {
+      const { container } = show({ url: '/progress/compare?friends=f1,f2' })
+
+      expect(screen.getByText('1 You')).toBeInTheDocument()
+      expect(screen.getByText('2 MJ')).toBeInTheDocument()
+      expect(screen.getByText('3 Ned')).toBeInTheDocument()
+
+      // Three marks on every row, one per person, plus the position.
+      const bravo = container.querySelector('[data-row="b"]')
+      expect(bravo.querySelectorAll('[aria-hidden="true"]').length).toBe(3)
+    })
+
+    it('drops a friend id that no longer resolves rather than rendering a blank column', () => {
+      show({ url: '/progress/compare?friends=f1,gone' })
+
+      expect(screen.getAllByText('MJ').length).toBeGreaterThan(0)
+      // Back to two people, so the two-person wording comes back with it.
+      expect(counts()).toEqual({
+        Both: '1',
+        'Only you': '1',
+        'Only them': '1',
+        Neither: '1',
+      })
+    })
+
+    it('compares a friend and a link at once', () => {
+      sharedResult.data = { display_name: 'Peter', watched_ids: ['a', 'b'] }
+      show({ url: '/progress/compare?friends=f1&with=tok' })
+
+      // You and Peter have Alpha and Bravo; MJ has Bravo and Charlie.
+      expect(counts()).toEqual({
+        Everyone: '1',
+        'Only you': '0',
+        'Some of you': '2',
+        Nobody: '1',
+      })
     })
   })
 

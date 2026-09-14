@@ -40,6 +40,18 @@ class User(Base):
     # ratings or the notes (see app/schemas/share.py).
     share_token: Mapped[str | None] = mapped_column(String(24), unique=True)
 
+    # The code somebody types to send this account a friend request.
+    #
+    # NOT NULL, unlike the share token beside it, and the difference is the
+    # point. A share token *is* the authorisation -- holding one hands over the
+    # data -- so it defaults to off and has an off state to return to. A friend
+    # code authorises nothing: the most it buys its holder is the ability to ask,
+    # and the ask has to be accepted before anything is disclosed. There is
+    # therefore nothing to opt into, no null branch anywhere above this line, and
+    # rotation rather than revocation is the control that matters (see
+    # `app.services.friends`).
+    friend_code: Mapped[str] = mapped_column(String(16), nullable=False, unique=True)
+
     # A JSON blob rather than a column per setting: these are small display
     # choices, they arrive free inside GET /api/auth/me (which the SPA already
     # calls once at boot), and one migration covers every preference added

@@ -128,6 +128,26 @@ class Strength(StrEnum):
     RECOMMENDED = "recommended"  # richer with it, coherent without it
 
 
+class FriendshipStatus(StrEnum):
+    """Where a friendship between two accounts has got to.
+
+    Two members and deliberately no third. Declining a request deletes its row
+    rather than recording a `declined` state: a stored refusal would be visible
+    to whoever sent it, and it would wedge the pair out of ever trying again
+    without an "undecline" nobody would build. Unfriending deletes the row for
+    the same reason -- there is nothing worth remembering about a relationship
+    that has ended.
+
+    There is no `blocked` either. A request can only be sent by somebody already
+    holding the recipient's friend code, and rotating that code invalidates every
+    copy of it at once, so the unsolicited contact a block defends against cannot
+    reach an account here in the first place.
+    """
+
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+
+
 def sql_in(column: str, enum: type[StrEnum]) -> str:
     """Render a CHECK body pinning `column` to an enum's members.
 

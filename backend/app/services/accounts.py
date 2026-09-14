@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import hash_password, verify_password
 from app.models.user import User
+from app.services.friends import mint_code
 
 # Verified against on a missing account so that "no such email" and "wrong
 # password" take the same time. Hashing a constant is the cheapest way to keep
@@ -43,6 +44,13 @@ def create_user(db: Session, *, email: str, password: str, display_name: str | N
         hashed_password=hash_password(password),
         display_name=display_name,
         preferences={},
+        # Minted here rather than lazily on first read, because `friend_code` is
+        # NOT NULL and this is the only place a User is ever constructed. A code
+        # discloses nothing on its own (see app/services/friends.py), so there is
+        # no consent to collect before issuing one -- and an account that already
+        # has one means the friends page has something to show on first visit
+        # instead of a button that has to be pressed before the feature exists.
+        friend_code=mint_code(db),
     )
     db.add(user)
     try:
@@ -65,6 +73,12 @@ def delete_user(db: Session, user: User) -> None:
     foreign keys are ON DELETE CASCADE, so this removes the user row, their
     watch progress, their custom orders and those orders' items. Nothing about
     the account survives, which is what the privacy policy promises.
+
+    Friendships go too, without a relationship to carry them: all three of the
+    columns on `friendships` are ON DELETE CASCADE, so the database removes every
+    row the account was party to -- including the ones where it was `user_b_id`
+    and therefore not the side doing the deleting. The friend's list shortens by
+    one and nothing is left pointing at an account that no longer exists.
     """
     db.delete(user)
     db.commit()

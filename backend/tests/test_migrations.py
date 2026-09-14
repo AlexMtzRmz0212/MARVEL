@@ -39,6 +39,7 @@ def test_migrations_produce_every_table(pg_engine):
         "custom_orders",
         "custom_order_items",
         "watch_progress",
+        "friendships",
     } <= tables
 
 
