@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { Button, Field, Problems, Segmented, Select, TextInput } from './ui'
+import { Button, Combobox, Field, Problems, Segmented, TextInput } from './ui'
 
 /**
  * The graph itself, edited one title at a time from both ends.
@@ -101,13 +101,11 @@ function ConnectForm({ eligible, movies, strengths, emptyHint, label, onConnect,
     // happened to be sitting there — a connection nobody asked for.
     <div className="hairline space-y-2 border border-dashed p-2">
       <Field label="Title">
-        <Select
+        <Combobox
           value={choice}
-          onChange={(event) => setChoice(event.target.value)}
-          options={[
-            { value: '', label: '— pick one —' },
-            ...eligible.map((id) => ({ value: id, label: labelOf(byId.get(id)) })),
-          ]}
+          onChange={setChoice}
+          placeholder="type to search…"
+          options={eligible.map((id) => ({ value: id, label: labelOf(byId.get(id)) }))}
         />
       </Field>
       <Field label="Strength">
@@ -190,9 +188,9 @@ export function Dependencies({ movies, enums, warnings, problems, saving, focusI
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
-        <Select
+        <Combobox
           value={focus.id}
-          onChange={(event) => onFocus(event.target.value)}
+          onChange={onFocus}
           className="max-w-lg"
           options={movies.map((movie, position) => ({
             value: movie.id,

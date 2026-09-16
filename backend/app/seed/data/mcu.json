@@ -599,10 +599,66 @@
         "count": 0,
         "note": "The Tony Stark scene plays just before the credits rather than after them."
       },
-      "prerequisites": [],
+      "prerequisites": [
+        {
+          "id": "captain-america-the-first-avenger",
+          "strength": "recommended",
+          "note": "Recreated Super Soldier Serum"
+        }
+      ],
       "tmdb_id": 1724,
       "poster_url": "https://image.tmdb.org/t/p/w500/gKzYx79y0AQTL4UAk1cBQJ3nvrm.jpg",
       "synopsis": "Scientist Bruce Banner scours the planet for an antidote to the unbridled force of rage within him: the Hulk. But when the military masterminds who dream of exploiting his powers force him back to civilization, he finds himself coming face to face with a new, deadly foe."
+    },
+    {
+      "id": "a-funny-thing-happened-one-shot",
+      "title": "Marvel One-Shot: A Funny Thing Happened on the Way to Thor's Hammer",
+      "release_date": "2011-10-25",
+      "phase": 1,
+      "saga": "Infinity Saga",
+      "universe": "Earth-199999",
+      "media_type": "film",
+      "tier": "optional",
+      "runtime_min": 4,
+      "prerequisites": [
+        {
+          "id": "agent-carter-season-one",
+          "strength": "essential",
+          "note": "Coulson's departure in Iron Man 2"
+        }
+      ],
+      "tmdb_id": 76535,
+      "poster_url": "https://image.tmdb.org/t/p/w500/njrOqsmFH4pxBrhcoslqLfw2OGk.jpg",
+      "synopsis": "Agent Coulson stops at a convenience store and deals with a coincidental robbery during his visit."
+    },
+    {
+      "id": "thor",
+      "title": "Thor",
+      "release_date": "2011-04-21",
+      "phase": 1,
+      "saga": "Infinity Saga",
+      "universe": "Earth-199999",
+      "media_type": "film",
+      "tier": "core",
+      "runtime_min": 115,
+      "credit_scenes": {
+        "count": 1
+      },
+      "prerequisites": [
+        {
+          "id": "iron-man-2",
+          "strength": "essential",
+          "note": "Sets up S.H.I.E.L.D.'s presence and the main storyline in New Mexico"
+        },
+        {
+          "id": "a-funny-thing-happened-one-shot",
+          "strength": "recommended",
+          "note": "Quick bridge showing Coulson's trip along the way"
+        }
+      ],
+      "tmdb_id": 10195,
+      "poster_url": "https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg",
+      "synopsis": "Against his father Odin's will, The Mighty Thor - a powerful but arrogant warrior god - recklessly reignites an ancient war. Thor is cast down to Earth and forced to live among humans as punishment. Once here, Thor learns what it takes to be a true hero when the most dangerous villain of his world sends the darkest forces of Asgard to invade Earth."
     },
     {
       "id": "the-consultant-one-shot",
@@ -619,50 +675,16 @@
           "id": "the-incredible-hulk",
           "strength": "essential",
           "note": "Turns on Emil Blonsky's imprisonment after the Hulk's rampage"
+        },
+        {
+          "id": "thor",
+          "strength": "essential",
+          "note": "The recent alien attack in New Mexico is the exact reason the World Security Council panics and demands a powerful monster like Blonsky for the team."
         }
       ],
       "tmdb_id": 76122,
       "poster_url": "https://image.tmdb.org/t/p/w500/xqNLXUUvBnfVk6m3QFGGU0Grgs7.jpg",
       "synopsis": "Agent Coulson informs Agent Sitwell that the World Security Council wishes Emil Blonsky to be released from prison to join the Avengers Initiative. As Nick Fury doesn't want to release Blonsky, the two agents decide to send a patsy to sabotage the meeting..."
-    },
-    {
-      "id": "thor",
-      "title": "Thor",
-      "release_date": "2011-04-21",
-      "phase": 1,
-      "saga": "Infinity Saga",
-      "universe": "Earth-199999",
-      "media_type": "film",
-      "tier": "core",
-      "runtime_min": 115,
-      "credit_scenes": {
-        "count": 1
-      },
-      "prerequisites": [],
-      "tmdb_id": 10195,
-      "poster_url": "https://image.tmdb.org/t/p/w500/prSfAi1xGrhLQNxVSUFh61xQ4Qy.jpg",
-      "synopsis": "Against his father Odin's will, The Mighty Thor - a powerful but arrogant warrior god - recklessly reignites an ancient war. Thor is cast down to Earth and forced to live among humans as punishment. Once here, Thor learns what it takes to be a true hero when the most dangerous villain of his world sends the darkest forces of Asgard to invade Earth."
-    },
-    {
-      "id": "a-funny-thing-happened-one-shot",
-      "title": "Marvel One-Shot: A Funny Thing Happened on the Way to Thor's Hammer",
-      "release_date": "2011-10-25",
-      "phase": 1,
-      "saga": "Infinity Saga",
-      "universe": "Earth-199999",
-      "media_type": "film",
-      "tier": "optional",
-      "runtime_min": 4,
-      "prerequisites": [
-        {
-          "id": "thor",
-          "strength": "essential",
-          "note": "Coulson's aside about the search for Mjolnir references it directly"
-        }
-      ],
-      "tmdb_id": 76535,
-      "poster_url": "https://image.tmdb.org/t/p/w500/njrOqsmFH4pxBrhcoslqLfw2OGk.jpg",
-      "synopsis": "Agent Coulson stops at a convenience store and deals with a coincidental robbery during his visit."
     },
     {
       "id": "the-avengers",

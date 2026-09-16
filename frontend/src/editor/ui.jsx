@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /**
  * The handful of controls the editor builds everything else out of.
@@ -65,6 +65,121 @@ export function Select({ options, className = '', ...props }) {
         )
       })}
     </select>
+  )
+}
+
+/**
+ * A type-to-filter select. Typing narrows `options` to a listbox below the
+ * field; Enter picks the highlighted match, Escape or a click outside backs
+ * out without changing the value. Built by hand rather than with `<datalist>`
+ * because that element won't let us style the listbox to match the rest of
+ * the editor, and its Enter-to-commit behavior is inconsistent across browsers.
+ */
+export function Combobox({ value, onChange, options, placeholder, className = '' }) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const [highlight, setHighlight] = useState(0)
+  const rootRef = useRef(null)
+
+  const selected = options.find((option) => option.value === value)
+  const shown = open ? query : (selected?.label ?? '')
+  const matches = options.filter((option) =>
+    option.label.toLowerCase().includes(query.trim().toLowerCase()),
+  )
+  const activeIndex = Math.min(highlight, matches.length - 1)
+
+  useEffect(() => {
+    if (!open) return
+    const onClickOutside = (event) => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [open])
+
+  const pick = (option) => {
+    onChange(option.value)
+    setQuery('')
+    setOpen(false)
+  }
+
+  return (
+    <div ref={rootRef} className={['relative', className].join(' ')}>
+      <input
+        type="text"
+        role="combobox"
+        aria-expanded={open}
+        aria-autocomplete="list"
+        className={CONTROL}
+        placeholder={placeholder}
+        value={shown}
+        onFocus={() => {
+          setQuery('')
+          setOpen(true)
+          setHighlight(0)
+        }}
+        // Picking an option leaves the input focused (see the option button's
+        // onMouseDown below), so a second click needs its own handler —
+        // `onFocus` won't fire again for an element that's already focused.
+        onClick={() => {
+          if (open) return
+          setQuery('')
+          setOpen(true)
+          setHighlight(0)
+        }}
+        onChange={(event) => {
+          setQuery(event.target.value)
+          setOpen(true)
+          setHighlight(0)
+        }}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowDown') {
+            event.preventDefault()
+            setOpen(true)
+            setHighlight((current) => Math.min(current + 1, matches.length - 1))
+          } else if (event.key === 'ArrowUp') {
+            event.preventDefault()
+            setHighlight((current) => Math.max(current - 1, 0))
+          } else if (event.key === 'Enter' && open && matches[activeIndex]) {
+            event.preventDefault()
+            pick(matches[activeIndex])
+          } else if (event.key === 'Escape') {
+            setOpen(false)
+            setQuery('')
+          }
+        }}
+      />
+      {open && (
+        <ul
+          role="listbox"
+          className="hairline absolute z-10 mt-1 max-h-56 w-full overflow-y-auto border bg-surface"
+        >
+          {matches.length === 0 && (
+            <li className="meta px-2 py-1.5 normal-case tracking-normal">No matches</li>
+          )}
+          {matches.map((option, index) => (
+            <li key={option.value} role="option" aria-selected={index === activeIndex}>
+              <button
+                type="button"
+                // Prevents the input from blurring before the click lands, so
+                // `onBlur` doesn't close the list out from under the click.
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => pick(option)}
+                className={[
+                  'block w-full px-2 py-1.5 text-left text-sm',
+                  index === activeIndex
+                    ? 'bg-raised text-ink'
+                    : 'text-ink-dim hover:bg-raised hover:text-ink',
+                ].join(' ')}
+              >
+                {option.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 
