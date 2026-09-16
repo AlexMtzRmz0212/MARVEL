@@ -1910,6 +1910,27 @@
       "synopsis": "Struggling to find his place in the world while juggling school and family, Brooklyn teenager Miles Morales is unexpectedly bitten by a radioactive spider and develops unfathomable powers just like the one and only Spider-Man. While wrestling with the implications of his new abilities, Miles discovers a super collider created by the madman Wilson \"Kingpin\" Fisk, causing others from across the Spider-Verse to be inadvertently transported to his dimension."
     },
     {
+      "id": "spider-man-accross-the-spider-verse",
+      "title": "Spider-Man: Across the Spider-Verse",
+      "release_date": "2023-05-31",
+      "phase": null,
+      "saga": "Spider-Verse Saga",
+      "universe": "Earth-1610",
+      "media_type": "film",
+      "tier": "supporting",
+      "runtime_min": 140,
+      "poster_url": "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
+      "synopsis": "After reuniting with Gwen Stacy, Brooklyn’s full-time, friendly neighborhood Spider-Man is catapulted across the Multiverse, where he encounters the Spider Society, a team of Spider-People charged with protecting the Multiverse's very existence. But when the heroes clash on how to handle a new threat, Miles finds himself pitted against the other Spiders and must set out on his own to save those he loves most.",
+      "tmdb_id": 569094,
+      "prerequisites": [
+        {
+          "id": "spider-man-into-the-spider-verse",
+          "strength": "essential",
+          "note": null
+        }
+      ]
+    },
+    {
       "id": "agents-of-shield-season-5",
       "title": "Marvel's Agents of S.H.I.E.L.D.: Season 5",
       "release_date": "2017-12-01",
@@ -2303,6 +2324,11 @@
           "id": "avengers-endgame",
           "strength": "recommended",
           "note": "Mostly standalone; the Blip and the epilogue cameos assume it"
+        },
+        {
+          "id": "all-hail-the-king-one-shot",
+          "strength": "recommended",
+          "note": null
         }
       ],
       "tmdb_id": 566525,
@@ -3174,6 +3200,11 @@
           "id": "she-hulk-attorney-at-law",
           "strength": "recommended",
           "note": "Shares the industry-satire register and Los Angeles setting"
+        },
+        {
+          "id": "shang-chi-and-the-legend-of-the-ten-rings",
+          "strength": "recommended",
+          "note": null
         }
       ],
       "tmdb_id": 198178,
