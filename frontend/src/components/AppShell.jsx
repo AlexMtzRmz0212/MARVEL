@@ -41,15 +41,24 @@ function NavLinks() {
 /**
  * Optimistic writes roll back silently when the server refuses them, which
  * looks like a toggle undoing itself. This says what happened.
+ *
+ * A floating popup rather than a banner in the document flow: a banner above
+ * `<main>` pushes every page's content down the moment a write fails, which
+ * moves whatever the user was just looking at. Fixed positioning says the
+ * same thing without relocating anything else on the page.
  */
-function SyncErrorBanner() {
+function SyncErrorPopup() {
   const message = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
   if (!message) return null
 
   return (
-    <div className="hairline border-b border-l-2 border-l-danger bg-surface">
-      <div className="mx-auto flex max-w-[1400px] items-center gap-4 px-4 py-2 sm:px-6">
-        <p className="flex-1 text-sm text-ink-dim">{message}</p>
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="hairline animate-popup-in fixed inset-x-4 bottom-4 z-40 border border-l-2 border-l-danger bg-surface sm:inset-x-auto sm:right-6 sm:max-w-sm"
+    >
+      <div className="flex items-start gap-4 px-4 py-3">
+        <p className="flex-1 text-sm leading-relaxed text-ink-dim">{message}</p>
         <button
           type="button"
           onClick={clearSyncError}
@@ -111,7 +120,7 @@ export function AppShell() {
         </nav>
       </header>
 
-      <SyncErrorBanner />
+      <SyncErrorPopup />
 
       <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-24 sm:px-6">
         <Outlet />

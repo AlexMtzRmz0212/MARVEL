@@ -94,6 +94,17 @@
   }
 }
 
+@keyframes popup-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+.animate-popup-in {
+  animation: popup-in 0.15s ease-out;
+}
+
 /* Respect a user's reduced-motion preference for the graph and card hovers. */
 @media (prefers-reduced-motion: reduce) {
   *,
