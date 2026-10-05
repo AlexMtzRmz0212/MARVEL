@@ -2784,6 +2784,11 @@
           "id": "avengers-endgame",
           "strength": "essential",
           "note": "Wakanda's place in the world after the Blip"
+        },
+        {
+          "id": "the-falcon-and-the-winter-soldier",
+          "strength": "recommended",
+          "note": "Shows how Wakanda fiercely protects its tech and interests on the global stage right after the Blip, explaining their political standing"
         }
       ],
       "tmdb_id": 505642,
