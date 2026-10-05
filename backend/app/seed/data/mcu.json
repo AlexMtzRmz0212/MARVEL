@@ -2299,7 +2299,32 @@
         {
           "id": "avengers-endgame",
           "strength": "essential",
-          "note": "Sam inherits the shield in the final scene"
+          "note": "Hands off the emotional status quo of Captain America's legacy directly to Sam and creates the fractured, post-Blip world everyone is trying to survive in."
+        },
+        {
+          "id": "captain-america-civil-war",
+          "strength": "essential",
+          "note": "It explains why Sharon is an outlaw, introduces Zemo as a mastermind, sets up Ayo’s involvement, and gives Sam and Bucky banter dynamic."
+        },
+        {
+          "id": "captain-america-the-winter-soldier",
+          "strength": "essential",
+          "note": "It establishes who Sam is, reveals Bucky’s past, and introduces Sharon Carter, setting up the core relationships and personal history that drive the show."
+        },
+        {
+          "id": "captain-america-the-first-avenger",
+          "strength": "recommended",
+          "note": "It shows Bucky before HYDRA changed him, giving his current fight for redemption a lot more weight."
+        },
+        {
+          "id": "black-panther",
+          "strength": "recommended",
+          "note": "Highlights Bucky’s time healing in Wakanda and explains why the Dora Milaje feel deeply invested in his story."
+        },
+        {
+          "id": "avengers-infinity-war",
+          "strength": "recommended",
+          "note": "Shows Bucky stepping back into battle with his new arm and establishes the sheer scale of the event that changed society forever."
         }
       ],
       "tmdb_id": 88396,
