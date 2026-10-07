@@ -2,9 +2,10 @@
  * A direct port of `backend/app/core/graph.py`.
  *
  * It exists so that dragging a title produces feedback in the same frame
- * instead of after a round trip. The server stays the authority — the builder
- * revalidates against `POST /orders/validate` on save — but a per-drop request
- * would make the interaction feel broken.
+ * instead of after a round trip; a per-drop request would make the interaction
+ * feel broken. The server's `POST /orders/validate` implements the same rule,
+ * but the builder does not currently call it: orders are advisory and saving
+ * is never blocked, so this file's verdict is the only one the UI shows.
  *
  * Two implementations of one rule is a real risk, and it is managed rather than
  * ignored: this file is a close translation, it returns the same snake_case

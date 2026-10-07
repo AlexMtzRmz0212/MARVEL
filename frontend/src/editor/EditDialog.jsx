@@ -115,7 +115,7 @@ function TmdbPicker({ draft, onApply }) {
           {candidates.map((candidate) => (
             <li
               key={`${candidate.kind}-${candidate.id}`}
-              className="hairline flex items-start gap-3 border bg-base p-2"
+              className="hairline flex items-start gap-3 border bg-paper p-2"
             >
               {candidate.poster_url ? (
                 <img
@@ -296,7 +296,7 @@ function TitleForm({ movie, movies, enums, problems, saving, onSave, onDelete, o
       </div>
 
       {(draft.poster_url || draft.synopsis) && (
-        <div className="hairline flex gap-3 border bg-base p-3">
+        <div className="hairline flex gap-3 border bg-paper p-3">
           {draft.poster_url && (
             <img src={draft.poster_url} alt="" className="h-28 w-19 shrink-0 object-cover" />
           )}
@@ -312,7 +312,7 @@ function TitleForm({ movie, movies, enums, problems, saving, onSave, onDelete, o
         <p className="meta mb-2 normal-case tracking-normal">
           Watch these first. Both directions of the graph are editable on the Dependencies tab.
         </p>
-        <div className="hairline max-h-64 space-y-1 overflow-y-auto border bg-base p-2">
+        <div className="hairline max-h-64 space-y-1 overflow-y-auto border bg-paper p-2">
           {others.length === 0 && <p className="meta">Nothing else in the catalog yet.</p>}
           {others.map((other) => {
             const edge = draft.prerequisites.find((candidate) => candidate.id === other.id)

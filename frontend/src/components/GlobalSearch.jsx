@@ -19,9 +19,9 @@ const RESULT_LIMIT = 8
 
 function LensIcon() {
   return (
-    <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden="true" fill="none">
-      <circle cx="6.75" cy="6.75" r="4.75" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M10.2 10.2L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <svg viewBox="0 0 16 16" className="size-4" aria-hidden="true" fill="none">
+      <circle cx="6.75" cy="6.75" r="4.75" stroke="currentColor" strokeWidth="2" />
+      <path d="M10.2 10.2L14 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   )
 }
@@ -113,39 +113,43 @@ export function GlobalSearch() {
         aria-expanded={open}
         aria-label={onPage ? 'Find a title on this page' : 'Search titles'}
         title={onPage ? 'Find a title on this page (Ctrl-F)' : 'Search titles'}
-        className="grid size-7 place-items-center text-ink-faint transition-colors hover:text-ink"
+        className="grid size-9 place-items-center text-on-masthead-dim transition-colors hover:text-on-masthead"
       >
         <LensIcon />
       </button>
 
       {open && (
-        <div className="hairline absolute right-0 top-full z-40 mt-1 w-64 border bg-surface p-2 shadow-lg">
+        <div className="floating bubble animate-popup-in absolute right-0 top-full z-40 mt-4 w-[min(18rem,calc(100vw-2rem))] p-2 text-ink">
           <input
             ref={inputRef}
             type="search"
+            name="title"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && results[0]) go(results[0])
             }}
-            placeholder={onPage ? 'Find on this page' : 'Search titles'}
-            className="hairline w-full border bg-base px-2.5 py-1.5 font-mono text-xs text-ink placeholder:text-ink-faint focus:border-hairline-strong focus:outline-none"
+            placeholder={onPage ? 'Find on this page…' : 'Search titles…'}
+            aria-label={onPage ? 'Find a title on this page' : 'Search titles'}
+            autoComplete="off"
+            spellCheck={false}
+            className="field"
           />
 
           {trimmed && (
             <ul className="mt-2 flex flex-col">
               {results.length === 0 && (
-                <li className="meta px-1 py-2 text-ink-faint">No matches</li>
+                <li className="meta px-2 py-2">No matches</li>
               )}
               {results.map((movie) => (
                 <li key={movie.id}>
                   <button
                     type="button"
                     onClick={() => go(movie)}
-                    className="flex w-full items-baseline justify-between gap-2 px-1 py-1.5 text-left text-sm text-ink transition-colors hover:bg-raised"
+                    className="flex w-full items-baseline justify-between gap-2 px-2 py-2 text-left text-sm font-medium text-ink transition-colors hover:bg-raised"
                   >
                     <span className="truncate">{movie.title}</span>
-                    <span className="meta shrink-0 text-ink-faint">{year(movie.release_date)}</span>
+                    <span className="meta shrink-0">{year(movie.release_date)}</span>
                   </button>
                 </li>
               ))}

@@ -36,7 +36,7 @@ export function UserMenu() {
     return (
       <NavLink
         to="/login"
-        className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
+        className="label border-2 border-on-masthead px-3 py-2 text-on-masthead transition-colors hover:bg-on-masthead hover:text-masthead"
       >
         Sign in
       </NavLink>
@@ -51,7 +51,7 @@ export function UserMenu() {
           onClick={() => setIsOpen((open) => !open)}
           aria-expanded={isOpen}
           aria-haspopup="menu"
-          className="label max-w-[12rem] truncate px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+          className="label max-w-[12rem] truncate px-3 py-2.5 text-on-masthead-dim transition-colors hover:text-on-masthead"
         >
           {label(user)}
         </button>
@@ -59,10 +59,10 @@ export function UserMenu() {
         {isOpen && (
           <div
             role="menu"
-            className="hairline absolute right-0 top-full z-40 mt-1 w-60 border bg-surface p-3 shadow-lg"
+            className="floating bubble animate-popup-in absolute right-0 top-full z-40 mt-4 w-64 p-3 text-ink"
           >
             <p className="meta truncate">{user.email}</p>
-            <p className="mt-2 text-xs leading-relaxed text-ink-faint">
+            <p className="mt-2 text-sm leading-relaxed text-ink-dim">
               Signing out leaves this device empty. Your orders and progress
               stay in your account.
             </p>
@@ -74,7 +74,7 @@ export function UserMenu() {
                 await signOut();
                 navigate("/");
               }}
-              className="label mt-3 w-full border border-hairline-strong px-3 py-1.5 text-ink transition-colors hover:bg-raised"
+              className="btn mt-3 w-full"
             >
               Sign out
             </button>
@@ -86,7 +86,7 @@ export function UserMenu() {
                 setIsOpen(false);
                 setIsDeleting(true);
               }}
-              className="label hairline mt-3 w-full border-t pt-3 text-left text-danger transition-colors hover:text-ink"
+              className="btn btn-danger mt-2 w-full"
             >
               Delete account
             </button>

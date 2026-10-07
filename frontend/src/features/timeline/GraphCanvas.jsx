@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 
-import { accentFor, isOutsideMcu } from '../../lib/format'
+import { accentFor } from '../../lib/format'
 import { boundsOf } from '../../lib/forceGraph'
 import { isWatched } from '../../lib/watchStorage'
 
@@ -601,7 +601,7 @@ export function GraphCanvas({
   return (
     <svg
       ref={svgRef}
-      className="size-full touch-none bg-base select-none focus:outline-none"
+      className="size-full touch-none bg-paper select-none focus:outline-none"
       // Not a tab stop — a node holds that — but focusable by hand, so the
       // page has somewhere to put the keyboard that is inside the graph
       // without being one particular title.
@@ -624,8 +624,9 @@ export function GraphCanvas({
           viewBox="0 0 8 8"
           refX="7"
           refY="4"
-          markerWidth="5"
-          markerHeight="5"
+          markerWidth="8"
+          markerHeight="8"
+          markerUnits="userSpaceOnUse"
           orient="auto-start-reverse"
         >
           <path d="M0,1 L7,4 L0,7 Z" fill="var(--color-ink)" />
@@ -648,13 +649,15 @@ export function GraphCanvas({
                   if (element) linkRefs.current.set(link.id, element)
                   else linkRefs.current.delete(link.id)
                 }}
-                stroke={lit ? 'var(--color-ink)' : 'var(--color-hairline-strong)'}
-                strokeWidth={lit ? 1.6 : 1}
+                // Ink at rest, at an opacity that still clears 3:1 against
+                // the page; full ink and heavier once lit.
+                stroke="var(--color-ink)"
+                strokeWidth={lit ? 2.5 : essential ? 1.25 : 1}
                 // Dashed means recommended rather than required, the same
                 // convention the per-title graph uses.
-                strokeDasharray={essential ? undefined : '3 3'}
+                strokeDasharray={essential ? undefined : '4 3'}
                 markerEnd={lit ? 'url(#graph-arrow)' : undefined}
-                opacity={lit ? 1 : dimmed ? 0.07 : essential ? 0.45 : 0.28}
+                opacity={lit ? 1 : dimmed ? 0.07 : essential ? 0.55 : 0.45}
                 style={{ transition: 'opacity 120ms' }}
               />
             )
@@ -713,8 +716,8 @@ export function GraphCanvas({
                 <circle
                   r={radius + 4}
                   fill="none"
-                  stroke="var(--color-ink-dim)"
-                  strokeWidth="1"
+                  stroke="var(--color-ink)"
+                  strokeWidth="1.5"
                   strokeDasharray="2 2"
                 />
               )}
@@ -723,25 +726,30 @@ export function GraphCanvas({
                   r={radius + 5}
                   fill="none"
                   stroke="var(--color-ink)"
-                  strokeWidth={node.id === selectedId ? 1.5 : 1}
-                  opacity={node.id === selectedId ? 0.9 : 0.5}
+                  strokeWidth={node.id === selectedId ? 3 : 1.5}
                 />
               )}
+              {/* A station in its line colour, cased in ink. Titles outside
+                  the MCU are already the grey line, so they are no longer
+                  also faded: the colour says it, at full contrast. */}
               <circle
                 r={radius}
                 fill={watched ? 'var(--color-ok)' : accentFor(node)}
-                stroke="var(--color-base)"
-                strokeWidth="1.5"
-                opacity={isOutsideMcu(node) && !active ? 0.55 : 1}
+                stroke="var(--color-ink)"
+                strokeWidth="1.75"
               />
               <text
-                y={radius + 11}
+                y={radius + 13}
                 textAnchor="middle"
-                className="pointer-events-none font-mono"
-                fontSize="9"
-                fill={active || near ? 'var(--color-ink)' : 'var(--color-ink-dim)'}
-                opacity={active || near ? 1 : showAllLabels ? 0.75 : 0}
-                style={{ transition: 'opacity 120ms' }}
+                className="pointer-events-none"
+                fontSize="11"
+                fontWeight="700"
+                fill="var(--color-ink)"
+                stroke="var(--color-paper)"
+                strokeWidth="3"
+                paintOrder="stroke"
+                opacity={active || near || showAllLabels ? 1 : 0}
+                style={{ transition: 'opacity 120ms', fontStretch: '87.5%' }}
               >
                 {labelOf(node.title)}
               </text>

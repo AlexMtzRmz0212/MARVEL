@@ -1,7 +1,8 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { accentFor, formatRuntime, phaseLabel, year } from '../../lib/format'
+import { LineBullet } from '../../components/LineBullet'
+import { formatRuntime, phaseLabel, year } from '../../lib/format'
 
 /**
  * One draggable row.
@@ -15,49 +16,57 @@ export function SortableRow({ movie, index, severity, onRemove }) {
     id: movie.id,
   })
 
-  const accent = accentFor(movie)
   const runtime = formatRuntime(movie.runtime_min)
+  const details = [year(movie.release_date), phaseLabel(movie.phase), runtime].filter(Boolean)
 
+  // A flagged row is cased in the colour of its problem, and says so in words
+  // beside the title, so it is never told by colour alone.
   const border =
     severity === 'error'
-      ? 'border-danger/70 bg-danger/5'
+      ? 'border-danger border-l-[6px]'
       : severity === 'warning'
-        ? 'border-warn/50 bg-warn/5'
-        : 'border-hairline bg-surface'
+        ? 'border-ink border-l-[6px] border-l-warn'
+        : 'border-ink'
 
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={[
-        'relative flex touch-none items-center gap-3 border px-3 py-2.5',
+        'relative flex cursor-grab touch-none items-center gap-3 border-2 bg-surface px-3 py-2 active:cursor-grabbing',
         border,
-        isDragging ? 'z-10 opacity-90 shadow-lg shadow-black/40' : '',
+        isDragging ? 'z-10 shadow-[4px_4px_0_var(--color-shadow)]' : '',
       ].join(' ')}
       {...attributes}
       {...listeners}
     >
-      <span className="meta w-6 shrink-0 cursor-grab tabular-nums">{index + 1}</span>
-      <span
-        aria-hidden="true"
-        className="h-7 w-[2px] shrink-0"
-        style={{ backgroundColor: accent }}
-      />
+      {/* The stop number, as a roundel: this is a route the reader is laying. */}
+      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-ink text-sm font-bold tabular-nums text-paper">
+        {index + 1}
+      </span>
 
-      {movie.poster_url && (
+      {movie.poster_url ? (
         <img
           src={movie.poster_url}
           alt=""
+          width={28}
+          height={42}
           loading="lazy"
-          className="hairline h-10 w-7 shrink-0 border object-cover"
+          decoding="async"
+          className="h-[42px] w-7 shrink-0 border-2 border-ink object-cover"
         />
+      ) : (
+        <span className="h-[42px] w-7 shrink-0 border-2 border-ink bg-raised" />
       )}
 
+      <LineBullet movie={movie} className="size-6 text-[11px]" />
+
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm text-ink">{movie.title}</span>
+        <span className="block truncate text-sm font-semibold text-ink">{movie.title}</span>
         <span className="meta">
-          {year(movie.release_date)} · {phaseLabel(movie.phase)}
-          {runtime ? ` · ${runtime}` : ''}
+          {details.join(', ')}
+          {severity === 'error' && <span className="text-danger">, out of place</span>}
+          {severity === 'warning' && <span className="text-ink-dim">, worth moving</span>}
         </span>
       </span>
 
@@ -68,7 +77,7 @@ export function SortableRow({ movie, index, severity, onRemove }) {
         // never fires.
         onPointerDown={(event) => event.stopPropagation()}
         aria-label={`Remove ${movie.title}`}
-        className="label shrink-0 px-2 py-1 text-ink-faint transition-colors hover:text-danger"
+        className="btn btn-sm shrink-0 border-transparent bg-transparent text-ink-dim shadow-none hover:translate-0 hover:border-danger hover:bg-transparent hover:text-danger hover:shadow-none"
       >
         Remove
       </button>

@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 
 import { useEdges, useMovies } from '../../api/catalog'
+import { LineBullet } from '../../components/LineBullet'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { progressFor } from '../../lib/watchStorage'
 import { CatalogMark, OrderMark, ProgressMark, TimelineMark } from './FeatureMarks'
@@ -51,49 +52,74 @@ const FEATURES = [
   },
 ]
 
-function Figure({ value, label }) {
+/**
+ * The catalog panel shows the catalog: five real posters, one per stretch of
+ * the timeline, each with its saga roundel. Until the catalog arrives -- or if
+ * none of them has art -- it falls back to the drawn mark, at the same size.
+ */
+const SHELF = [
+  'iron-man',
+  'the-avengers',
+  'avengers-endgame',
+  'loki',
+  'the-fantastic-four-first-steps',
+]
+
+function Shelf({ movies }) {
+  const byId = new Map((movies ?? []).map((movie) => [movie.id, movie]))
+  const shelf = SHELF.map((id) => byId.get(id)).filter((movie) => movie?.poster_url)
+  if (shelf.length === 0) return <CatalogMark className="h-24 w-full lg:h-44" />
+
   return (
-    <div>
-      <p className="font-mono text-3xl leading-none tabular-nums text-ink sm:text-4xl">
+    <div className="grid grid-cols-5 gap-2" aria-hidden="true">
+      {shelf.map((movie) => (
+        <div key={movie.id} className="relative aspect-[2/3] border-2 border-ink bg-raised">
+          <img
+            src={movie.poster_url}
+            alt=""
+            width={500}
+            height={750}
+            loading="lazy"
+            decoding="async"
+            className="size-full object-cover"
+          />
+          <LineBullet movie={movie} className="absolute top-1.5 left-1.5 size-6" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Figure({ value, label, lead = false }) {
+  return (
+    <div className={`panel px-4 py-3 ${lead ? 'benday bg-infinity text-on-infinity' : ''}`}>
+      <p className="display text-5xl normal-case tabular-nums sm:text-6xl">
         {value ?? (
           // Holds the line's height while the catalog loads, so nothing below
           // it jumps when the numbers arrive.
           <span className="inline-block h-[0.7em] w-16 animate-pulse bg-raised align-baseline" />
         )}
       </p>
-      <p className="meta mt-2">{label}</p>
+      <p className={`mt-1 text-sm font-semibold ${lead ? '' : 'text-ink-dim'}`}>{label}</p>
     </div>
   )
 }
 
-function KeyDot({ colour, children }) {
+/** A swatch of line, drawn the way the map draws it. */
+function KeyLine({ colour, dashed, children }) {
   return (
-    <span className="flex items-center gap-1.5">
-      <span
-        aria-hidden="true"
-        className="size-2 shrink-0 rounded-full"
-        style={{ backgroundColor: colour }}
-      />
-      <span className="meta text-[0.625rem]">{children}</span>
-    </span>
-  )
-}
-
-function KeyLine({ dashed, children }) {
-  return (
-    <span className="flex items-center gap-1.5">
-      <svg viewBox="0 0 14 2" aria-hidden="true" className="h-0.5 w-3.5 shrink-0">
-        <line
-          x1="0"
-          y1="1"
-          x2="14"
-          y2="1"
-          stroke="var(--color-hairline-strong)"
-          strokeWidth="2"
-          strokeDasharray={dashed ? '4 3' : undefined}
-        />
+    <span className="flex items-center gap-2">
+      <svg viewBox="0 0 24 8" aria-hidden="true" className="h-2 w-6 shrink-0">
+        {dashed ? (
+          <line x1="2" y1="4" x2="22" y2="4" stroke="var(--color-ink)" strokeWidth="1.75" strokeDasharray="4 3" />
+        ) : (
+          <>
+            <line x1="2" y1="4" x2="22" y2="4" stroke="var(--color-ink)" strokeWidth="7" strokeLinecap="round" />
+            <line x1="2" y1="4" x2="22" y2="4" stroke={colour} strokeWidth="3.5" strokeLinecap="round" />
+          </>
+        )}
       </svg>
-      <span className="meta text-[0.625rem]">{children}</span>
+      <span className="meta text-ink-dim">{children}</span>
     </span>
   )
 }
@@ -121,56 +147,49 @@ export function HomePage() {
     : null
 
   return (
-    <div>
-      <section className="hairline grid items-center gap-10 border-b py-12 lg:grid-cols-12 lg:gap-12 lg:py-20">
-        <div className="lg:col-span-5">
-          <h1 className="text-3xl leading-[1.1] font-medium tracking-tight text-balance text-ink sm:text-4xl lg:text-5xl">
+    <div className="pt-4 sm:pt-6">
+      <section className="grid gap-3 lg:grid-cols-12">
+        <div className="panel benday flex flex-col justify-center p-6 sm:p-8 lg:col-span-5">
+          <h1 className="display text-5xl text-balance text-ink sm:text-6xl">
             What to watch, and what to watch first.
           </h1>
-          <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-dim sm:text-[0.9375rem]">
+          <p className="mt-5 max-w-md text-base leading-relaxed text-ink-dim">
             Every film, series and special, mapped by what you need to have seen first.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-2">
-            <Link
-              to="/catalog"
-              className="label bg-ink px-5 py-2.5 text-base transition-opacity hover:opacity-85"
-            >
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link to="/catalog" className="btn btn-primary">
               Open the catalog
             </Link>
-            <Link
-              to="/timeline"
-              className="label border border-hairline-strong px-5 py-2.5 text-ink-dim transition-colors hover:bg-raised hover:text-ink"
-            >
+            <Link to="/timeline" className="btn">
               See the map
             </Link>
           </div>
         </div>
 
-        <div className="lg:col-span-7">
+        <div className="panel halftone flex flex-col lg:col-span-7">
           {/* The two aspects are the two shapes the excerpt actually settles
               into, measured rather than guessed: 0.675 turned vertically for
               the phone, 2.65 laid out flat for everything else. A frame much
               squarer than its drawing is mostly empty frame. */}
-          <div className="hairline border bg-surface p-2 sm:p-3">
-            <div className="aspect-[27/40] bg-base sm:aspect-[12/5]">
-              <HeroGraph />
+          <div className="flex flex-1 items-center p-2 sm:p-4">
+            <div className="aspect-[27/40] w-full sm:aspect-[12/5]">
+            <HeroGraph />
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-1 pt-3">
-              <KeyDot colour="var(--color-infinity)">Infinity Saga</KeyDot>
-              <KeyDot colour="var(--color-multiverse)">Multiverse Saga</KeyDot>
-              <KeyLine>Required</KeyLine>
-              <KeyLine dashed>Recommended</KeyLine>
-            </div>
+          </div>
+          <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 border-t-2 border-ink bg-surface px-4 py-2.5">
+            <KeyLine colour="var(--color-infinity)">Infinity Saga</KeyLine>
+            <KeyLine colour="var(--color-multiverse)">Multiverse Saga</KeyLine>
+            <KeyLine dashed>Recommended first</KeyLine>
           </div>
         </div>
       </section>
 
       {counted && (
-        <section className="hairline border-b py-10">
+        <section className="mt-3">
           <h2 className="sr-only">The catalog in numbers</h2>
-          <div className="grid grid-cols-2 gap-y-8 sm:grid-cols-4">
-            <Figure value={movies?.length} label="Titles" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Figure value={movies?.length} label="Titles" lead />
             <Figure value={edges?.length} label="Prerequisites" />
             <Figure value={phases} label="Phases" />
             {/* Someone who has watched nothing is told how much there is;
@@ -184,19 +203,34 @@ export function HomePage() {
         </section>
       )}
 
-      <section className="py-10">
+      <section className="mt-3">
         <h2 className="sr-only">Where to go</h2>
-        <div className="hairline grid gap-px border bg-hairline sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map((feature) => (
+        {/* A comic page rather than a row of equal cards: the catalog is where
+            most people go, so it gets the big panel and the rest stack beside it. */}
+        <div className="grid gap-3 lg:grid-cols-2 lg:grid-rows-3">
+          {FEATURES.map((feature, index) => (
             <Link
               key={feature.to}
               to={feature.to}
-              className="group flex flex-col gap-5 bg-base p-5 transition-colors hover:bg-surface"
+              className={[
+                'panel group flex gap-5 p-5 transition-colors hover:bg-raised',
+                index === 0
+                  ? 'flex-col justify-between lg:row-span-3 lg:p-8'
+                  : 'flex-col sm:flex-row sm:items-center',
+              ].join(' ')}
             >
-              <feature.Mark />
+              <div className={index === 0 ? 'lg:max-w-lg' : 'sm:w-40 sm:shrink-0'}>
+                {index === 0 ? <Shelf movies={movies} /> : <feature.Mark />}
+              </div>
               <div>
-                <h3 className="text-sm text-ink">{feature.name}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-ink-dim">{feature.line}</p>
+                <h3
+                  className={`display text-ink ${index === 0 ? 'text-4xl lg:text-5xl' : 'text-3xl'}`}
+                >
+                  {feature.name}
+                </h3>
+                <p className="mt-2 max-w-prose text-sm leading-relaxed text-ink-dim">
+                  {feature.line}
+                </p>
               </div>
             </Link>
           ))}
@@ -204,14 +238,14 @@ export function HomePage() {
 
         {/* One line of colophon, because a portfolio piece should say what it
             is made of without turning the landing page into a CV. */}
-        <p className="mt-6 text-xs text-ink-faint">
+        <p className="mt-6 text-sm text-ink-dim">
           React and FastAPI. Every watch order is a topological sort over the
           prerequisite graph.{' '}
           <a
             href="https://github.com/AlexMtzRmz0212/MARVEL"
             target="_blank"
             rel="noreferrer"
-            className="text-ink-dim underline underline-offset-4 transition-colors hover:text-ink"
+            className="font-semibold text-ink underline underline-offset-4 hover:decoration-2"
           >
             Source
           </a>

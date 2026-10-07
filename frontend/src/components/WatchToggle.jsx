@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { toggleWatched } from '../lib/watchStorage'
 
 /**
@@ -21,37 +23,58 @@ export function CheckIcon({ className = 'size-3.5' }) {
 }
 
 export function WatchToggle({ movieId, watched, title, size = 'md' }) {
-  const dimension = size === 'sm' ? 'size-6' : 'size-7'
+  const dimension = size === 'sm' ? 'size-7' : 'size-9'
+  // Bumped each time a title is marked watched, so the sound effect replays
+  // even on a quick second click. Never for un-watching: that is not an event.
+  const [bang, setBang] = useState(0)
 
   return (
-    <button
-      type="button"
-      aria-pressed={watched}
-      aria-label={watched ? `Mark ${title} unwatched` : `Mark ${title} watched`}
-      title={watched ? 'Watched' : 'Mark watched'}
-      onClick={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        toggleWatched(movieId)
-      }}
-      className={[
-        dimension,
-        'grid place-items-center border backdrop-blur transition-colors',
-        watched
-          ? 'border-ok/60 bg-ok/20 text-ok'
-          : 'border-hairline-strong bg-base/70 text-ink-faint hover:border-ink-faint hover:text-ink',
-      ].join(' ')}
-    >
-      <CheckIcon className="size-3.5" />
-    </button>
+    <span className="relative inline-grid">
+      <button
+        type="button"
+        aria-pressed={watched}
+        aria-label={watched ? `Mark ${title} unwatched` : `Mark ${title} watched`}
+        title={watched ? 'Watched' : 'Mark watched'}
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          if (!watched) setBang((count) => count + 1)
+          toggleWatched(movieId)
+        }}
+        className={[
+          dimension,
+          // A station: round and cased in ink. Filled cyan once watched.
+          'station grid place-items-center transition-colors',
+          watched
+            ? 'bg-ok text-on-ok'
+            : 'bg-surface text-ink-faint hover:bg-raised hover:text-ink',
+        ].join(' ')}
+      >
+        <CheckIcon className="size-3.5" />
+      </button>
+      {bang > 0 && (
+        // Decorative: the button's pressed state already says what happened.
+        <span
+          key={bang}
+          aria-hidden="true"
+          className="sfx top-full right-0 mt-1"
+          onAnimationEnd={() => setBang(0)}
+        >
+          Seen!
+        </span>
+      )}
+    </span>
   )
 }
 
-/** A thin completion bar. Percentage is shown by the caller. */
+/**
+ * Completion as a stretch of line: the part travelled is drawn in colour, the
+ * rest is the bare track. Percentage is shown by the caller.
+ */
 export function ProgressBar({ percent, accent = 'var(--color-ok)' }) {
   return (
     <div
-      className="h-1 w-full bg-hairline"
+      className="h-2.5 w-full border-2 border-ink bg-surface"
       role="progressbar"
       aria-valuenow={percent}
       aria-valuemin={0}

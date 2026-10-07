@@ -12,11 +12,11 @@ import { clearAll, isWatched, progressFor } from '../../lib/watchStorage'
 function Row({ label, sublabel, movieIds, progress, to }) {
   const stats = progressFor(progress, movieIds)
   const body = (
-    <div className="py-3">
+    <div className="px-4 py-3">
       <div className="mb-2 flex items-baseline justify-between gap-4">
-        <span className="truncate text-sm text-ink">{label}</span>
+        <span className="truncate text-sm font-semibold text-ink">{label}</span>
         <span className="meta shrink-0 tabular-nums">
-          {stats.watched}/{stats.total} · {stats.percent}%
+          {stats.watched} of {stats.total}, {stats.percent}%
         </span>
       </div>
       <ProgressBar percent={stats.percent} />
@@ -25,9 +25,9 @@ function Row({ label, sublabel, movieIds, progress, to }) {
   )
 
   return (
-    <li className="hairline border-b last:border-b-0">
+    <li>
       {to ? (
-        <Link to={to} className="block transition-colors hover:bg-surface">
+        <Link to={to} className="block transition-colors hover:bg-raised">
           {body}
         </Link>
       ) : (
@@ -63,30 +63,32 @@ export function ProgressPage() {
 
   return (
     <div className="py-8">
-      <div className="hairline border-b pb-6">
-        <h1 className="text-2xl font-medium tracking-tight text-ink">Progress</h1>
-        <p className="mt-1 text-sm text-ink-dim">
-          {overall.watched} of {overall.total} watched
-          {watchedRuntime > 0 && ` · ${formatTotalRuntime(watchedRuntime)} behind you`}
-          {remainingRuntime > 0 && ` · ${formatTotalRuntime(remainingRuntime)} to go`}
-        </p>
-        <div className="mt-4 max-w-md">
-          <ProgressBar percent={overall.percent} />
+      <div className="flex flex-col gap-6 pb-6 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0 flex-1">
+          <h1 className="display text-5xl text-ink sm:text-6xl">Progress</h1>
+          <p className="mt-2 text-base text-ink-dim">
+            {overall.watched} of {overall.total} watched
+            {watchedRuntime > 0 && `, ${formatTotalRuntime(watchedRuntime)} behind you`}
+            {remainingRuntime > 0 && `, ${formatTotalRuntime(remainingRuntime)} to go`}
+          </p>
+          <div className="mt-4 max-w-xl">
+            <ProgressBar percent={overall.percent} />
+          </div>
         </div>
-        <p className="mt-4">
-          <Link
-            to="/progress/compare"
-            className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
-          >
+        <div className="flex items-end gap-4">
+          <p className="display text-7xl normal-case tabular-nums text-ink">{overall.percent}%</p>
+          <Link to="/progress/compare" className="btn mb-2">
             Compare with a friend
           </Link>
-        </p>
+        </div>
       </div>
 
-      <div className="grid gap-10 py-8 md:grid-cols-2">
-        <section>
-          <h2 className="meta hairline border-b pb-2">By phase</h2>
-          <ul>
+      <div className="grid items-start gap-3 md:grid-cols-2">
+        <section className="panel">
+          <div className="px-5 pt-5">
+            <h2 className="caption caption-corner !mb-1">By phase</h2>
+          </div>
+          <ul className="divide-y divide-hairline">
             {phases.map((phase) => (
               <Row
                 key={phase}
@@ -99,16 +101,18 @@ export function ProgressPage() {
           </ul>
         </section>
 
-        <section>
-          <h2 className="meta hairline border-b pb-2">By saga</h2>
-          <ul>
+        <section className="panel">
+          <div className="px-5 pt-5">
+            <h2 className="caption caption-corner !mb-1">By saga</h2>
+          </div>
+          <ul className="divide-y divide-hairline">
             {sagas.map((saga) => (
               <Row
                 key={saga}
                 label={SAGA_LABEL[saga] ?? saga}
                 movieIds={movies.filter((m) => m.saga === saga).map((m) => m.id)}
                 progress={progress}
-                to={`/catalog?saga=${saga}`}
+                to={`/catalog?saga=${encodeURIComponent(saga)}`}
               />
             ))}
           </ul>
@@ -116,9 +120,11 @@ export function ProgressPage() {
       </div>
 
       {orders.length > 0 && (
-        <section className="pb-8">
-          <h2 className="meta hairline border-b pb-2">Your orders</h2>
-          <ul>
+        <section className="panel mt-3">
+          <div className="px-5 pt-5">
+            <h2 className="caption caption-corner !mb-1">Your orders</h2>
+          </div>
+          <ul className="divide-y divide-hairline">
             {orders.map((order) => (
               <Row
                 key={order.id}
@@ -138,19 +144,19 @@ export function ProgressPage() {
           onClick={() => {
             if (confirm('Clear all watch progress? This cannot be undone.')) clearAll()
           }}
-          className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-danger"
+          className="btn btn-danger mt-6"
         >
           Reset progress
         </button>
       )}
 
-      <p className="mt-8 max-w-xl text-xs leading-relaxed text-ink-faint">
+      <p className="mt-8 max-w-xl text-sm leading-relaxed text-ink-dim">
         {user ? (
           <>Saved to your account and synced across your devices.</>
         ) : (
           <>
             Saved in this browser only.{' '}
-            <Link to="/login" className="underline underline-offset-4 hover:text-ink-dim">
+            <Link to="/login" className="font-semibold text-ink underline underline-offset-4">
               Sign in
             </Link>{' '}
             to sync it across devices.

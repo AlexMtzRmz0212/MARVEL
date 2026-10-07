@@ -22,7 +22,7 @@ function Card({ movie, onEdit }) {
       onClick={() => onEdit(movie.id)}
       className="hairline group block border bg-surface text-left transition-colors hover:border-hairline-strong"
     >
-      <div className="relative aspect-[2/3] overflow-hidden bg-base">
+      <div className="relative aspect-[2/3] overflow-hidden bg-paper">
         {movie.poster_url ? (
           <img
             src={movie.poster_url}

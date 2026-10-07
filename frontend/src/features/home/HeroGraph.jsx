@@ -104,7 +104,7 @@ const LINKS = EDGES.map(([from, to, strength = 'essential']) => ({ from, to, str
  * other. Halving them puts every ornament within a pixel of its desktop size.
  */
 function radiusOf(node, scale) {
-  return (5 + Math.min(Math.sqrt(node.degree) * 2.2, 7)) * scale
+  return (5 + Math.min(Math.sqrt(node.degree) * 1.6, 5)) * scale
 }
 
 /**
@@ -181,24 +181,34 @@ export function HeroGraph({ className = '' }) {
         nodeRefs.current.get(node.id)?.setAttribute('transform', `translate(${node.x} ${node.y})`)
       }
       for (const link of links) {
-        const line = linkRefs.current.get(link.id)
-        if (!line) continue
         const from = nodes[link.source]
         const to = nodes[link.target]
-        line.setAttribute('x1', from.x)
-        line.setAttribute('y1', from.y)
-        line.setAttribute('x2', to.x)
-        line.setAttribute('y2', to.y)
+        // Each required link is two strokes, the ink casing and the line
+        // colour inside it, and both have to move together.
+        for (const layer of ['casing', 'colour']) {
+          const line = linkRefs.current.get(`${layer}-${link.id}`)
+          if (!line) continue
+          line.setAttribute('x1', from.x)
+          line.setAttribute('y1', from.y)
+          line.setAttribute('x2', to.x)
+          line.setAttribute('y2', to.y)
+        }
       }
     }
 
     paint()
     if (still) return undefined
 
+    // Animated on twos: the layout still advances every frame, but it is only
+    // drawn on every other one, so it moves in held steps like hand-drawn
+    // animation rather than gliding.
+    let drawn = 0
     const step = () => {
       const alpha = simulation.tick()
-      paint()
+      drawn += 1
+      if (drawn % 2 === 0) paint()
       if (alpha > 0.0021) frame.current = requestAnimationFrame(step)
+      else paint()
     }
     frame.current = requestAnimationFrame(step)
     return () => cancelAnimationFrame(frame.current)
@@ -212,23 +222,35 @@ export function HeroGraph({ className = '' }) {
       role="img"
       aria-label="A map of Marvel titles. Lines run from each title to the ones that need it watched first: several starting points fan out, converge on Avengers: Endgame, and branch again into WandaVision and Loki."
     >
-      <g fill="none" stroke="var(--color-hairline-strong)">
-        {graph.links.map((link) => (
-          <line
-            key={link.id}
-            ref={(element) => {
-              if (element) linkRefs.current.set(link.id, element)
-              else linkRefs.current.delete(link.id)
-            }}
-            strokeWidth={(link.strength === 'essential' ? 1.4 : 1) * scale}
-            // Dashed means recommended rather than required, the convention
-            // every other graph in the app uses.
-            strokeDasharray={
-              link.strength === 'essential' ? undefined : `${4 * scale} ${4 * scale}`
-            }
-            opacity={link.strength === 'essential' ? 0.75 : 0.4}
-          />
-        ))}
+      {/* Lines are drawn as a transit map draws them: a colour cased in ink,
+          the colour being the saga of the title the line runs into. A
+          recommended link is a thin dashed ink line with no colour, the
+          convention every other graph in the app uses. Casings go down first,
+          as one layer, so where lines cross the colours sit on top. */}
+      <g fill="none" strokeLinecap="round">
+        {['casing', 'colour'].map((layer) =>
+          graph.links
+            .filter((link) => layer === 'casing' || link.strength === 'essential')
+            .map((link) => {
+              const essential = link.strength === 'essential'
+              const casing = layer === 'casing'
+              return (
+                <line
+                  key={`${layer}-${link.id}`}
+                  ref={(element) => {
+                    const key = `${layer}-${link.id}`
+                    if (element) linkRefs.current.set(key, element)
+                    else linkRefs.current.delete(key)
+                  }}
+                  stroke={
+                    casing ? 'var(--color-ink)' : accentFor(graph.nodes[link.target])
+                  }
+                  strokeWidth={(casing ? (essential ? 7 : 1.75) : 3.5) * scale}
+                  strokeDasharray={essential ? undefined : `${5 * scale} ${4 * scale}`}
+                />
+              )
+            }),
+        )}
       </g>
 
       {graph.nodes.map((node) => (
@@ -239,19 +261,25 @@ export function HeroGraph({ className = '' }) {
             else nodeRefs.current.delete(node.id)
           }}
         >
+          {/* A station: paper inside an ink ring. Where several lines meet the
+              ring is heavier, like an interchange. */}
           <circle
             r={radiusOf(node, scale)}
-            fill={accentFor(node)}
-            stroke="var(--color-base)"
-            strokeWidth={1.5 * scale}
+            fill="var(--color-surface)"
+            stroke="var(--color-ink)"
+            strokeWidth={(node.degree > 2 ? 3.25 : 2.5) * scale}
           />
           {node.mark && (
             <text
-              y={radiusOf(node, scale) + 15 * scale}
+              y={radiusOf(node, scale) + 17 * scale}
               textAnchor="middle"
-              className="font-mono"
               fontSize={15 * scale}
-              fill="var(--color-ink-dim)"
+              fontWeight={800}
+              fill="var(--color-ink)"
+              stroke="var(--color-surface)"
+              strokeWidth={4 * scale}
+              paintOrder="stroke"
+              style={{ fontStretch: '75%', textTransform: 'uppercase', letterSpacing: '0.02em' }}
             >
               {node.mark}
             </text>

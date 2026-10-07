@@ -67,9 +67,9 @@ export function ShiftLinks({ links, row, height, activeId, activeColour }) {
           stand out from. */}
       <g
         fill="none"
-        stroke="var(--color-hairline-strong)"
+        stroke="var(--color-ink)"
         strokeWidth="1"
-        opacity={active ? 0.12 : 0.38}
+        opacity={active ? 0.1 : 0.28}
         className="transition-opacity duration-200"
       >
         <Threads links={links} row={row} />
@@ -80,8 +80,16 @@ export function ShiftLinks({ links, row, height, activeId, activeColour }) {
           d={thread(row, active.from, active.to)}
           fill="none"
           stroke={activeColour}
-          strokeWidth="1.5"
+          strokeWidth="3.5"
+          strokeLinecap="round"
           vectorEffect="non-scaling-stroke"
+          // Cased in ink like every other line in the app. A filter rather
+          // than a second path, so this band still draws exactly one path
+          // per title plus the lit one.
+          style={{
+            filter:
+              'drop-shadow(0 0 0.6px var(--color-ink)) drop-shadow(0 0 0.6px var(--color-ink)) drop-shadow(0 0 0.6px var(--color-ink))',
+          }}
         />
       )}
     </svg>

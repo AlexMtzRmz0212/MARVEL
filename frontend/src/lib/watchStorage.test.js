@@ -9,6 +9,7 @@ import {
   markManyWatched,
   progressFor,
   resetToLocalStorage,
+  setNotes,
   setRating,
   setWatchBackend,
   subscribe,
@@ -139,6 +140,20 @@ describe('remote mode', () => {
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
   })
 
+  it('sends rating and notes with the title they belong to', async () => {
+    const api = vi.spyOn(client, 'api').mockResolvedValue({})
+    setWatchBackend('remote', { 'iron-man': { watched_at: '2026-01-01T00:00:00Z' } })
+
+    setRating('iron-man', 9)
+    setNotes('iron-man', 'The cave.')
+    await flush()
+
+    expect(api).toHaveBeenLastCalledWith('/me/watch-progress/iron-man', {
+      method: 'PUT',
+      body: { watched_at: '2026-01-01T00:00:00Z', rating: 9, notes: 'The cave.' },
+    })
+  })
+
   it('restores the local data on sign-out', async () => {
     toggleWatched('thor')
     vi.spyOn(client, 'api').mockResolvedValue({})
@@ -150,6 +165,24 @@ describe('remote mode', () => {
     // own progress is still in localStorage where it was left.
     expect(getSnapshot()).not.toHaveProperty('iron-man')
     expect(isWatched(getSnapshot(), 'thor')).toBe(true)
+  })
+})
+
+describe('setNotes', () => {
+  it('keeps notes beside the watch date in localStorage', () => {
+    toggleWatched('thor')
+    setNotes('thor', 'Rewatch before Ragnarok.')
+
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY))
+    expect(stored.thor.notes).toBe('Rewatch before Ragnarok.')
+    expect(isWatched(stored, 'thor')).toBe(true)
+  })
+
+  it('stores blank notes as null', () => {
+    toggleWatched('thor')
+    setNotes('thor', '   ')
+
+    expect(getSnapshot().thor.notes).toBeNull()
   })
 })
 

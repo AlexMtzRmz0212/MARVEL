@@ -20,14 +20,34 @@ const ORDERS = [
     label: 'Chronological',
     blurb: 'In-universe timeline. Titles with no agreed placement come last.',
   },
+  {
+    key: 'title',
+    label: 'A-Z',
+    blurb: 'Alphabetical, for when you already know what you are looking for.',
+  },
 ]
 
-const FILTER_KEYS = ['phase', 'saga', 'media_type', 'tier', 'q']
+const ORDER_KEYS = new Set(ORDERS.map((item) => item.key))
+
+const FILTER_KEYS = ['phase', 'saga', 'universe', 'media_type', 'tier', 'q']
+
+/** The two main sagas lead; everything else follows alphabetically. */
+const SAGA_RANK = { 'Infinity Saga': 0, 'Multiverse Saga': 1 }
+
+function distinct(movies, pick, compare) {
+  const values = new Set()
+  for (const movie of movies ?? []) {
+    const value = pick(movie)
+    if (value !== null && value !== undefined && value !== '') values.add(value)
+  }
+  return [...values].sort(compare)
+}
 
 export function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const order = searchParams.get('order') === 'chronological' ? 'chronological' : 'release'
+  const requestedOrder = searchParams.get('order')
+  const order = ORDER_KEYS.has(requestedOrder) ? requestedOrder : 'release'
   const filters = Object.fromEntries(
     FILTER_KEYS.map((key) => [key, searchParams.get(key) ?? null]),
   )
@@ -68,31 +88,35 @@ export function CatalogPage() {
 
   const active = ORDERS.find((item) => item.key === order)
 
+  // Filter choices come from the catalog itself, not a hand-kept list, so a
+  // new saga or universe in the seed file shows up here without a code change.
+  // The unfiltered list is already fetched for the total count.
+  const options = {
+    phases: distinct(allMovies, (movie) => movie.phase, (a, b) => a - b),
+    sagas: distinct(
+      allMovies,
+      (movie) => movie.saga,
+      (a, b) => (SAGA_RANK[a] ?? 2) - (SAGA_RANK[b] ?? 2) || a.localeCompare(b),
+    ),
+    universes: distinct(allMovies, (movie) => movie.universe, (a, b) => a.localeCompare(b)),
+  }
+
   return (
     <>
-      <div className="hairline flex flex-col gap-4 border-b py-8 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 pt-8 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-medium tracking-tight text-ink">The Marvel catalog</h1>
-          <p className="mt-1 max-w-xl text-sm text-ink-dim">{active.blurb}</p>
+          <h1 className="display text-5xl text-ink sm:text-6xl">The Marvel catalog</h1>
+          <p className="mt-2 max-w-xl text-base text-ink-dim">{active.blurb}</p>
         </div>
 
-        <div
-          className="hairline flex shrink-0 self-start border sm:self-auto"
-          role="group"
-          aria-label="Viewing order"
-        >
+        <div className="flex shrink-0 self-start sm:self-auto" role="group" aria-label="Viewing order">
           {ORDERS.map((item) => (
             <button
               key={item.key}
               type="button"
               onClick={() => setParam('order', item.key === 'release' ? null : item.key)}
               aria-pressed={order === item.key}
-              className={[
-                'label px-4 py-2 transition-colors',
-                order === item.key
-                  ? 'bg-ink text-base'
-                  : 'text-ink-faint hover:bg-raised hover:text-ink-dim',
-              ].join(' ')}
+              className="chip -ml-[2px] min-h-10 px-4 first:ml-0"
             >
               {item.label}
             </button>
@@ -100,9 +124,10 @@ export function CatalogPage() {
         </div>
       </div>
 
-      <div className="py-4">
+      <div className="pb-4">
         <FilterBar
           filters={filters}
+          options={options}
           setFilter={setParam}
           reset={resetFilters}
           resultCount={visibleMovies?.length ?? 0}
@@ -122,9 +147,9 @@ export function CatalogPage() {
       )}
 
       {visibleMovies && visibleMovies.length > 0 && (
-        <ul className="grid grid-cols-2 gap-3 py-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
+        <ul className="grid grid-cols-2 gap-3 py-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {visibleMovies.map((movie) => (
-            <li key={movie.id}>
+            <li key={movie.id} className="[contain-intrinsic-size:auto_420px] [content-visibility:auto]">
               <TitleCard movie={movie} />
             </li>
           ))}

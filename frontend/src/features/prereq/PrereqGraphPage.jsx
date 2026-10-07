@@ -6,17 +6,15 @@ import { BackLink } from '../../components/BackLink'
 import { CheckIcon, ProgressBar } from '../../components/WatchToggle'
 import { EmptyState, ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
-import { accentFor, formatTotalRuntime } from '../../lib/format'
+import { formatTotalRuntime } from '../../lib/format'
 import { isWatched, markManyWatched, progressFor } from '../../lib/watchStorage'
 import { PrereqChainList, PrereqGraph } from './PrereqGraph'
 
-function Stat({ label, value, accent }) {
+function Stat({ label, value }) {
   return (
-    <div className="hairline border-l pl-3">
-      <p className="meta">{label}</p>
-      <p className="mt-0.5 font-mono text-lg tabular-nums" style={{ color: accent }}>
-        {value}
-      </p>
+    <div className="bg-surface px-4 py-2.5">
+      <dt className="meta">{label}</dt>
+      <dd className="display mt-0.5 text-4xl normal-case tabular-nums text-ink">{value}</dd>
     </div>
   )
 }
@@ -35,7 +33,6 @@ export function PrereqGraphPage() {
   if (error) return <ErrorState error={error} onRetry={refetch} />
 
   const { movie, stats, nodes, edges, watch_order: watchOrder } = data
-  const accent = accentFor(movie)
   const totalRuntime = formatTotalRuntime(stats.total_runtime_min)
 
   // Merged in from the watch store rather than fetched. The API has a `watched`
@@ -57,18 +54,18 @@ export function PrereqGraphPage() {
     <article className="py-8">
       <BackLink to={`/movies/${movieId}`}>{movie.title}</BackLink>
 
-      <header className="hairline mt-4 flex flex-col gap-6 border-b pb-6">
+      <header className="mt-4 flex flex-col gap-5 pb-5">
         {/* The whole heading, rather than an eyebrow reading "Watch before"
             stacked over the bare title: one sentence says what the page is. */}
-        <h1 className="text-3xl leading-tight font-medium tracking-tight text-balance text-ink">
+        <h1 className="display text-5xl text-balance text-ink sm:text-6xl">
           Watch before {movie.title}
         </h1>
 
         <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="flex flex-wrap gap-6">
-            <Stat label="Titles" value={stats.total} accent={accent} />
-            <Stat label="Required" value={stats.essential} accent={accent} />
-            <Stat label="Recommended" value={stats.recommended} accent="var(--color-ink-dim)" />
+          <dl className="flex flex-wrap gap-0.5 border-2 border-ink bg-ink">
+            <Stat label="Titles" value={stats.total} />
+            <Stat label="Required" value={stats.essential} />
+            <Stat label="Recommended" value={stats.recommended} />
             {totalRuntime && (
               <Stat
                 label={chainProgress.watched > 0 ? 'Left to watch' : 'Runtime'}
@@ -77,29 +74,23 @@ export function PrereqGraphPage() {
                     ? (formatTotalRuntime(unwatchedRuntime) ?? '0m')
                     : totalRuntime
                 }
-                accent="var(--color-ink-dim)"
               />
             )}
-            <Stat label="Depth" value={stats.max_depth} accent="var(--color-ink-dim)" />
-          </div>
+            <Stat label="Depth" value={stats.max_depth} />
+          </dl>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setEssentialOnly((value) => !value)}
               aria-pressed={essentialOnly}
-              className={[
-                'label border px-3 py-1.5 transition-colors',
-                essentialOnly
-                  ? 'border-transparent bg-ink text-base'
-                  : 'border-hairline-strong text-ink-dim hover:text-ink',
-              ].join(' ')}
+              className="chip min-h-10 px-4"
             >
               Essential only
             </button>
             <Link
               to={`/orders/new?start=${movieId}&name=${encodeURIComponent(`Watching ${movie.title}`)}`}
-              className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+              className="btn btn-primary"
             >
               Build an order from this
             </Link>
@@ -113,13 +104,13 @@ export function PrereqGraphPage() {
         </EmptyState>
       ) : (
         <>
-          <section className="hairline flex flex-wrap items-center gap-4 border-b py-4">
+          <section className="panel flex flex-wrap items-center gap-4 p-4">
             <div className="min-w-48 flex-1">
               <div className="mb-2 flex items-baseline justify-between">
-                <span className="meta">
+                <span className="text-sm font-semibold text-ink">
                   {chainProgress.watched} of {chainProgress.total} watched
                 </span>
-                <span className="font-mono text-xs tabular-nums text-ink-dim">
+                <span className="meta text-sm">
                   {chainProgress.percent}%
                 </span>
               </div>
@@ -129,24 +120,18 @@ export function PrereqGraphPage() {
               <button
                 type="button"
                 onClick={() => markManyWatched(watchOrder)}
-                className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+                className="btn"
               >
                 Mark all {chainProgress.remaining} watched
               </button>
             )}
           </section>
 
-          <div className="meta flex flex-wrap items-center gap-x-5 gap-y-2 py-4">
+          <div className="meta flex flex-wrap items-center gap-x-5 gap-y-2 py-4 text-ink-dim">
             <span className="flex items-center gap-2">
               <svg width="26" height="8" aria-hidden="true">
-                <line
-                  x1="0"
-                  y1="4"
-                  x2="26"
-                  y2="4"
-                  stroke="var(--color-hairline-strong)"
-                  strokeWidth="1.5"
-                />
+                <line x1="2" y1="4" x2="24" y2="4" stroke="var(--color-ink)" strokeWidth="6" strokeLinecap="round" />
+                <line x1="2" y1="4" x2="24" y2="4" stroke="var(--color-infinity)" strokeWidth="3" strokeLinecap="round" />
               </svg>
               Required
             </span>
@@ -157,19 +142,21 @@ export function PrereqGraphPage() {
                   y1="4"
                   x2="26"
                   y2="4"
-                  stroke="var(--color-hairline-strong)"
-                  strokeWidth="1"
-                  strokeDasharray="3 3"
+                  stroke="var(--color-ink)"
+                  strokeWidth="1.5"
+                  strokeDasharray="4 3"
                 />
               </svg>
               Recommended
             </span>
             <span className="flex items-center gap-2">
-              <CheckIcon className="size-3.5 text-ok" />
+              <span className="station grid size-5 place-items-center bg-ok text-on-ok">
+                <CheckIcon className="size-3" />
+              </span>
               Watched
             </span>
-            <span className="text-ink-dim">
-              Earliest on the left · hover a title to trace it, or a line for why
+            <span>
+              Earliest on the left. Hover a title to trace it, or a line to see why.
             </span>
           </div>
 
@@ -183,7 +170,7 @@ export function PrereqGraphPage() {
           </div>
 
           <section className="py-10">
-            <h2 className="meta hairline border-b pb-2">In watch order</h2>
+            <h2 className="display text-3xl text-ink">In watch order</h2>
             <div className="mt-4 hidden md:block">
               <PrereqChainList watchOrder={watchOrder} nodes={watchedNodes} />
             </div>

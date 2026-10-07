@@ -36,11 +36,11 @@ function SagaRow({ label, movieIds, progress, tint }) {
   const stats = progressFor(progress, movieIds)
 
   return (
-    <li className="hairline border-b py-3 last:border-b-0">
+    <li className="border-b border-hairline py-3 last:border-b-0">
       <div className="mb-2 flex items-baseline justify-between gap-4">
-        <span className="truncate text-sm text-ink">{label}</span>
+        <span className="truncate text-sm font-semibold text-ink">{label}</span>
         <span className="meta shrink-0 tabular-nums">
-          {stats.watched}/{stats.total} · {stats.percent}%
+          {stats.watched} of {stats.total}, {stats.percent}%
         </span>
       </div>
       <ProgressBar percent={stats.percent} accent={tint} />
@@ -61,15 +61,15 @@ function Figure({ label, value, blurb, to }) {
   const body = (
     <>
       <dt className="meta truncate">{label}</dt>
-      <dd className="text-lg tabular-nums text-ink">{value}</dd>
-      <dd className="mt-0.5 break-words text-xs text-ink-faint">{blurb}</dd>
+      <dd className="display text-4xl normal-case tabular-nums text-ink">{value}</dd>
+      <dd className="mt-0.5 break-words text-sm text-ink-dim">{blurb}</dd>
     </>
   )
 
   return (
     <div className="min-w-0">
       {to ? (
-        <Link to={to} className="block transition-colors hover:bg-surface">
+        <Link to={to} className="block transition-colors hover:bg-raised">
           {body}
         </Link>
       ) : (
@@ -129,10 +129,10 @@ export function FriendProfilePage() {
   if (!user) {
     return (
       <div className="py-8">
-        <h1 className="text-2xl font-medium tracking-tight text-ink">Friends</h1>
+        <h1 className="display text-5xl text-ink sm:text-6xl">Friends</h1>
         <p className="mt-3 max-w-xl text-sm text-ink-dim">
           Friend profiles need an account.{' '}
-          <Link to="/login" className="text-ink underline underline-offset-4">
+          <Link to="/login" className="font-semibold text-ink underline underline-offset-4 hover:decoration-2">
             Sign in
           </Link>{' '}
           to see them.
@@ -151,7 +151,7 @@ export function FriendProfilePage() {
   if (!friend || !theirProgress) {
     return (
       <div className="py-8">
-        <h1 className="text-2xl font-medium tracking-tight text-ink">Not on your friends list</h1>
+        <h1 className="display text-5xl text-ink sm:text-6xl">Not on your friends list</h1>
         <p className="mt-3 max-w-xl text-sm text-ink-dim">
           Either this friendship has ended, or the link was never yours to follow. Nothing about
           them is shown unless you are both still friends.
@@ -159,7 +159,7 @@ export function FriendProfilePage() {
         <p className="mt-4">
           <Link
             to="/friends"
-            className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+            className="btn btn-sm"
           >
             Back to friends
           </Link>
@@ -180,16 +180,16 @@ export function FriendProfilePage() {
 
   return (
     <div className="py-8">
-      <div className="hairline border-b pb-6">
+      <div className="pb-6">
         <p className="mb-2">
           <Link
             to="/friends"
-            className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
+            className="label text-ink underline underline-offset-4 hover:decoration-2"
           >
             Back to friends
           </Link>
         </p>
-        <h1 className="break-words text-2xl font-medium tracking-tight text-ink">{name}</h1>
+        <h1 className="display break-words text-5xl text-ink sm:text-6xl">{name}</h1>
         <p className="mt-1 max-w-xl text-sm text-ink-dim">
           {theirStats.watched} of {theirStats.total} titles marked watched
           {theirRuntime > 0 ? `, about ${formatTotalRuntime(theirRuntime)} of viewing` : ''}.
@@ -199,23 +199,23 @@ export function FriendProfilePage() {
       {/* Their bar directly under yours, at the same scale. Two figures in a
        * sentence are a comparison nobody can actually make; two bars one above
        * the other are one glance. */}
-      <section className="hairline border-b py-6">
-        <h2 className="meta mb-4">Side by side</h2>
+      <section className="panel mt-3 p-5">
+        <h2 className="caption caption-corner">Side by side</h2>
         <div className="flex flex-col gap-4">
           <div>
             <div className="mb-2 flex items-baseline justify-between gap-3">
-              <span className="text-sm text-ink">You</span>
+              <span className="text-sm font-semibold text-ink">You</span>
               <span className="meta shrink-0 tabular-nums">
-                {myStats.watched}/{myStats.total} · {myStats.percent}%
+                {myStats.watched} of {myStats.total}, {myStats.percent}%
               </span>
             </div>
             <ProgressBar percent={myStats.percent} />
           </div>
           <div>
             <div className="mb-2 flex items-baseline justify-between gap-3">
-              <span className="truncate text-sm text-ink">{name}</span>
+              <span className="truncate text-sm font-semibold text-ink">{name}</span>
               <span className="meta shrink-0 tabular-nums">
-                {theirStats.watched}/{theirStats.total} · {theirStats.percent}%
+                {theirStats.watched} of {theirStats.total}, {theirStats.percent}%
               </span>
             </div>
             <ProgressBar percent={theirStats.percent} accent="var(--color-multiverse)" />
@@ -224,8 +224,8 @@ export function FriendProfilePage() {
       </section>
 
       {split && (
-        <section className="hairline border-b py-6">
-          <h2 className="meta mb-3">The difference</h2>
+        <section className="panel mt-3 p-5">
+          <h2 className="caption caption-corner">The difference</h2>
           <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Figure
               label="Both"
@@ -255,7 +255,7 @@ export function FriendProfilePage() {
           <p className="mt-4">
             <Link
               to={compareHref}
-              className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+              className="btn btn-sm"
             >
               Compare title by title
             </Link>
@@ -264,9 +264,9 @@ export function FriendProfilePage() {
       )}
 
       {split && split.onlyTheirs.length > 0 && (
-        <section className="hairline border-b py-6">
-          <h2 className="meta mb-1">Ask them about</h2>
-          <p className="mb-3 max-w-xl text-xs text-ink-faint">
+        <section className="panel mt-3 p-5">
+          <h2 className="caption caption-corner !mb-2">Ask them about</h2>
+          <p className="mb-3 max-w-xl text-sm text-ink-dim">
             The {split.onlyTheirs.length} they have seen and you have not, oldest first.
           </p>
           <ul>
@@ -274,7 +274,7 @@ export function FriendProfilePage() {
               <li key={movie.id}>
                 <Link
                   to={`/movies/${movie.id}`}
-                  className="block truncate py-1 text-[0.8125rem] text-ink-dim transition-colors hover:text-ink"
+                  className="block truncate py-1 text-sm font-medium text-ink hover:underline hover:underline-offset-2"
                 >
                   {movie.title}
                 </Link>
@@ -285,7 +285,7 @@ export function FriendProfilePage() {
             <p className="mt-3">
               <Link
                 to={compareHref}
-                className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
+                className="label text-ink underline underline-offset-4 hover:decoration-2"
               >
                 And {split.onlyTheirs.length - 12} more
               </Link>
@@ -294,8 +294,8 @@ export function FriendProfilePage() {
         </section>
       )}
 
-      <section className="py-6">
-        <h2 className="meta mb-3">Where they are in each saga</h2>
+      <section className="panel mt-3 p-5">
+        <h2 className="caption caption-corner">Where they are in each saga</h2>
         <ul>
           {sagas.map(({ saga, ids }) => (
             <SagaRow

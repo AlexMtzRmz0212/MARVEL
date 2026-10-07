@@ -21,10 +21,15 @@ const NAV = [
   { to: '/friends', label: 'Friends', accountOnly: true },
 ]
 
+// The active stop is underlined in the Infinity yellow, like the lit segment
+// of a line diagram over a carriage door. The underline is a border rather
+// than `text-decoration` so it sits flush on the band's bottom edge.
 function navClass({ isActive }) {
   return [
-    'label shrink-0 px-1.5 py-1.5 whitespace-nowrap transition-colors lg:px-3',
-    isActive ? 'text-ink' : 'text-ink-dim hover:text-ink',
+    'label shrink-0 border-b-[3px] px-2 pt-3 pb-2.5 whitespace-nowrap transition-colors lg:px-3',
+    isActive
+      ? 'border-infinity text-on-masthead'
+      : 'border-transparent text-on-masthead-dim hover:text-on-masthead',
   ].join(' ')
 }
 
@@ -55,15 +60,11 @@ function SyncErrorPopup() {
     <div
       role="alert"
       aria-live="assertive"
-      className="hairline animate-popup-in fixed inset-x-4 bottom-4 z-40 border border-l-2 border-l-danger bg-surface sm:inset-x-auto sm:right-6 sm:max-w-sm"
+      className="floating bubble bubble-below animate-popup-in fixed inset-x-4 bottom-6 z-40 border-danger sm:inset-x-auto sm:right-6 sm:max-w-sm"
     >
       <div className="flex items-start gap-4 px-4 py-3">
-        <p className="flex-1 text-sm leading-relaxed text-ink-dim">{message}</p>
-        <button
-          type="button"
-          onClick={clearSyncError}
-          className="label shrink-0 text-ink-dim transition-colors hover:text-ink"
-        >
+        <p className="flex-1 text-sm leading-relaxed text-ink">{message}</p>
+        <button type="button" onClick={clearSyncError} className="btn btn-sm shrink-0">
           Dismiss
         </button>
       </div>
@@ -71,41 +72,70 @@ function SyncErrorPopup() {
   )
 }
 
+/** The route mark: two lines cased in ink meeting at a station, as in the favicon. */
+function RouteMark() {
+  return (
+    <svg viewBox="0 0 28 20" aria-hidden="true" className="h-5 w-7 shrink-0" fill="none">
+      <path d="M3 4 L16 10" stroke="var(--color-on-masthead)" strokeWidth="5" strokeLinecap="round" />
+      <path d="M3 16 L16 10" stroke="var(--color-on-masthead)" strokeWidth="5" strokeLinecap="round" />
+      <path d="M3 4 L16 10" stroke="var(--color-infinity)" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M3 16 L16 10" stroke="var(--color-multiverse)" strokeWidth="2.4" strokeLinecap="round" />
+      <circle cx="18" cy="10" r="5" fill="var(--color-masthead)" stroke="var(--color-on-masthead)" strokeWidth="2.2" />
+    </svg>
+  )
+}
+
+/**
+ * Print out of register: the red, green and blue of whatever this is applied
+ * to are separated and nudged a few pixels apart, like three inks laid down
+ * slightly off. Defined once here and referenced from CSS as
+ * `url(#misregister)`.
+ */
+function MisregisterFilter() {
+  return (
+    <svg aria-hidden="true" width="0" height="0" className="absolute">
+      <filter id="misregister" x="-5%" y="-5%" width="110%" height="110%" colorInterpolationFilters="sRGB">
+        <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red" />
+        <feOffset in="red" dx="-4" dy="1" result="red-off" />
+        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green" />
+        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue" />
+        <feOffset in="blue" dx="4" dy="-1" result="blue-off" />
+        <feBlend in="red-off" in2="green" mode="screen" result="red-green" />
+        <feBlend in="red-green" in2="blue-off" mode="screen" />
+      </filter>
+    </svg>
+  )
+}
+
 export function AppShell() {
   return (
-    <div className="flex min-h-dvh flex-col bg-base">
-      <header className="hairline sticky top-0 z-30 border-b bg-base/85 backdrop-blur">
-        <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-3 sm:gap-6 sm:px-6">
-          <NavLink to="/" className="flex items-baseline gap-2">
-            <span className="font-mono text-sm font-semibold tracking-[0.2em] text-ink">
-              MARVEL
+    <div className="flex min-h-dvh flex-col bg-paper">
+      <MisregisterFilter />
+      <a
+        href="#main"
+        className="btn btn-primary sr-only z-50 focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+      >
+        Skip to content
+      </a>
+      <header className="masthead sticky top-0 z-30">
+        <div className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 sm:gap-6 sm:px-6">
+          <NavLink to="/" className="flex items-center gap-2 py-2.5" aria-label="Marvel Watch Order, home">
+            <RouteMark />
+            <span translate="no" className="flex items-baseline gap-1.5">
+              <span className="text-xs font-semibold text-on-masthead-dim">Marvel</span>
+              <span className="display text-xl text-on-masthead">Watch order</span>
             </span>
-            <span className="meta hidden sm:inline">Watch Order</span>
           </NavLink>
 
           {/* Below `lg` the nav moves to its own row underneath. The logo, the
            * nav items and the account control together need well over 414px of
-           * min-content, so on a 320-390px phone a single row cannot fit them:
-           * the document grew wider than the viewport, which is what let the
-           * browser pinch-zoom out past the layout. Rendering one nav or the
-           * other (rather than reordering a single one with `order`) keeps the
-           * focus order matching the visual order in both layouts, and the
-           * hidden copy is `display:none`, so assistive tech only ever sees one.
-           *
-           * The breakpoint was `md` at five items, where they measured ~430px
-           * at the desktop padding. A signed-in visitor now has six, ~515px,
-           * which alongside the wordmark, the search lens and the account
-           * control no longer clears 768px -- so it is `lg`. Between the two
-           * breakpoints the nav simply takes the second row, which it was
-           * already built to do.
-           *
-           * That second row cannot fit six either -- ~440px against a 320px
-           * phone -- so it scrolls sideways, and the items refuse to shrink so
-           * a label is never squeezed to nothing. The overflow is the nav's
-           * own, not the document's, which is the part that mattered: the page
-           * itself still never grows wider than the viewport.
-           */}
-          <nav className="hidden items-center gap-1 lg:flex">
+           * min-content, so on a 320-390px phone a single row cannot fit them.
+           * Rendering one nav or the other (rather than reordering a single one
+           * with `order`) keeps the focus order matching the visual order in
+           * both layouts, and the hidden copy is `display:none`, so assistive
+           * tech only ever sees one. The second row scrolls sideways on its
+           * own, so the page itself never grows wider than the viewport. */}
+          <nav className="hidden items-end gap-1 self-stretch lg:flex" aria-label="Main">
             <NavLinks />
           </nav>
 
@@ -115,38 +145,38 @@ export function AppShell() {
           </div>
         </div>
 
-        <nav className="mx-auto -mt-1 flex max-w-[1400px] items-center overflow-x-auto px-2 pb-2 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
+        <nav
+          aria-label="Main"
+          className="mx-auto flex max-w-[1400px] items-center overflow-x-auto px-2 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
+        >
           <NavLinks />
         </nav>
       </header>
 
       <SyncErrorPopup />
 
-      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-24 sm:px-6">
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-24 outline-none sm:px-6">
         <Outlet />
       </main>
 
-      <footer className="hairline border-t">
-        {/* A notch under `.meta` and faded further still: this is the one
-         * piece of chrome on every page that nobody is here to read, so it
-         * should sit at the very back rather than compete with the page. */}
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-4 text-[0.625rem] opacity-60 sm:px-6">
-          <p className="meta text-[0.625rem]">Marvel Watch Order</p>
+      <footer className="border-t-2 border-ink">
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-4 sm:px-6">
+          <p className="meta">Marvel Watch Order</p>
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5" aria-label="Legal">
             <Link
               to="/privacy"
-              className="label text-[0.6875rem] text-ink-faint transition-colors hover:text-ink-dim"
+              className="meta underline-offset-4 transition-colors hover:text-ink hover:underline"
             >
               Privacy policy
             </Link>
             <Link
               to="/terms"
-              className="label text-[0.6875rem] text-ink-faint transition-colors hover:text-ink-dim"
+              className="meta underline-offset-4 transition-colors hover:text-ink hover:underline"
             >
               Terms of service
             </Link>
           </nav>
-          <p className="meta w-full text-[0.625rem] text-ink-faint sm:w-auto">
+          <p className="meta w-full sm:ml-auto sm:w-auto">
             An unofficial fan project, not affiliated with Marvel or Disney.
           </p>
         </div>

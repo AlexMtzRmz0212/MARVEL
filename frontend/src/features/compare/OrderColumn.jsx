@@ -45,7 +45,7 @@ export function OrderColumn({
     <div className="relative min-w-0">
       <span
         aria-hidden="true"
-        className={`absolute inset-y-0 w-px bg-hairline ${facingLeft ? 'right-0' : 'left-0'}`}
+        className={`absolute inset-y-0 w-[3px] bg-ink ${facingLeft ? '-right-px' : '-left-px'}`}
       />
 
       <ol
@@ -74,18 +74,21 @@ export function OrderColumn({
                 aria-pressed={movie.id === selectedId}
                 className={[
                   'relative flex h-full w-full items-center gap-2 transition-colors',
-                  facingLeft ? 'pr-3 pl-1' : 'pr-1 pl-3',
+                  facingLeft ? 'pr-4 pl-1' : 'pr-1 pl-4',
                   active ? 'bg-raised' : 'hover:bg-surface',
                 ].join(' ')}
               >
                 <span
                   aria-hidden="true"
                   className={[
-                    'absolute top-1/2 size-1.5 -translate-y-1/2 rounded-full transition-transform',
+                    // A station on the line, in its saga colour or cyan once
+                    // watched. Watched titles recede through their text, not
+                    // by fading the station.
+                    'station absolute top-1/2 size-3 -translate-y-1/2 border-[1.5px] transition-transform',
                     facingLeft ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2',
-                    active ? 'scale-150' : '',
+                    active ? 'scale-[1.6]' : '',
                   ].join(' ')}
-                  style={{ backgroundColor: colour, opacity: watched && !active ? 0.55 : 1 }}
+                  style={{ backgroundColor: colour }}
                 />
 
                 {facingLeft && aside && (
@@ -95,9 +98,9 @@ export function OrderColumn({
 
                 <span
                   className={[
-                    'min-w-0 flex-1 truncate text-[0.8125rem] transition-colors',
+                    'min-w-0 flex-1 truncate text-sm transition-colors',
                     facingLeft ? 'text-right' : 'text-left',
-                    active ? 'text-ink' : watched ? 'text-ink-faint' : 'text-ink-dim',
+                    active ? 'font-bold text-ink' : watched ? 'text-ink-faint' : 'font-medium text-ink',
                   ].join(' ')}
                 >
                   {movie.title}
@@ -125,7 +128,7 @@ export function OrderColumn({
 function Position({ index, dim }) {
   return (
     <span
-      className={`meta w-8 shrink-0 text-right text-[0.625rem] tabular-nums ${dim ? 'opacity-60' : ''}`}
+      className={`meta w-8 shrink-0 text-right tabular-nums ${dim ? 'font-normal' : ''}`}
     >
       {index + 1}
     </span>
@@ -144,10 +147,10 @@ function Aside({ value, width, dim, side }) {
   return (
     <span
       className={[
-        'meta hidden shrink-0 text-[0.625rem] tabular-nums sm:block',
+        'meta hidden shrink-0 tabular-nums sm:block',
         width,
         side === 'left' ? 'text-left' : 'text-right',
-        dim ? 'opacity-60' : '',
+        dim ? 'font-normal' : '',
       ].join(' ')}
     >
       {value}

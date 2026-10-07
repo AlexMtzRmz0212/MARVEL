@@ -65,12 +65,7 @@ function Control({ children, onClick, title, active }) {
       onClick={onClick}
       title={title}
       aria-pressed={active}
-      className={[
-        'label border bg-base/80 px-2 py-0.5 text-[0.6875rem] backdrop-blur transition-colors',
-        active
-          ? 'border-hairline-strong text-ink'
-          : 'border-hairline-strong text-ink-dim hover:text-ink',
-      ].join(' ')}
+      className="chip"
     >
       {children}
     </button>
@@ -143,15 +138,15 @@ function Legend({ open, onToggle }) {
   return (
     <div className="absolute bottom-3 left-3">
       {open && (
-        <ul className="hairline mb-1.5 border bg-base/85 px-2.5 py-2 backdrop-blur">
+        <ul className="floating mb-2 px-3 py-2">
           {KEY.map((entry) => (
             <li key={entry.label} className="flex items-center gap-2 py-0.5">
               <span
                 aria-hidden="true"
-                className="size-2 shrink-0 rounded-full"
+                className="station size-3 shrink-0 border-[1.5px]"
                 style={{ backgroundColor: entry.colour }}
               />
-              <span className="meta text-[0.625rem]">{entry.label}</span>
+              <span className="meta text-ink">{entry.label}</span>
             </li>
           ))}
         </ul>
@@ -160,7 +155,7 @@ function Legend({ open, onToggle }) {
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="label border border-hairline-strong bg-base/80 px-2 py-0.5 text-[0.6875rem] text-ink-dim backdrop-blur transition-colors hover:text-ink"
+        className="chip"
       >
         {open ? 'Hide key' : 'Key'}
       </button>
@@ -364,7 +359,7 @@ export function TimelinePage() {
             canvas its height, and there are only three controls. */}
         <div className="pointer-events-none absolute top-3 right-3 flex flex-wrap items-center justify-end gap-1.5">
           {overall && (
-            <span className="meta pointer-events-auto px-1 text-[0.625rem]">
+            <span className="pointer-events-auto border-2 border-ink bg-surface px-2 py-1 text-xs font-semibold tabular-nums text-ink">
               {overall.watched}/{overall.total} watched
             </span>
           )}

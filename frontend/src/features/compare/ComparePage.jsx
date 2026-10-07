@@ -86,19 +86,19 @@ function Line({ label, colour, checked, disabled, onChange }) {
       aria-checked={checked}
       disabled={disabled}
       onClick={onChange}
-      className="group flex w-full items-center gap-2 py-1 text-left disabled:cursor-not-allowed disabled:opacity-40"
+      className="group flex min-h-8 w-full items-center gap-2.5 py-1 text-left disabled:cursor-not-allowed"
     >
       <span
         aria-hidden="true"
-        className={`flex size-3 shrink-0 items-center justify-center border ${
-          checked ? 'border-ink-dim' : 'border-hairline-strong'
+        className={`flex size-4 shrink-0 items-center justify-center border-2 ${
+          disabled ? 'border-hairline-strong' : 'border-ink'
         }`}
       >
-        {checked && <span className="size-1.5" style={{ backgroundColor: colour }} />}
+        {checked && <span className="size-2" style={{ backgroundColor: colour }} />}
       </span>
       <span
-        className={`label text-[0.75rem] transition-colors ${
-          checked ? 'text-ink' : 'text-ink-faint group-hover:text-ink-dim'
+        className={`label transition-colors ${
+          disabled ? 'text-ink-faint' : checked ? 'text-ink' : 'text-ink-dim group-hover:text-ink'
         }`}
       >
         {label}
@@ -114,15 +114,15 @@ function KeyMenu({ open, onToggle, show, setShow, canLink, floored }) {
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="label border border-hairline-strong px-2 py-0.5 text-[0.6875rem] text-ink-dim transition-colors hover:text-ink"
+        className="chip"
       >
         {open ? 'Hide key' : 'Key'}
       </button>
 
       {open && (
-        <div className="hairline absolute top-full right-0 z-20 mt-1 w-56 border bg-base/95 backdrop-blur">
-          <div className="px-2.5 py-2">
-            <p className="meta mb-0.5 text-[0.625rem]">Show</p>
+        <div className="floating absolute top-full right-0 z-20 mt-2 w-64">
+          <div className="px-3 py-2.5">
+            <p className="meta mb-1">Show</p>
             <Line
               label="Release order"
               colour="var(--color-ink)"
@@ -139,46 +139,46 @@ function KeyMenu({ open, onToggle, show, setShow, canLink, floored }) {
             />
             <Line
               label="Connections"
-              colour="var(--color-ink-dim)"
+              colour="var(--color-ink)"
               checked={show.links && canLink}
               disabled={!canLink}
               onChange={() => setShow((value) => ({ ...value, links: !value.links }))}
             />
             <Line
               label="Release dates"
-              colour="var(--color-ink-faint)"
+              colour="var(--color-ink)"
               checked={show.dates}
               onChange={() => setShow((value) => ({ ...value, dates: !value.dates }))}
             />
             <Line
               label="Running time"
-              colour="var(--color-ink-faint)"
+              colour="var(--color-ink)"
               checked={show.runtime}
               onChange={() => setShow((value) => ({ ...value, runtime: !value.runtime }))}
             />
             {!canLink && (
-              <p className="meta mt-1 text-[0.625rem] normal-case">
+              <p className="mt-1 text-xs leading-snug text-ink-dim">
                 Both lines have to be up for a connection to join anything.
               </p>
             )}
             {show.runtime && floored && (
-              <p className="meta mt-1 text-[0.625rem] normal-case">
+              <p className="mt-1 text-xs leading-snug text-ink-dim">
                 Some series have no runtime on file, so a total marked + is a floor.
               </p>
             )}
           </div>
 
-          <div className="hairline border-t px-2.5 py-2">
-            <p className="meta mb-1 text-[0.625rem]">Colour</p>
+          <div className="border-t-2 border-ink px-3 py-2.5">
+            <p className="meta mb-1">Colour</p>
             <ul>
               {KEY.map((entry) => (
                 <li key={entry.label} className="flex items-center gap-2 py-0.5">
                   <span
                     aria-hidden="true"
-                    className="size-2 shrink-0 rounded-full"
+                    className="station size-3 shrink-0 border-[1.5px]"
                     style={{ backgroundColor: entry.colour }}
                   />
-                  <span className="meta text-[0.625rem]">{entry.label}</span>
+                  <span className="meta text-ink">{entry.label}</span>
                 </li>
               ))}
             </ul>
@@ -201,11 +201,11 @@ function Readout({ movie, releaseAt, chronoAt }) {
     <p className="flex min-w-0 flex-wrap items-baseline gap-x-2">
       <Link
         to={`/movies/${movie.id}`}
-        className="truncate text-[0.8125rem] text-ink underline decoration-hairline-strong underline-offset-4 transition-colors hover:decoration-ink-dim"
+        className="truncate text-sm font-bold text-ink underline decoration-2 underline-offset-4 transition-colors hover:decoration-infinity"
       >
         {movie.title}
       </Link>
-      <span className="meta text-[0.625rem]">
+      <span className="meta">
         {`#${releaseAt + 1} release / #${chronoAt + 1} chronological / ${gap}`}
       </span>
     </p>
@@ -356,9 +356,11 @@ export function ComparePage() {
 
   return (
     <div ref={pageRef}>
-      <div className="hairline border-b py-8">
-        <h1 className="text-2xl font-medium tracking-tight text-ink">Release against chronology</h1>
-        <p className="mt-1 max-w-xl text-sm text-ink-dim">
+      <div className="pt-8 pb-5">
+        <h1 className="display text-5xl text-balance text-ink sm:text-6xl">
+          Release against chronology
+        </h1>
+        <p className="mt-2 max-w-2xl text-base leading-relaxed text-ink-dim">
           Every title in both orders at once. The thread between them is how far it moves: flat
           where the two agree, and steep where a film arrived years after the events it depicts.
           The release line is dated; the chronological one counts the hours as they add up.
@@ -366,7 +368,7 @@ export function ComparePage() {
       </div>
 
       <div
-        className="hairline sticky z-10 border-b bg-base/95 backdrop-blur"
+        className="sticky z-10 border-y-2 border-ink bg-paper"
         style={{ top: headerHeight }}
       >
         <div className="flex items-center justify-between gap-3 py-2">
@@ -377,7 +379,7 @@ export function ComparePage() {
               chronoAt={model.chronoAt.get(activeMovie.id)}
             />
           ) : (
-            <p className="meta truncate text-[0.625rem]">
+            <p className="meta truncate text-ink-dim">
               Point at a title to trace it, click to keep it lit
             </p>
           )}
@@ -395,12 +397,12 @@ export function ComparePage() {
         {(show.release || show.chronological) && (
           <div className={`${grid} pb-1.5`}>
             {show.release && (
-              <p className={`meta text-[0.625rem] ${both ? 'pr-3 text-right' : 'pl-3'}`}>
+              <p className={`label text-ink ${both ? 'pr-3 text-right' : 'pl-3'}`}>
                 Release order
               </p>
             )}
             {both && <span />}
-            {show.chronological && <p className="meta pl-3 text-[0.625rem]">Chronological</p>}
+            {show.chronological && <p className="label pl-3 text-ink">Chronological</p>}
           </div>
         )}
       </div>

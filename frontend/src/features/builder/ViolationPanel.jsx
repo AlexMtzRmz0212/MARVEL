@@ -17,9 +17,9 @@ export function ViolationPanel({ result, titles, missingCount, onApplySuggestion
 
   if (errors.length === 0 && warnings.length === 0) {
     return (
-      <div className="hairline border border-l-2 border-l-ok bg-surface px-4 py-3">
-        <p className="meta text-ok">Valid order</p>
-        <p className="mt-1 text-xs text-ink-dim">
+      <div role="status" className="panel border-l-[6px] border-l-ok px-4 py-3">
+        <p className="display text-2xl text-ink">Valid order</p>
+        <p className="mt-1 text-sm text-ink-dim">
           {result.checked_count === 0
             ? 'Add some titles to get started.'
             : 'Every prerequisite is present and in the right place.'}
@@ -31,16 +31,16 @@ export function ViolationPanel({ result, titles, missingCount, onApplySuggestion
   return (
     <div className="flex flex-col gap-3">
       {errors.length > 0 && (
-        <section className="hairline border border-l-2 border-l-danger bg-surface px-4 py-3">
+        <section className="panel border-danger border-l-[6px] px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="meta text-danger">
+            <p className="display text-2xl text-danger">
               {errors.length} {errors.length === 1 ? 'problem' : 'problems'}
             </p>
             {outOfOrder.length > 0 && (
               <button
                 type="button"
                 onClick={onApplySuggestion}
-                className="label border border-hairline-strong px-3 py-1 text-ink-dim transition-colors hover:border-danger hover:text-ink"
+                className="btn btn-sm"
               >
                 Fix the order
               </button>
@@ -48,7 +48,7 @@ export function ViolationPanel({ result, titles, missingCount, onApplySuggestion
           </div>
           <ul className="mt-2 flex flex-col gap-1.5">
             {errors.map((violation, index) => (
-              <li key={index} className="text-xs leading-relaxed text-ink-dim">
+              <li key={index} className="text-sm leading-relaxed text-ink">
                 {formatViolation(violation, titles)}
               </li>
             ))}
@@ -57,15 +57,15 @@ export function ViolationPanel({ result, titles, missingCount, onApplySuggestion
       )}
 
       {warnings.length > 0 && (
-        <section className="hairline border border-l-2 border-l-warn bg-surface px-4 py-3">
+        <section className="border-2 border-ink bg-warn px-4 py-3 text-on-infinity">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="meta text-warn">
+            <p className="display text-2xl">
               {warnings.length} {warnings.length === 1 ? 'suggestion' : 'suggestions'}
             </p>
           </div>
           <ul className="mt-2 flex flex-col gap-1.5">
             {warnings.map((violation, index) => (
-              <li key={index} className="text-xs leading-relaxed text-ink-dim">
+              <li key={index} className="text-sm leading-relaxed">
                 {formatViolation(violation, titles)}
               </li>
             ))}
@@ -77,7 +77,7 @@ export function ViolationPanel({ result, titles, missingCount, onApplySuggestion
         <button
           type="button"
           onClick={onAddMissing}
-          className="hairline border border-dashed px-4 py-2.5 text-sm text-ink-dim transition-colors hover:border-hairline-strong hover:text-ink"
+          className="btn border-dashed"
         >
           {/* The count is the size of the full transitive closure, not just the
               directly-flagged titles: adding Endgame's three direct

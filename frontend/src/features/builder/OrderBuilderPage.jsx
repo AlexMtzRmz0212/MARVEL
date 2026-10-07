@@ -146,29 +146,35 @@ function Builder({ orderId, existing, searchParams }) {
     <div className="py-8">
       <h1 className="sr-only">{orderId ? `Edit order: ${name}` : 'New order'}</h1>
 
-      <div className="hairline flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 pb-2 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 flex-1">
-          <label className="label" htmlFor="order-name">
+          <label className="label text-ink-dim" htmlFor="order-name">
             Order name
           </label>
           <input
             id="order-name"
+            name="order_name"
             value={name}
             onChange={(event) => {
               setName(event.target.value)
               setSavedAt(null)
             }}
-            className="mt-1 block w-full max-w-md border-0 border-b border-hairline bg-transparent pb-1 text-2xl font-medium tracking-tight text-ink focus:border-hairline-strong focus:outline-none"
+            autoComplete="off"
+            className="field display mt-1.5 max-w-xl py-1 text-4xl normal-case"
           />
-          <p className="meta mt-2">
-            {movieIds.length} titles{totalRuntime ? ` · ${totalRuntime}` : ''}
+          <p className="meta mt-2 text-sm">
+            {movieIds.length} titles{totalRuntime ? `, ${totalRuntime} in all` : ''}
           </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
-          {savedAt && <span className="meta text-ok">Saved</span>}
+          {savedAt && (
+            <span role="status" className="text-sm font-semibold text-ok">
+              Saved
+            </span>
+          )}
           {saveOrder.error && (
-            <span role="alert" className="meta text-danger">
+            <span role="alert" className="text-sm font-semibold text-danger">
               {saveOrder.error.message}
             </span>
           )}
@@ -176,14 +182,14 @@ function Builder({ orderId, existing, searchParams }) {
             type="button"
             onClick={handleSave}
             disabled={movieIds.length === 0 || saveOrder.isPending}
-            className="label border border-hairline-strong px-4 py-2 text-ink transition-colors hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40"
+            className="btn btn-primary"
           >
             {saveOrder.isPending ? 'Saving…' : 'Save order'}
           </button>
         </div>
       </div>
 
-      <div className="grid gap-8 py-6 lg:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex flex-col gap-4">
           <ViolationPanel
             result={result}
@@ -200,8 +206,10 @@ function Builder({ orderId, existing, searchParams }) {
           />
 
           {movieIds.length === 0 ? (
-            <div className="hairline border border-dashed px-6 py-16 text-center">
-              <p className="meta">Pick titles from the right to start building</p>
+            <div className="halftone border-2 border-dashed border-ink px-6 py-16 text-center">
+              <p className="inline-block bg-paper px-2 text-sm font-semibold text-ink-dim">
+                Pick titles from the list to start building
+              </p>
             </div>
           ) : (
             <DndContext
@@ -211,7 +219,7 @@ function Builder({ orderId, existing, searchParams }) {
               onDragEnd={handleDragEnd}
             >
               <SortableContext items={movieIds} strategy={verticalListSortingStrategy}>
-                <ul className="flex flex-col gap-1.5">
+                <ul className="flex flex-col gap-2">
                   {movieIds.map((id, index) => {
                     const movie = byId.get(id)
                     if (!movie) return null
@@ -234,7 +242,7 @@ function Builder({ orderId, existing, searchParams }) {
           )}
         </div>
 
-        <aside className="lg:sticky lg:top-20 lg:self-start">
+        <aside className="panel p-5 lg:sticky lg:top-20 lg:self-start">
           <TitlePicker
             movies={movies}
             chosenIds={movieIds}

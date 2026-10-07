@@ -119,6 +119,32 @@ export function accentFor(movie) {
   return 'var(--color-adjacent)'
 }
 
+/**
+ * The saga roundel on cards and title pages: the line colour, the colour that
+ * reads on top of it, and what is printed inside.
+ *
+ * The phase number when there is one; otherwise the saga's initial, so a Fox
+ * or Sony title is told apart by a letter and not only by being grey. `label`
+ * is the full sentence for assistive tech, since a lone "3" means nothing read
+ * aloud.
+ */
+export function lineBulletFor(movie) {
+  const onColour =
+    movie.saga === 'Multiverse Saga'
+      ? 'var(--color-on-multiverse)'
+      : movie.saga === 'Infinity Saga'
+        ? 'var(--color-on-infinity)'
+        : 'var(--color-on-adjacent)'
+  const saga = SAGA_LABEL[movie.saga] ?? movie.saga ?? ''
+  const mark = movie.phase ? String(movie.phase) : (saga.replace(/^(The |Story )/, '')[0] ?? '?')
+  return {
+    background: accentFor(movie),
+    color: onColour,
+    mark,
+    label: movie.phase ? `${saga}, phase ${movie.phase}` : saga,
+  }
+}
+
 export function phaseLabel(phase) {
   return phase ? `Phase ${phase}` : 'Unphased'
 }

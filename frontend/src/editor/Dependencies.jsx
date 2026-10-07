@@ -36,7 +36,7 @@ function EdgeRow({ owner, edge, other, strengths, onChange, onCut, disabled }) {
   const [note, setNote] = useState(edge.note ?? '')
 
   return (
-    <li className="hairline border bg-base p-2">
+    <li className="hairline border bg-paper p-2">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-xs text-ink">{other.title}</p>

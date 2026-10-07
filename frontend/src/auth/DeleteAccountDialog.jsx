@@ -44,15 +44,15 @@ export function DeleteAccountDialog({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-base/80 px-4 backdrop-blur-sm">
+    <div className="halftone fixed inset-0 z-50 flex items-center justify-center bg-paper/85 px-4 overscroll-contain">
       <form
         onSubmit={handleSubmit}
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-account-title"
-        className="hairline w-full max-w-md border border-l-2 border-l-danger bg-surface p-6 shadow-xl"
+        className="floating w-full max-w-md border-l-[6px] border-l-danger p-6"
       >
-        <h2 id="delete-account-title" className="text-lg font-medium tracking-tight text-ink">
+        <h2 id="delete-account-title" className="display text-3xl text-ink">
           Delete your account?
         </h2>
 
@@ -63,20 +63,21 @@ export function DeleteAccountDialog({ onClose }) {
         </p>
 
         <label className="mt-5 block">
-          <span className="label">Confirm your password</span>
+          <span className="label text-ink">Confirm your password</span>
           <input
             ref={inputRef}
             type="password"
+            name="password"
             required
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="hairline mt-1 block w-full border bg-base px-3 py-2 font-mono text-sm text-ink focus:border-hairline-strong focus:outline-none"
+            className="field mt-1.5"
           />
         </label>
 
         {error && (
-          <p role="alert" className="mt-3 text-xs leading-relaxed text-danger">
+          <p role="alert" className="mt-2 text-sm leading-relaxed text-danger">
             {error}
           </p>
         )}
@@ -84,15 +85,15 @@ export function DeleteAccountDialog({ onClose }) {
         <div className="mt-6 flex flex-col gap-2 sm:flex-row-reverse">
           <button
             type="submit"
-            disabled={isDeleting || password.length === 0}
-            className="label border border-danger px-4 py-2 text-danger transition-colors hover:bg-danger hover:text-base disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={isDeleting}
+            className="btn btn-danger"
           >
             {isDeleting ? 'Deleting…' : 'Delete my account'}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="label px-4 py-2 text-ink-dim transition-colors hover:text-ink"
+            className="btn"
           >
             Cancel
           </button>

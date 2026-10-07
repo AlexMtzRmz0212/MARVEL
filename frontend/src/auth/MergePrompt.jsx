@@ -8,13 +8,13 @@ export function MergePrompt({ merge }) {
 
   if (summary) {
     return (
-      <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-6">
-        <div className="hairline flex max-w-lg items-start gap-4 border bg-surface px-5 py-4 shadow-lg">
-          <p className="text-sm text-ink-dim">{summary}</p>
+      <div role="status" className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-6">
+        <div className="floating bubble bubble-below bubble-left animate-popup-in mb-3 flex max-w-lg items-start gap-4 px-5 py-4">
+          <p className="text-sm leading-relaxed text-ink">{summary}</p>
           <button
             type="button"
             onClick={dismissSummary}
-            className="label shrink-0 text-ink-faint transition-colors hover:text-ink"
+            className="btn btn-sm shrink-0"
           >
             Dismiss
           </button>
@@ -31,14 +31,14 @@ export function MergePrompt({ merge }) {
   ).length
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-base/80 px-4 backdrop-blur-sm">
+    <div className="halftone fixed inset-0 z-50 flex items-center justify-center bg-paper/85 px-4 overscroll-contain">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="merge-prompt-title"
-        className="hairline w-full max-w-md border bg-surface p-6 shadow-xl"
+        className="floating w-full max-w-md p-6"
       >
-        <h2 id="merge-prompt-title" className="text-lg font-medium tracking-tight text-ink">
+        <h2 id="merge-prompt-title" className="display text-3xl text-ink">
           Bring this browser's data with you?
         </h2>
 
@@ -50,7 +50,7 @@ export function MergePrompt({ merge }) {
           and <span className="text-ink">{watchedCount} watched titles</span> that aren't in your
           account yet.
         </p>
-        <p className="mt-2 text-sm leading-relaxed text-ink-faint">
+        <p className="mt-2 text-sm leading-relaxed text-ink-dim">
           Merging copies them up and clears them from this device. Anything already in your account
           is kept as-is.
         </p>
@@ -59,14 +59,14 @@ export function MergePrompt({ merge }) {
           <button
             type="button"
             onClick={accept}
-            className="label border border-hairline-strong px-4 py-2 text-ink transition-colors hover:bg-raised"
+            className="btn btn-primary"
           >
             Merge into my account
           </button>
           <button
             type="button"
             onClick={decline}
-            className="label px-4 py-2 text-ink-faint transition-colors hover:text-ink-dim"
+            className="btn"
           >
             Keep separate
           </button>

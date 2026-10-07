@@ -16,39 +16,52 @@ export function TitlePicker({ movies, chosenIds, onAdd }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="hairline flex items-baseline justify-between border-b pb-2">
-        <h2 className="meta">Add titles</h2>
-        <span className="meta text-ink-dim">{available.length}</span>
+      <div className="flex items-start justify-between">
+        <h2 className="caption caption-corner !mb-1">Add titles</h2>
+        <span className="meta text-sm">{available.length}</span>
       </div>
 
+      <label htmlFor="title-picker-search" className="sr-only">
+        Search titles to add
+      </label>
       <input
+        id="title-picker-search"
         type="search"
+        name="title"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search"
-        className="hairline mt-3 w-full border bg-surface px-3 py-1.5 font-mono text-xs text-ink placeholder:text-ink-faint focus:border-hairline-strong focus:outline-none"
+        placeholder="Search titles…"
+        autoComplete="off"
+        spellCheck={false}
+        className="field mt-3"
       />
 
-      <ul className="mt-3 flex max-h-[28rem] flex-col overflow-y-auto">
+      <ul className="mt-3 flex max-h-[28rem] flex-col divide-y divide-hairline overflow-y-auto overscroll-contain border-2 border-ink">
         {available.map((movie) => (
           <li key={movie.id}>
             <button
               type="button"
               onClick={() => onAdd(movie.id)}
-              className="hairline flex w-full items-center gap-2 border-b px-2 py-2 text-left transition-colors last:border-b-0 hover:bg-surface"
+              aria-label={`Add ${movie.title}`}
+              className="flex w-full items-center gap-2 px-2.5 py-2 text-left transition-colors hover:bg-raised"
             >
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs text-ink">{movie.title}</span>
-                <span className="meta text-[10px]">
-                  {year(movie.release_date)} · {phaseLabel(movie.phase)}
+                <span className="block truncate text-sm font-semibold text-ink">{movie.title}</span>
+                <span className="meta">
+                  {year(movie.release_date)}, {phaseLabel(movie.phase)}
                 </span>
               </span>
-              <span className="meta shrink-0 text-ink-faint">+</span>
+              <span
+                aria-hidden="true"
+                className="grid size-6 shrink-0 place-items-center rounded-full border-2 border-ink text-sm leading-none font-bold text-ink"
+              >
+                +
+              </span>
             </button>
           </li>
         ))}
         {available.length === 0 && (
-          <li className="meta py-6 text-center">
+          <li className="py-6 text-center text-sm text-ink-dim">
             {query ? 'Nothing matches' : 'Everything is already in this order'}
           </li>
         )}

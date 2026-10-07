@@ -13,7 +13,7 @@ export function BackLink({ to, children }) {
   return (
     <Link
       to={to}
-      className="group inline-flex items-center gap-1.5 text-ink-faint transition-colors hover:text-ink"
+      className="group inline-flex min-h-6 items-center gap-1.5 text-ink-dim transition-colors hover:text-ink"
     >
       <svg
         viewBox="0 0 8 12"
@@ -24,7 +24,7 @@ export function BackLink({ to, children }) {
         <path
           d="M6.5 1 L1.5 6 L6.5 11"
           stroke="currentColor"
-          strokeWidth="1.5"
+          strokeWidth="2"
           strokeLinecap="square"
         />
       </svg>

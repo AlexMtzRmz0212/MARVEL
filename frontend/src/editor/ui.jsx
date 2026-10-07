@@ -10,13 +10,13 @@ import { useEffect, useRef, useState } from 'react'
  */
 
 const CONTROL =
-  'w-full border border-hairline bg-base px-2 py-1.5 text-sm text-ink outline-none ' +
+  'w-full border border-hairline bg-paper px-2 py-1.5 text-sm text-ink outline-none ' +
   'transition-colors placeholder:text-ink-faint focus:border-hairline-strong disabled:opacity-40'
 
 export function Button({ tone = 'default', className = '', ...props }) {
   const tones = {
     default: 'border-hairline-strong text-ink-dim hover:text-ink',
-    primary: 'border-ink-dim bg-ink text-base hover:bg-ink/90',
+    primary: 'border-ink-dim bg-ink text-paper hover:bg-ink/90',
     danger: 'border-danger/50 text-danger hover:bg-danger/10',
   }
   return (

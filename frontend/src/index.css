@@ -1,112 +1,692 @@
 @import "tailwindcss";
+@import "@fontsource-variable/archivo/standard.css";
+@import "@fontsource-variable/archivo/standard-italic.css";
+@import "@fontsource/kalam/latin-700.css";
+@import "@fontsource/bangers/latin-400.css";
 
-/* Design direction: "archive dossier".
+/* Design direction: "Metro in print".
  *
- * A reference tool rather than a fan page. Near-black so poster art carries the
- * only saturated colour on screen; structure from hairline borders and
- * whitespace instead of drop shadows; metadata always in mono, because it reads
- * as data and that is what makes the thing feel like an archive.
+ * The watch order drawn as a transit map and printed like a comic insert.
+ * Metro cartography supplies the structure -- sagas are lines, titles are
+ * stations, a prerequisite is a change-here -- and comic print supplies the
+ * material: newsprint, ink outlines, process inks, halftone, condensed
+ * lettering. The two meet in one gesture, which is the rule everything else
+ * follows: every line is a colour cased in ink.
  *
- * Saga is the colour axis, so phase and continuity are legible at a glance in
- * every view. Adjacent (non-MCU) titles are deliberately desaturated so the
- * main spine stays readable in a catalogue this long.
+ * Shape rule: panels and buttons are square with an ink border; anything round
+ * is a station (graph nodes, line bullets, watched marks). The only shadow is
+ * the hard offset one under floating layers.
+ *
+ * Process yellow never carries text on paper. It is a fill with ink on it, or
+ * an ink-cased line.
+ *
+ * Light is the printed page; dark is the night edition. Both are the same
+ * `--color-*` tokens, swapped under `prefers-color-scheme`, so no component
+ * needs a `dark:` variant. Every text pair is checked to WCAG AA in both.
  *
  * Tailwind v4 is configured in CSS: there is no tailwind.config.js and none
  * should be added.
  */
 @theme {
-  --color-base: #0a0a0b;
-  --color-surface: #121215;
-  --color-raised: #1a1a1e;
-  --color-hairline: #26262b;
-  --color-hairline-strong: #3a3a42;
+  /* `paper` rather than `base`: a colour named `base` made `text-base` emit a
+   * font-size and a colour at once. */
+  --color-paper: #e9ebe4;
+  --color-surface: #f6f7f2;
+  --color-raised: #dde0d7;
+  /* Rules inside a panel. Panels themselves are cased in `ink`. */
+  --color-hairline: #c5c8bf;
+  /* Non-text marks that must clear 3:1: graph edges, input borders at rest. */
+  --color-hairline-strong: #7a7d76;
 
-  --color-ink: #ece9e4;
-  --color-ink-dim: #94908a;
-  /* Both of these are WCAG AA floors, not free choices. `.meta` renders at 11px
-   * and is the only styling most metadata gets, so ink-faint has to clear 4.5:1
-   * against the darkest thing it ever sits on (`raised`), not just against
-   * `base`. It measures 4.80:1 there, 5.47:1 on `base`. The previous #64615c
-   * was 3.03-3.41:1 and failed everywhere it was used. */
-  --color-ink-faint: #8a8681;
+  --color-ink: #17171c;
+  --color-ink-dim: #45474e;
+  /* Metadata. 5.0:1 on `raised`, the darkest thing it sits on. */
+  --color-ink-faint: #5a5c63;
 
-  --color-infinity: #e0a45e;
-  --color-multiverse: #8b7ff5;
-  /* Desaturated so the main spine stays readable, but no darker than AA allows:
-   * this is title text on cards, at 4.9:1 against `surface`. */
-  --color-adjacent: #838b99;
+  /* Saga lines. Infinity is process yellow and is only ever a cased fill. */
+  --color-infinity: #f2c200;
+  --color-multiverse: #b0135f;
+  --color-adjacent: #7d8088;
+  /* Text drawn on top of each line colour. */
+  --color-on-infinity: #17171c;
+  --color-on-multiverse: #ffffff;
+  --color-on-adjacent: #17171c;
 
-  --color-danger: #e5484d;
-  --color-warn: #e0a45e;
-  --color-ok: #4cc38a;
+  --color-danger: #b42d18;
+  --color-on-danger: #ffffff;
+  --color-warn: #f2c200;
+  /* Watched. Process cyan, darkened until it can be text as well as a fill. */
+  --color-ok: #006c96;
+  --color-on-ok: #ffffff;
 
-  /* System stack only: no web fonts means no network cost and no layout shift. */
-  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  --color-shadow: #17171c;
+  --color-panel-shadow: #17171c;
+
+  /* The masthead is a dark band in both editions. */
+  --color-masthead: #17171c;
+  --color-on-masthead: #e9ebe4;
+  --color-on-masthead-dim: #a9aba5;
+
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  /* Data no longer gets a monospace: it is Archivo set narrower with tabular
+   * figures (see `.font-mono` below), which keeps columns aligned without a
+   * second voice. */
+  --font-mono: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Hand lettering, for the narrator's caption boxes. */
+  --font-letter: "Kalam", "Comic Neue", ui-rounded, sans-serif;
+  /* Sound-effect lettering, for the few things that shout. */
+  --font-sfx: "Bangers", "Archivo Variable", sans-serif;
 }
 
 @layer base {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-paper: #15161b;
+      --color-surface: #1e2027;
+      --color-raised: #2a2d36;
+      --color-hairline: #34363f;
+      --color-hairline-strong: #6e717a;
+
+      --color-ink: #ecede6;
+      --color-ink-dim: #b3b5ae;
+      --color-ink-faint: #9a9c96;
+
+      --color-infinity: #f2c200;
+      --color-multiverse: #ea5fa3;
+      --color-adjacent: #8f929a;
+      --color-on-infinity: #17171c;
+      --color-on-multiverse: #17171c;
+      --color-on-adjacent: #17171c;
+
+      --color-danger: #ff6a4d;
+      --color-on-danger: #17171c;
+      --color-ok: #3db4e6;
+      --color-on-ok: #17171c;
+
+      --color-shadow: #050507;
+      --color-panel-shadow: #3e404a;
+
+      --color-masthead: #050507;
+      --color-on-masthead: #ecede6;
+      --color-on-masthead-dim: #a3a59f;
+    }
+  }
+
   html {
-    color-scheme: dark;
+    color-scheme: light dark;
+    /* Keeps anything scrolled or tabbed to clear of the sticky masthead, which
+     * is one row on a desktop and two on a phone. */
+    scroll-padding-top: 7rem;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    background-color: var(--color-base);
+    background-color: var(--color-paper);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   ::selection {
-    background-color: color-mix(in oklab, var(--color-infinity) 35%, transparent);
+    background-color: var(--color-infinity);
+    color: var(--color-on-infinity);
   }
 
+  /* One focus treatment for everything: a thick ink ring, which is the
+   * highest-contrast thing either theme has. */
   :focus-visible {
-    outline: 2px solid var(--color-ink-dim);
+    outline: 3px solid var(--color-ink);
     outline-offset: 2px;
+  }
+
+  button,
+  [role="button"],
+  a,
+  input,
+  select,
+  textarea,
+  label {
+    touch-action: manipulation;
   }
 }
 
 @layer components {
-  /* Small-caps mono, used for every piece of metadata in the app.
-   *
-   * Metadata only. A control is an instruction, not data, and setting the two
-   * in the same face was the tell: letterspaced all-caps mono on a nav item or
-   * a button is decoration borrowed from the data, not a description of it.
-   * Anything clickable takes `.label` below instead. */
-  .meta {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.06em;
+  /* Condensed black lettering: page titles, the hero, big figures, station
+   * labels. Uppercase because comic lettering and transit signage both are --
+   * and only in those roles. */
+  .display {
+    text-wrap: balance;
+    font-stretch: 62%;
+    font-weight: 900;
     text-transform: uppercase;
+    line-height: 0.95;
+    letter-spacing: 0;
+  }
+
+  /* Metadata: a narrower, heavier cut with tabular figures, so it reads as data
+   * without switching typeface. Sentence case; nothing is letterspaced. */
+  .meta {
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-stretch: 87.5%;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.3;
     color: var(--color-ink-faint);
   }
 
-  /* Interactive labels: nav items, buttons, link CTAs. Sans and sentence case,
-   * sized to hold the same visual weight `.meta` had in these positions. */
+  /* Interactive labels: nav items, buttons, link CTAs. */
   .label {
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
+    font-weight: 600;
     line-height: 1.15;
   }
 
   .hairline {
     border-color: var(--color-hairline);
   }
+
+  .masthead {
+    background-color: var(--color-masthead);
+    color: var(--color-on-masthead);
+  }
+  /* An ink ring would vanish on the band; yellow is the one colour that reads
+   * on it in both editions. */
+  .masthead :focus-visible {
+    outline-color: var(--color-infinity);
+  }
+
+  /* The comic panel: a square box cased in heavy ink, printed slightly off
+   * the page -- the hard offset shadow is the one thing that makes a box read
+   * as a panel on a comic page rather than a card in an app. */
+  .panel {
+    border: 3px solid var(--color-ink);
+    background-color: var(--color-surface);
+    box-shadow: 5px 5px 0 var(--color-panel-shadow);
+  }
+
+  /* A panel you can open lifts off the page under the pointer and presses
+   * back down when clicked, like the buttons. */
+  a.panel {
+    transition:
+      transform 0.12s ease-out,
+      box-shadow 0.12s ease-out,
+      background-color 0.12s ease-out;
+  }
+  a.panel:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0 var(--color-panel-shadow);
+  }
+  a.panel:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--color-panel-shadow);
+  }
+
+  /* Anything that floats above the page. */
+  .floating {
+    border: 3px solid var(--color-ink);
+    background-color: var(--color-surface);
+    box-shadow: 5px 5px 0 var(--color-panel-shadow);
+  }
+
+  /* Page titles are set like a cover logo: condensed black italic, with the
+   * yellow plate printed a few points off register behind it. */
+  h1.display {
+    font-style: italic;
+    padding-right: 0.08em;
+    text-shadow: 0.055em 0.055em 0 var(--color-infinity);
+  }
+
+  /* The caption box: the yellow rectangle a narrator speaks from. Section
+   * headings inside a panel sit in one, hung over the panel's top edge and set
+   * a degree off square, the way a letterer pastes them on. */
+  .caption {
+    display: inline-block;
+    width: fit-content;
+    max-width: 100%;
+    border: 3px solid var(--color-ink);
+    background-color: var(--color-infinity);
+    color: var(--color-on-infinity);
+    padding: 0.3rem 0.7rem 0.15rem;
+    font-family: var(--font-letter);
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    box-shadow: 3px 3px 0 var(--color-panel-shadow);
+    transform: rotate(-1.25deg);
+  }
+  /* Every narrator gets their own box. The Infinity Saga speaks from the
+   * classic yellow; the Multiverse Saga from magenta; anything from another
+   * studio's universe in black and white, a different book entirely. */
+  .caption-multiverse {
+    background-color: var(--color-multiverse);
+    color: var(--color-on-multiverse);
+  }
+  .caption-noir {
+    background-color: #17171c;
+    color: #f6f7f2;
+  }
+
+  /* Pasted into the panel's top-left corner, over its border, the way a
+   * narrator's box sits in a comic. `--pad` is the panel's own padding, so the
+   * box lands on the corner whatever the panel's spacing. */
+  .caption-corner {
+    margin: calc(-1 * var(--pad, 1.25rem) - 3px) 0 0.9rem calc(-1 * var(--pad, 1.25rem) - 3px);
+    transform-origin: top left;
+  }
+
+  /* Speech bubble: a floating panel with a tail. The tail is two triangles,
+   * ink behind paper, so it is cased like everything else. Defaults to a tail
+   * on the top edge near the right; `bubble-left` moves it left, and
+   * `bubble-below` puts it on the bottom edge pointing down. */
+  .bubble {
+    position: relative;
+    border-radius: 0.9rem;
+  }
+  .bubble::before,
+  .bubble::after {
+    content: "";
+    position: absolute;
+    right: 1.1rem;
+    border-style: solid;
+    pointer-events: none;
+  }
+  .bubble::before {
+    bottom: 100%;
+    border-width: 0 0.7rem 0.95rem 0.15rem;
+    border-color: transparent transparent var(--color-ink) transparent;
+  }
+  .bubble::after {
+    bottom: calc(100% - 4px);
+    right: calc(1.1rem + 4px);
+    border-width: 0 0.4rem 0.6rem 0.05rem;
+    border-color: transparent transparent var(--color-surface) transparent;
+  }
+  .bubble-left::before {
+    right: auto;
+    left: 1.1rem;
+  }
+  .bubble-left::after {
+    right: auto;
+    left: calc(1.1rem + 5px);
+  }
+  .bubble-center::before {
+    right: auto;
+    left: calc(50% - 0.45rem);
+  }
+  .bubble-center::after {
+    right: auto;
+    left: calc(50% - 0.45rem + 4px);
+  }
+  .bubble-below::before {
+    bottom: auto;
+    top: 100%;
+    border-width: 0.95rem 0.7rem 0 0.15rem;
+    border-color: var(--color-ink) transparent transparent transparent;
+  }
+  .bubble-below::after {
+    bottom: auto;
+    top: calc(100% - 4px);
+    border-width: 0.6rem 0.4rem 0 0.05rem;
+    border-color: var(--color-surface) transparent transparent transparent;
+  }
+
+  /* The starburst: the shape a comic shouts in. Used for the few things worth
+   * shouting about -- an extra scene after the credits, a dead end. The ink
+   * casing is a second burst behind the first, since clip-path cannot stroke. */
+  .burst {
+    --burst: polygon(
+      50% 0%, 61% 18%, 82% 9%, 79% 31%, 100% 35%, 84% 50%, 100% 65%, 79% 69%,
+      82% 91%, 61% 82%, 50% 100%, 39% 82%, 18% 91%, 21% 69%, 0% 65%, 16% 50%,
+      0% 35%, 21% 31%, 18% 9%, 39% 18%
+    );
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    isolation: isolate;
+    color: var(--color-on-infinity);
+    font-family: var(--font-sfx);
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    line-height: 1;
+  }
+  .burst::before,
+  .burst::after {
+    content: "";
+    position: absolute;
+    clip-path: var(--burst);
+    z-index: -1;
+  }
+  .burst::before {
+    inset: 0;
+    background-color: var(--color-ink);
+  }
+  .burst::after {
+    inset: 3px;
+    background-color: var(--color-infinity);
+  }
+
+  /* Out of register: the three inks printed a few points apart, the look a
+   * poster takes when you put a finger on it. Uses the SVG filter AppShell
+   * mounts once (#misregister). Only while pointed at or focused. */
+  a:hover .poster,
+  a:focus-visible .poster {
+    filter: url(#misregister);
+  }
+
+  /* A multiverse title glitches when you reach for it: slices of the poster
+   * jump sideways and come back, a few frames at a time. Two copies of the
+   * poster do the jumping; the poster itself never moves. */
+  .glitch-slice {
+    position: absolute;
+    inset: 0;
+    background: var(--poster) center / cover no-repeat;
+    opacity: 0;
+    pointer-events: none;
+  }
+  a:hover .glitch-slice,
+  a:focus-visible .glitch-slice {
+    animation: glitch-a 0.5s steps(1, end) 1;
+  }
+  a:hover .glitch-slice + .glitch-slice,
+  a:focus-visible .glitch-slice + .glitch-slice {
+    animation-name: glitch-b;
+    filter: url(#misregister);
+  }
+
+  /* Sound effect. Pops up beside whatever caused it, drawn on twos. */
+  .sfx {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    font-family: var(--font-sfx);
+    font-size: 1.35rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    color: var(--color-infinity);
+    -webkit-text-stroke: 5px #17171c;
+    paint-order: stroke fill;
+    text-shadow: 2px 2px 0 #17171c;
+    animation: sfx-pop 0.75s steps(9, end) forwards;
+  }
+
+  /* Speed lines: a ring of ink rays converging on a point, the action frame. */
+  .speed-lines {
+    background-image: repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      color-mix(in oklab, var(--color-ink) 22%, transparent) 0deg 1.2deg,
+      transparent 1.2deg 7deg
+    );
+    -webkit-mask-image: radial-gradient(circle closest-side, transparent 34%, #000 62%, transparent 100%);
+    mask-image: radial-gradient(circle closest-side, transparent 34%, #000 62%, transparent 100%);
+  }
+
+  /* Ben-Day dots fading out of a corner: the printed shading of a comic panel.
+   * Decorative, behind the content, and only ever in a panel's corner. */
+  .benday {
+    position: relative;
+    isolation: isolate;
+  }
+  .benday::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(
+      circle,
+      color-mix(in oklab, var(--color-multiverse) 55%, transparent) 1.6px,
+      transparent 2px
+    );
+    background-size: 9px 9px;
+    -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 0%, transparent 42%);
+    mask-image: radial-gradient(circle at 100% 100%, #000 0%, transparent 42%);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    border: 2px solid var(--color-ink);
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.1;
+    white-space: nowrap;
+    box-shadow: 3px 3px 0 var(--color-panel-shadow);
+    transition:
+      background-color 0.12s ease-out,
+      transform 0.08s ease-out,
+      box-shadow 0.08s ease-out;
+  }
+  .btn:hover {
+    background-color: var(--color-raised);
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--color-panel-shadow);
+  }
+  .btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--color-panel-shadow);
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    border-color: var(--color-hairline-strong);
+    color: var(--color-ink-faint);
+    background-color: transparent;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Primary: process yellow with ink on it, the colour of a cover call-out. */
+  .btn-primary {
+    background-color: var(--color-infinity);
+    color: var(--color-on-infinity);
+    border-color: var(--color-ink);
+    font-weight: 800;
+  }
+  .btn-primary:hover {
+    background-color: var(--color-infinity);
+    filter: brightness(1.06);
+  }
+
+  .btn-sm {
+    min-height: 2rem;
+    padding: 0 0.625rem;
+    font-size: 0.8125rem;
+  }
+
+  .btn-danger {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+    box-shadow: 3px 3px 0 var(--color-danger);
+  }
+  .btn-danger:hover {
+    background-color: var(--color-danger);
+    color: var(--color-on-danger);
+  }
+
+  /* A toggle. Its pressed state is drawn from `aria-pressed`, so the visual
+   * state can never disagree with what assistive tech is told. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2rem;
+    padding: 0 0.625rem;
+    border: 2px solid var(--color-ink);
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    transition: background-color 0.12s ease-out;
+  }
+  .chip:hover {
+    background-color: var(--color-raised);
+  }
+  .chip[aria-pressed="true"],
+  .chip[aria-checked="true"] {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .chip:disabled {
+    cursor: not-allowed;
+    border-color: var(--color-hairline-strong);
+    color: var(--color-ink-faint);
+  }
+
+  /* Text inputs, selects and textareas. 16px so iOS does not zoom on focus. */
+  .field {
+    display: block;
+    width: 100%;
+    min-height: 2.5rem;
+    border: 2px solid var(--color-ink);
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    padding: 0.4rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  .field::placeholder {
+    color: var(--color-ink-faint);
+    opacity: 1;
+  }
+  .field:focus-visible {
+    outline-offset: 0;
+  }
+  select.field {
+    appearance: none;
+    padding-right: 2rem;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--color-ink) 50%),
+      linear-gradient(135deg, var(--color-ink) 50%, transparent 50%);
+    background-position:
+      calc(100% - 1.05rem) 55%,
+      calc(100% - 0.7rem) 55%;
+    background-size: 0.35rem 0.35rem;
+    background-repeat: no-repeat;
+  }
+
+  /* Halftone screen. Three uses only: the hero graph panel, empty states, and
+   * watched posters. */
+  .halftone {
+    background-image: radial-gradient(
+      circle,
+      color-mix(in oklab, var(--color-ink) 18%, transparent) 1px,
+      transparent 1.3px
+    );
+    background-size: 6px 6px;
+  }
+
+  /* Laid over a watched poster: a coarse paper-coloured screen knocks the
+   * picture back, the way a reprint's tint would, while the title under the
+   * poster keeps its full contrast. */
+  .halftone-screen {
+    background-image: radial-gradient(
+      circle,
+      var(--color-paper) 1.25px,
+      transparent 1.6px
+    );
+    background-size: 4px 4px;
+    opacity: 0.85;
+  }
+
+  .station {
+    border-radius: 9999px;
+    border: 2px solid var(--color-ink);
+  }
+
+  /* The saga roundel: line colour, ink casing, phase number. */
+  .line-bullet {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    border-radius: 9999px;
+    border: 2px solid var(--color-ink);
+    font-size: 0.75rem;
+    font-weight: 800;
+    font-stretch: 75%;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  /* Leftover `font-mono` call sites are data: same face, narrower, tabular. */
+  .font-mono {
+    font-stretch: 87.5%;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @keyframes popup-in {
   from {
     opacity: 0;
-    transform: translateY(0.5rem);
+    transform: translate(0, 0.5rem) scale(0.94);
   }
 }
 
+/* Three held frames over a fifth of a second: animated on twos, the way a
+ * comic-book film moves, instead of easing smoothly in. */
 .animate-popup-in {
-  animation: popup-in 0.15s ease-out;
+  animation: popup-in 0.2s steps(3, end);
 }
 
-/* Respect a user's reduced-motion preference for the graph and card hovers. */
+@keyframes glitch-a {
+  0% { opacity: 1; clip-path: inset(12% 0 64% 0); transform: translate(-7px, 0); }
+  20% { opacity: 1; clip-path: inset(58% 0 22% 0); transform: translate(6px, 0); }
+  40% { opacity: 1; clip-path: inset(31% 0 49% 0); transform: translate(-4px, 0); }
+  60% { opacity: 1; clip-path: inset(80% 0 6% 0); transform: translate(8px, 0); }
+  80% { opacity: 1; clip-path: inset(3% 0 88% 0); transform: translate(-5px, 0); }
+  100% { opacity: 0; }
+}
+
+@keyframes glitch-b {
+  0% { opacity: 1; clip-path: inset(70% 0 12% 0); transform: translate(5px, 0); }
+  25% { opacity: 1; clip-path: inset(20% 0 66% 0); transform: translate(-8px, 0); }
+  50% { opacity: 1; clip-path: inset(44% 0 38% 0); transform: translate(6px, 0); }
+  75% { opacity: 1; clip-path: inset(88% 0 2% 0); transform: translate(-3px, 0); }
+  100% { opacity: 0; }
+}
+
+@keyframes sfx-pop {
+  0% { opacity: 0; transform: rotate(-12deg) scale(0.3); }
+  15% { opacity: 1; transform: rotate(-12deg) scale(1.25); }
+  30% { transform: rotate(-9deg) scale(1); }
+  75% { opacity: 1; transform: rotate(-9deg) scale(1) translate(0, -2px); }
+  100% { opacity: 0; transform: rotate(-9deg) scale(1.05) translate(0, -6px); }
+}
+
+/* The 404 heading jumps universes once on arrival. */
+@keyframes glitch-text {
+  0% { transform: translate(-6px, 0); text-shadow: -4px 0 var(--color-multiverse), 4px 0 var(--color-ok); }
+  25% { transform: translate(5px, 0) skewX(-6deg); text-shadow: 5px 0 var(--color-multiverse), -5px 0 var(--color-ok); }
+  50% { transform: translate(-3px, 0); text-shadow: -3px 0 var(--color-multiverse), 3px 0 var(--color-ok); }
+  75% { transform: translate(2px, 0) skewX(4deg); }
+}
+
+.animate-glitch-text {
+  animation: glitch-text 0.6s steps(1, end) 0.2s 1;
+}
+
+/* Respect a user's reduced-motion preference everywhere. The glitch and the
+ * sound effects are pure motion, so they are not shown at all. */
 @media (prefers-reduced-motion: reduce) {
+  .glitch-slice,
+  .sfx {
+    display: none;
+  }
+
   *,
   *::before,
   *::after {

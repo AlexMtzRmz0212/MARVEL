@@ -172,9 +172,22 @@ export function markManyWatched(movieIds) {
   write(next, { kind: 'bulk', movieIds })
 }
 
+/** A 1-10 score, or null to take it back. */
 export function setRating(movieId, rating) {
   const next = { ...read() }
   next[movieId] = { ...next[movieId], rating }
+  write(next, { kind: 'set', movieId, entry: next[movieId] })
+}
+
+/**
+ * Free-text notes on a title, saved the same way as a rating: optimistic, one
+ * `set` delta, rolled back if the server refuses. Blank means "no notes", which
+ * is stored as null rather than an empty string so the two cannot drift apart.
+ */
+export function setNotes(movieId, notes) {
+  const trimmed = typeof notes === 'string' ? notes.trim() : ''
+  const next = { ...read() }
+  next[movieId] = { ...next[movieId], notes: trimmed ? notes : null }
   write(next, { kind: 'set', movieId, entry: next[movieId] })
 }
 

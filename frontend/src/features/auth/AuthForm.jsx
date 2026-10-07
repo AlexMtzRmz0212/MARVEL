@@ -30,8 +30,7 @@ const COPY = {
   },
 }
 
-const inputClass =
-  'hairline mt-1.5 w-full border bg-base px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-ink-faint'
+const inputClass = 'field mt-1.5'
 
 export function AuthForm({ mode }) {
   const copy = COPY[mode]
@@ -63,30 +62,34 @@ export function AuthForm({ mode }) {
   }
 
   return (
-    <div className="mx-auto max-w-sm py-16">
-      <h1 className="text-2xl font-medium tracking-tight text-ink">{copy.title}</h1>
-      <p className="mt-2 text-sm leading-relaxed text-ink-dim">
+    <div className="panel benday mx-auto my-12 max-w-md p-6 sm:p-8">
+      <h1 className="display text-5xl text-ink">{copy.title}</h1>
+      <p className="mt-3 text-sm leading-relaxed text-ink-dim">
         An account syncs your saved orders and watch progress across devices. The catalog works
         without one.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
         <label className="block">
-          <span className="label">Email</span>
+          <span className="label text-ink">Email</span>
           <input
             type="email"
+            name="email"
             required
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
+            spellCheck={false}
+            placeholder="you@example.com"
             className={inputClass}
           />
         </label>
 
         <label className="block">
-          <span className="label">Password</span>
+          <span className="label text-ink">Password</span>
           <input
             type="password"
+            name="password"
             required
             minLength={isRegister ? 8 : undefined}
             autoComplete={isRegister ? 'new-password' : 'current-password'}
@@ -95,15 +98,16 @@ export function AuthForm({ mode }) {
             className={inputClass}
           />
           {isRegister && (
-            <span className="mt-1.5 block text-xs leading-relaxed text-ink-faint">At least 8 characters.</span>
+            <span className="mt-1.5 block text-sm leading-relaxed text-ink-dim">At least 8 characters.</span>
           )}
         </label>
 
         {isRegister && (
           <label className="block">
-            <span className="label">Display name (optional)</span>
+            <span className="label text-ink">Display name (optional)</span>
             <input
               type="text"
+              name="display_name"
               maxLength={80}
               autoComplete="nickname"
               value={displayName}
@@ -114,7 +118,7 @@ export function AuthForm({ mode }) {
         )}
 
         {error && (
-          <p role="alert" className="hairline border border-l-2 border-l-danger bg-surface p-3 text-sm text-ink-dim">
+          <p role="alert" className="border-2 border-danger border-l-[6px] bg-surface p-3 text-sm text-ink">
             {error}
           </p>
         )}
@@ -122,15 +126,15 @@ export function AuthForm({ mode }) {
         <button
           type="submit"
           disabled={isBusy}
-          className="label mt-2 border border-hairline-strong px-4 py-2.5 text-ink transition-colors hover:bg-raised disabled:opacity-50"
+          className="btn btn-primary mt-2 w-full"
         >
           {isBusy ? copy.busy : copy.submit}
         </button>
       </form>
 
-      <p className="mt-6 text-xs leading-relaxed text-ink-faint">
+      <p className="mt-6 text-sm leading-relaxed text-ink-dim">
         {copy.switchText}{' '}
-        <Link to={copy.switchTo} className="text-ink-dim underline underline-offset-4 hover:text-ink">
+        <Link to={copy.switchTo} className="font-semibold text-ink underline underline-offset-4 hover:decoration-2">
           {copy.switchLabel}
         </Link>
       </p>

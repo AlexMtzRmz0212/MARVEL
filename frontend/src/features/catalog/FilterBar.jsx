@@ -1,21 +1,8 @@
 import { MEDIA_LABEL, SAGA_LABEL, TIER_LABEL } from '../../lib/format'
 
-const PHASES = [1, 2, 3, 4, 5, 6]
-
-function Toggle({ active, onClick, children, accent }) {
+function Toggle({ active, onClick, children }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={[
-        'label border px-2.5 py-1 transition-colors',
-        active
-          ? 'border-transparent text-base'
-          : 'border-hairline text-ink-faint hover:border-hairline-strong hover:text-ink-dim',
-      ].join(' ')}
-      style={active ? { backgroundColor: accent ?? 'var(--color-ink)' } : undefined}
-    >
+    <button type="button" onClick={onClick} aria-pressed={active} className="chip">
       {children}
     </button>
   )
@@ -23,9 +10,43 @@ function Toggle({ active, onClick, children, accent }) {
 
 function Group({ label, children }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="label mr-1 text-ink-dim">{label}</span>
+    <div role="group" aria-label={label} className="flex flex-wrap items-center gap-1.5">
+      <span aria-hidden="true" className="label mr-1 text-ink-dim">
+        {label}
+      </span>
       {children}
+    </div>
+  )
+}
+
+/**
+ * A native select for the long lists: sixteen sagas and twenty universes are
+ * far too many to lay out as toggles, and the platform picker is the one that
+ * already works with every keyboard, screen reader and phone.
+ */
+function Choice({ id, label, value, values, format = (option) => option, onChange }) {
+  // Keep a value the URL asked for even if the catalog does not offer it, so
+  // the control never silently disagrees with the filter that is applied.
+  const choices = value && !values.includes(value) ? [value, ...values] : values
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <label htmlFor={id} className="label text-ink-dim">
+        {label}
+      </label>
+      <select
+        id={id}
+        name={id.replace('catalog-', '')}
+        value={value ?? ''}
+        onChange={(event) => onChange(event.target.value || null)}
+        className="field"
+      >
+        <option value="">Any</option>
+        {choices.map((option) => (
+          <option key={option} value={option}>
+            {format(option)}
+          </option>
+        ))}
+      </select>
     </div>
   )
 }
@@ -36,6 +57,7 @@ function Group({ label, children }) {
  */
 export function FilterBar({
   filters,
+  options,
   setFilter,
   reset,
   resultCount,
@@ -46,31 +68,52 @@ export function FilterBar({
   const hasFilters = Object.values(filters).some(Boolean)
 
   return (
-    <div className="hairline flex flex-col gap-3 border-b pb-4">
+    <div className="panel flex flex-col gap-4 p-4">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <label htmlFor="catalog-search" className="label text-ink-dim">
+            Search
+          </label>
+          <input
+            id="catalog-search"
+            type="search"
+            name="q"
+            value={filters.q ?? ''}
+            onChange={(event) => setFilter('q', event.target.value || null)}
+            placeholder="Iron Man, Loki, Wakanda…"
+            autoComplete="off"
+            spellCheck={false}
+            className="field"
+          />
+        </div>
+
+        <Choice
+          id="catalog-saga"
+          label="Saga"
+          value={filters.saga}
+          values={options.sagas}
+          format={(saga) => SAGA_LABEL[saga] ?? saga}
+          onChange={(saga) => setFilter('saga', saga)}
+        />
+
+        <Choice
+          id="catalog-universe"
+          label="Universe"
+          value={filters.universe}
+          values={options.universes}
+          onChange={(universe) => setFilter('universe', universe)}
+        />
+      </div>
+
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <Group label="Phase">
-          {PHASES.map((phase) => (
+          {options.phases.map((phase) => (
             <Toggle
               key={phase}
               active={filters.phase === String(phase)}
               onClick={() => setFilter('phase', filters.phase === String(phase) ? null : phase)}
             >
               {phase}
-            </Toggle>
-          ))}
-        </Group>
-
-        <Group label="Saga">
-          {['Infinity Saga', 'Multiverse Saga'].map((saga) => (
-            <Toggle
-              key={saga}
-              active={filters.saga === saga}
-              accent={
-                saga === 'Infinity Saga' ? 'var(--color-infinity)' : 'var(--color-multiverse)'
-              }
-              onClick={() => setFilter('saga', filters.saga === saga ? null : saga)}
-            >
-              {SAGA_LABEL[saga].replace(' Saga', '')}
             </Toggle>
           ))}
         </Group>
@@ -117,31 +160,16 @@ export function FilterBar({
         </Group>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="relative flex-1 sm:max-w-xs">
-          <span className="sr-only">Search titles</span>
-          <input
-            type="search"
-            value={filters.q ?? ''}
-            onChange={(event) => setFilter('q', event.target.value || null)}
-            placeholder="Search titles"
-            className="hairline w-full border bg-surface px-3 py-1.5 font-mono text-xs text-ink placeholder:text-ink-faint focus:border-hairline-strong focus:outline-none"
-          />
-        </label>
-
-        <span className="meta">
+      <div className="flex flex-wrap items-center gap-3 border-t border-hairline pt-3">
+        <span className="meta text-sm text-ink-dim" aria-live="polite">
           {resultCount === totalCount
             ? `${totalCount} titles`
-            : `${resultCount} of ${totalCount}`}
+            : `${resultCount} of ${totalCount} titles`}
         </span>
 
         {hasFilters && (
-          <button
-            type="button"
-            onClick={reset}
-            className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink"
-          >
-            Clear
+          <button type="button" onClick={reset} className="btn btn-sm ml-auto">
+            Clear filters
           </button>
         )}
       </div>

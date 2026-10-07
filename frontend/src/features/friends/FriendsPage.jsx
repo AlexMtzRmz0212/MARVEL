@@ -43,8 +43,8 @@ import { MAX_COMPARE_FRIENDS, friendIdsParam, toggleFriendId } from '../../lib/f
 function SignInWall() {
   return (
     <div className="py-8">
-      <div className="hairline border-b pb-6">
-        <h1 className="text-2xl font-medium tracking-tight text-ink">Friends</h1>
+      <div className="pb-6">
+        <h1 className="display text-5xl text-ink sm:text-6xl">Friends</h1>
         <p className="mt-1 max-w-xl text-sm text-ink-dim">
           Swap codes with someone, then put your watch histories side by side.
         </p>
@@ -53,11 +53,11 @@ function SignInWall() {
         Friends need an account on both sides, so this is the one part of the app that does not
         work signed out. Everything else still does: your progress lives in this browser until
         you want it somewhere else.{' '}
-        <Link to="/login" className="text-ink underline underline-offset-4">
+        <Link to="/login" className="font-semibold text-ink underline underline-offset-4 hover:decoration-2">
           Sign in
         </Link>{' '}
         or{' '}
-        <Link to="/register" className="text-ink underline underline-offset-4">
+        <Link to="/register" className="font-semibold text-ink underline underline-offset-4 hover:decoration-2">
           create an account
         </Link>
         .
@@ -65,7 +65,7 @@ function SignInWall() {
       <p>
         <Link
           to="/progress/compare"
-          className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
+          className="label text-ink underline underline-offset-4 hover:decoration-2"
         >
           Compare with a link instead
         </Link>
@@ -129,27 +129,30 @@ function YourCode() {
          * a screen reader would announce the code the moment the page settled,
          * over the heading that explains what it is. Nothing here is the result
          * of a calculation the reader is waiting on. */}
-        <p className="hairline border bg-surface px-3 py-2 font-mono text-lg tracking-[0.15em] text-ink">
+        <p className="panel display px-4 py-2 text-3xl tracking-[0.08em] text-ink">
           {code}
         </p>
         <button
           type="button"
           onClick={copy}
           aria-label="Copy your friend code"
-          className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+          className="btn btn-sm"
         >
           {copied ? 'Copied' : 'Copy'}
         </button>
+        <span role="status" className="sr-only">
+          {copied ? 'Copied to the clipboard' : ''}
+        </span>
       </div>
 
-      <p className="max-w-md text-xs text-ink-faint">
+      <p className="max-w-md text-sm text-ink-dim">
         Give this to someone and they can send you a friend request. On its own it shows them
         nothing, not even that the account exists, until you accept.
       </p>
 
       {confirmingRotate ? (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <p className="text-xs text-ink-dim">
+          <p className="text-sm text-ink-dim">
             A new code stops the old one working for anyone still holding it. Friends you already
             have are not affected.
           </p>
@@ -159,14 +162,14 @@ function YourCode() {
               rotate.mutate(undefined, { onSettled: () => setConfirmingRotate(false) })
             }}
             disabled={rotate.isPending}
-            className="label border border-hairline-strong px-3 py-1.5 text-ink transition-colors hover:bg-raised disabled:opacity-40"
+            className="btn btn-sm"
           >
             {rotate.isPending ? 'Replacing…' : 'Replace it'}
           </button>
           <button
             type="button"
             onClick={() => setConfirmingRotate(false)}
-            className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
+            className="label text-ink underline underline-offset-4 hover:decoration-2"
           >
             Keep the current code
           </button>
@@ -175,7 +178,7 @@ function YourCode() {
         <button
           type="button"
           onClick={() => setConfirmingRotate(true)}
-          className="label self-start text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
+          className="label self-start text-ink underline underline-offset-4 hover:decoration-2"
         >
           Replace with a new code
         </button>
@@ -214,24 +217,25 @@ function AddFriend() {
             setValue(event.target.value)
             send.reset()
           }}
-          placeholder="Their friend code"
+          name="friend_code"
+          placeholder="ABCDE-FGHJK…"
           aria-label="Their friend code"
           aria-invalid={Boolean(send.error)}
           autoComplete="off"
           spellCheck="false"
-          className="hairline min-w-0 flex-1 border bg-surface px-2 py-1.5 font-mono text-sm uppercase text-ink placeholder:font-sans placeholder:normal-case placeholder:text-ink-faint"
+          className="field min-w-0 flex-1 uppercase tracking-[0.1em] placeholder:normal-case placeholder:tracking-normal"
         />
         <button
           type="submit"
-          disabled={send.isPending || !value.trim()}
-          className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink disabled:opacity-40"
+          disabled={send.isPending}
+          className="btn btn-sm"
         >
           {send.isPending ? 'Sending…' : 'Send request'}
         </button>
       </form>
 
       {send.error && (
-        <p className="text-xs text-danger">
+        <p className="text-sm text-danger">
           {send.error.status === 404
             ? 'No account has that code. Check it with them; codes can be replaced.'
             : (send.error.message ?? 'The request could not be sent.')}
@@ -239,7 +243,7 @@ function AddFriend() {
       )}
 
       {outcome && (
-        <p className="break-words text-xs" style={{ color: 'var(--color-ok)' }}>
+        <p className="break-words text-sm font-semibold text-ok">
           {outcome.status === 'accepted'
             ? `${nameOf(outcome)} had already sent you a request, so you are now friends.`
             : `Request sent to ${nameOf(outcome)}. They will see it next time they open the app.`}
@@ -251,8 +255,8 @@ function AddFriend() {
 
 function RequestRow({ person, children }) {
   return (
-    <li className="hairline flex flex-wrap items-center gap-x-4 gap-y-2 border-b py-3 last:border-b-0">
-      <span className="min-w-0 flex-1 truncate text-sm text-ink">{nameOf(person)}</span>
+    <li className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline py-3 last:border-b-0">
+      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{nameOf(person)}</span>
       {children}
     </li>
   )
@@ -269,9 +273,9 @@ function Requests() {
   return (
     <>
       {data.incoming.length > 0 && (
-        <section className="hairline border-b py-6">
-          <h2 className="meta mb-1">Waiting on you</h2>
-          <p className="mb-3 max-w-xl text-xs text-ink-faint">
+        <section className="panel mt-3 p-5">
+          <h2 className="caption caption-corner !mb-2">Waiting on you</h2>
+          <p className="mb-3 max-w-xl text-sm text-ink-dim">
             Accepting lets them see which titles you have marked watched, and you see theirs.
             Nothing else is shared, and you can undo it at any time.
           </p>
@@ -281,14 +285,14 @@ function Requests() {
                 <button
                   type="button"
                   onClick={() => accept.mutate(person.user_id)}
-                  className="label border border-hairline-strong px-3 py-1.5 text-ink transition-colors hover:bg-raised"
+                  className="btn btn-sm btn-primary"
                 >
                   Accept
                 </button>
                 <button
                   type="button"
                   onClick={() => dismiss.mutate(person.user_id)}
-                  className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-danger"
+                  className="label text-danger underline underline-offset-4 hover:decoration-2"
                 >
                   Decline
                 </button>
@@ -299,8 +303,8 @@ function Requests() {
       )}
 
       {data.outgoing.length > 0 && (
-        <section className="hairline border-b py-6">
-          <h2 className="meta mb-3">Waiting on them</h2>
+        <section className="panel mt-3 p-5">
+          <h2 className="caption caption-corner">Waiting on them</h2>
           <ul>
             {data.outgoing.map((person) => (
               <RequestRow key={person.user_id} person={person}>
@@ -308,7 +312,7 @@ function Requests() {
                 <button
                   type="button"
                   onClick={() => dismiss.mutate(person.user_id)}
-                  className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-danger"
+                  className="label text-danger underline underline-offset-4 hover:decoration-2"
                 >
                   Cancel
                 </button>
@@ -338,16 +342,19 @@ function FriendRow({ friend, total, selected, onToggle, atCapacity }) {
   const name = nameOf(friend)
 
   return (
-    <li className="hairline border-b py-3 last:border-b-0">
+    <li className="border-b border-hairline py-3 last:border-b-0">
       <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          checked={selected}
-          disabled={!selected && atCapacity}
-          onChange={() => onToggle(friend.user_id)}
-          aria-label={`Compare with ${name}`}
-          className="size-3.5 shrink-0 accent-[var(--color-ok)] disabled:opacity-30"
-        />
+        <label className="-m-2.5 grid size-10 shrink-0 cursor-pointer place-items-center has-[:disabled]:cursor-not-allowed">
+          <input
+            type="checkbox"
+            name="compare"
+            checked={selected}
+            disabled={!selected && atCapacity}
+            onChange={() => onToggle(friend.user_id)}
+            aria-label={`Compare with ${name}`}
+            className="size-5 accent-[var(--color-ink)] disabled:cursor-not-allowed"
+          />
+        </label>
 
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-baseline justify-between gap-4">
@@ -358,7 +365,7 @@ function FriendRow({ friend, total, selected, onToggle, atCapacity }) {
               {name}
             </Link>
             <span className="meta shrink-0 tabular-nums">
-              {total ? `${friend.watched_count}/${total} · ${percent}%` : `${friend.watched_count} watched`}
+              {total ? `${friend.watched_count} of ${total}, ${percent}%` : `${friend.watched_count} watched`}
             </span>
           </div>
           <ProgressBar percent={percent} />
@@ -376,7 +383,7 @@ function FriendRow({ friend, total, selected, onToggle, atCapacity }) {
             <button
               type="button"
               onClick={() => setConfirming(false)}
-              className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
+              className="label text-ink underline underline-offset-4 hover:decoration-2"
             >
               Keep
             </button>
@@ -386,7 +393,7 @@ function FriendRow({ friend, total, selected, onToggle, atCapacity }) {
             type="button"
             onClick={() => setConfirming(true)}
             aria-label={`Remove ${name} from your friends`}
-            className="label shrink-0 text-ink-faint underline underline-offset-4 transition-colors hover:text-danger"
+            className="label shrink-0 text-danger underline underline-offset-4 hover:decoration-2"
           >
             Remove
           </button>
@@ -394,7 +401,7 @@ function FriendRow({ friend, total, selected, onToggle, atCapacity }) {
       </div>
 
       {confirming && (
-        <p className="mt-2 break-words pl-6 text-xs text-ink-faint">
+        <p className="mt-2 break-words pl-6 text-sm text-ink-dim">
           Removing {name} ends it for both of you, and neither of you keeps seeing the other&rsquo;s
           progress. Either of you can ask again afterwards.
         </p>
@@ -419,28 +426,28 @@ export function FriendsPage() {
 
   return (
     <div className="py-8">
-      <div className="hairline border-b pb-6">
-        <h1 className="text-2xl font-medium tracking-tight text-ink">Friends</h1>
+      <div className="pb-6">
+        <h1 className="display text-5xl text-ink sm:text-6xl">Friends</h1>
         <p className="mt-1 max-w-xl text-sm text-ink-dim">
           Swap codes with someone and you can see how far through the catalogue they are, and
           which titles neither of you has got to yet.
         </p>
       </div>
 
-      <section className="hairline border-b py-6">
-        <h2 className="meta mb-3">Your code</h2>
+      <section className="panel mt-3 p-5">
+        <h2 className="caption caption-corner">Your code</h2>
         <YourCode />
       </section>
 
-      <section className="hairline border-b py-6">
-        <h2 className="meta mb-3">Add a friend</h2>
+      <section className="panel mt-3 p-5">
+        <h2 className="caption caption-corner">Add a friend</h2>
         <AddFriend />
       </section>
 
       <Requests />
 
-      <section className="py-6">
-        <h2 className="meta mb-3">Your friends</h2>
+      <section className="panel mt-3 p-5">
+        <h2 className="caption caption-corner">Your friends</h2>
 
         {friends.isPending && <LoadingState label="Loading friends" />}
         {friends.error && <ErrorState error={friends.error} onRetry={friends.refetch} />}
@@ -474,15 +481,11 @@ export function FriendsPage() {
                 onClick={(event) => {
                   if (live.length === 0) event.preventDefault()
                 }}
-                className={`label border px-3 py-1.5 transition-colors ${
-                  live.length === 0
-                    ? 'pointer-events-none border-hairline text-ink-faint opacity-40'
-                    : 'border-hairline-strong text-ink hover:bg-raised'
-                }`}
+                className={`btn btn-primary ${live.length === 0 ? 'pointer-events-none' : ''}`}
               >
                 {compareLabel(friends.data, live)}
               </Link>
-              <p className="text-xs text-ink-faint">
+              <p className="text-sm text-ink-dim">
                 {atCapacity
                   ? `Four at once is the limit, so every row still fits on a phone.`
                   : `Tick up to ${MAX_COMPARE_FRIENDS} people to put side by side.`}

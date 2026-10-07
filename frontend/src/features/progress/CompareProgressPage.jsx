@@ -110,8 +110,7 @@ function Mark({ on }) {
   return (
     <span
       aria-hidden="true"
-      className={`size-1.5 shrink-0 rounded-full ${on ? '' : 'border border-hairline-strong'}`}
-      style={on ? { backgroundColor: 'var(--color-ok)' } : undefined}
+      className={`station size-3 shrink-0 border-[1.5px] ${on ? 'bg-ok' : 'bg-surface'}`}
     />
   )
 }
@@ -127,13 +126,9 @@ function Chip({ active, disabled, children, onClick }) {
       // name is 80 characters of whatever somebody typed. A flex-wrap row wraps
       // chips but cannot shrink one, so without this a single long name is a
       // horizontal scrollbar on the whole document.
-      className={`label max-w-[10rem] truncate border px-2 py-0.5 text-[0.6875rem] transition-colors disabled:cursor-not-allowed disabled:opacity-30 ${
-        active
-          ? 'border-ink-dim text-ink'
-          : 'border-hairline-strong text-ink-faint hover:text-ink-dim'
-      }`}
+      className="chip max-w-[10rem]"
     >
-      {children}
+      <span className="truncate">{children}</span>
     </button>
   )
 }
@@ -143,9 +138,9 @@ function Side({ name, stats, runtime }) {
   return (
     <div className="min-w-0">
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <span className="truncate text-sm text-ink">{name}</span>
+        <span className="truncate text-sm font-semibold text-ink">{name}</span>
         <span className="meta shrink-0 tabular-nums">
-          {stats.watched}/{stats.total} · {stats.percent}%
+          {stats.watched} of {stats.total}, {stats.percent}%
         </span>
       </div>
       <ProgressBar percent={stats.percent} />
@@ -185,7 +180,7 @@ function FriendPicker({ selected, onToggle }) {
     return (
       <p className="text-sm text-ink-dim">
         No friends yet.{' '}
-        <Link to="/friends" className="text-ink underline underline-offset-4">
+        <Link to="/friends" className="font-semibold text-ink underline underline-offset-4 hover:decoration-2">
           Swap codes with someone
         </Link>{' '}
         and they will show up here, or use a link below.
@@ -212,7 +207,7 @@ function FriendPicker({ selected, onToggle }) {
           )
         })}
       </div>
-      <p className="text-xs text-ink-faint">
+      <p className="text-sm text-ink-dim">
         {atCapacity
           ? `${MAX_COMPARE_FRIENDS} at once is the limit, so every row still fits on a phone.`
           : `Pick up to ${MAX_COMPARE_FRIENDS}.`}
@@ -234,12 +229,14 @@ function YourLink() {
   const create = useCreateShareLink()
   const revoke = useRevokeShareLink()
   const [copied, setCopied] = useState(false)
+  // 'replace' or 'revoke' while the inline confirmation is showing.
+  const [pendingChange, setPendingChange] = useState(null)
 
   if (!user) {
     return (
       <p className="text-sm text-ink-dim">
         Your progress is saved in this browser only, so there is nothing to share yet.{' '}
-        <Link to="/login" className="text-ink underline underline-offset-4">
+        <Link to="/login" className="font-semibold text-ink underline underline-offset-4 hover:decoration-2">
           Sign in
         </Link>{' '}
         to get a link. You can still follow someone else&rsquo;s below.
@@ -270,11 +267,11 @@ function YourLink() {
           type="button"
           onClick={() => create.mutate()}
           disabled={create.isPending}
-          className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink disabled:opacity-40"
+          className="btn btn-sm"
         >
           {create.isPending ? 'Creating…' : 'Create a link'}
         </button>
-        <p className="max-w-md text-xs text-ink-faint">
+        <p className="max-w-md text-sm text-ink-dim">
           Anyone holding the link can see your display name and which titles you have marked
           watched. Not your email, your ratings or your notes. You can revoke it at any time.
         </p>
@@ -290,35 +287,62 @@ function YourLink() {
           value={url}
           aria-label="Your share link"
           onFocus={(event) => event.target.select()}
-          className="hairline min-w-0 flex-1 border bg-surface px-2 py-1.5 font-mono text-xs text-ink-dim"
+          className="field min-w-0 flex-1 text-sm text-ink-dim"
         />
         <button
           type="button"
           onClick={copy}
-          className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+          className="btn btn-sm"
         >
           {copied ? 'Copied' : 'Copy'}
         </button>
+        <span role="status" className="sr-only">
+          {copied ? 'Copied to the clipboard' : ''}
+        </span>
       </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-        <button
-          type="button"
-          onClick={() => create.mutate()}
-          className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
-        >
-          Replace with a new link
-        </button>
-        <button
-          type="button"
-          onClick={() => revoke.mutate()}
-          className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-danger"
-        >
-          Revoke
-        </button>
-        <p className="text-xs text-ink-faint">
-          Replacing or revoking stops the old link working immediately.
-        </p>
-      </div>
+      {pendingChange ? (
+        <div role="group" aria-label="Confirm link change" className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-ink">
+            {pendingChange === 'replace'
+              ? 'Replace it? The current link stops working straight away.'
+              : 'Revoke it? The current link stops working straight away.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              if (pendingChange === 'replace') create.mutate()
+              else revoke.mutate()
+              setPendingChange(null)
+            }}
+            className="btn btn-sm btn-danger"
+          >
+            {pendingChange === 'replace' ? 'Replace link' : 'Revoke link'}
+          </button>
+          <button type="button" onClick={() => setPendingChange(null)} className="btn btn-sm">
+            Keep it
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <button
+            type="button"
+            onClick={() => setPendingChange('replace')}
+            className="label text-ink underline underline-offset-4 hover:decoration-2"
+          >
+            Replace with a new link
+          </button>
+          <button
+            type="button"
+            onClick={() => setPendingChange('revoke')}
+            className="label text-danger underline underline-offset-4 hover:decoration-2"
+          >
+            Revoke
+          </button>
+          <p className="text-sm text-ink-dim">
+            Replacing or revoking stops the old link working immediately.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -348,19 +372,23 @@ function TheirLink({ onFollow, current }) {
             setValue(event.target.value)
             setInvalid(false)
           }}
-          placeholder="Paste their link"
+          name="share_link"
+          inputMode="url"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="https://…/progress/compare?with=…"
           aria-label="Their share link"
           aria-invalid={invalid}
-          className="hairline min-w-0 flex-1 border bg-surface px-2 py-1.5 text-sm text-ink placeholder:text-ink-faint"
+          className="field min-w-0 flex-1"
         />
         <button
           type="submit"
-          className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+          className="btn btn-sm"
         >
           {current ? 'Switch' : 'Compare'}
         </button>
       </div>
-      {invalid && <p className="text-xs text-danger">That does not look like a share link.</p>}
+      {invalid && <p className="text-sm text-danger">That does not look like a share link.</p>}
     </form>
   )
 }
@@ -391,17 +419,17 @@ function MarkHeadings({ names }) {
         </p>
       )}
       <div className="flex items-center gap-1.5 pb-1 pl-3">
-        <span className="meta w-6 text-right text-[0.625rem]">#</span>
+        <span className="meta w-6 text-right">#</span>
         {names.map((name, index) => (
           <span
             key={name + index}
-            className="meta w-7 truncate text-center text-[0.625rem]"
+            className="meta w-7 truncate text-center"
             title={name}
           >
             {numbered ? index + 1 : name}
           </span>
         ))}
-        <span className="meta text-[0.625rem]">Title</span>
+        <span className="meta">Title</span>
       </div>
     </>
   )
@@ -521,8 +549,8 @@ export function CompareProgressPage() {
 
   return (
     <div className="py-8">
-      <div className="hairline border-b pb-6">
-        <h1 className="text-2xl font-medium tracking-tight text-ink">Compare progress</h1>
+      <div className="pb-6">
+        <h1 className="display text-5xl text-ink sm:text-6xl">Compare progress</h1>
         <p className="mt-1 max-w-xl text-sm text-ink-dim">
           Put your watch history against your friends&rsquo; on the same catalogue. What you have
           all seen, what only one of you has, and what is still ahead of everybody, which is the
@@ -531,34 +559,34 @@ export function CompareProgressPage() {
         <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
           <Link
             to="/progress"
-            className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
+            className="label text-ink underline underline-offset-4 hover:decoration-2"
           >
             Back to your progress
           </Link>
           <Link
             to="/friends"
-            className="label text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
+            className="label text-ink underline underline-offset-4 hover:decoration-2"
           >
             Manage friends
           </Link>
         </p>
       </div>
 
-      <section className="hairline border-b py-6">
-        <h2 className="meta mb-3">Compare with</h2>
+      <section className="panel mt-3 p-5">
+        <h2 className="caption caption-corner">Compare with</h2>
         <FriendPicker
           selected={friendIds}
           onToggle={(id) => setSelection(toggleFriendId(friendIds, id))}
         />
       </section>
 
-      <section className="hairline border-b py-6">
-        <h2 className="meta mb-3">Your link</h2>
+      <section className="panel mt-3 p-5">
+        <h2 className="caption caption-corner">Your link</h2>
         <YourLink />
       </section>
 
-      <section className="hairline border-b py-6">
-        <h2 className="meta mb-3">{token ? 'Comparing with a link' : 'Their link'}</h2>
+      <section className="panel mt-3 p-5">
+        <h2 className="caption caption-corner">{token ? 'Comparing with a link' : 'Their link'}</h2>
         <TheirLink
           current={token}
           onFollow={(next) => {
@@ -584,7 +612,7 @@ export function CompareProgressPage() {
             onClick={() =>
               setSearchParams(friendIds.length ? { friends: friendIdsParam(friendIds) } : {})
             }
-            className="label mt-3 text-ink-faint underline underline-offset-4 transition-colors hover:text-ink-dim"
+            className="label mt-3 text-ink underline underline-offset-4 hover:decoration-2"
           >
             Clear the link
           </button>
@@ -599,7 +627,7 @@ export function CompareProgressPage() {
 
       {model && (
         <>
-          <section className="hairline grid gap-8 border-b py-6 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="panel mt-3 grid gap-8 p-5 sm:grid-cols-2 lg:grid-cols-3">
             <Side name="You" stats={progressFor(mine, allIds)} runtime={runtimeOf(mine)} />
             {others.map((other) => (
               <Side
@@ -611,20 +639,20 @@ export function CompareProgressPage() {
             ))}
           </section>
 
-          <section className="hairline border-b py-6">
-            <h2 className="meta mb-3">The difference</h2>
+          <section className="panel mt-3 p-5">
+            <h2 className="caption caption-corner">The difference</h2>
             <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {FILTERS.filter((key) => key !== 'all').map((key) => (
                 <div key={key}>
                   <dt className="meta">{buckets[key].label}</dt>
-                  <dd className="text-lg tabular-nums text-ink">{model.counts[key]}</dd>
-                  <dd className="mt-0.5 text-xs text-ink-faint">{buckets[key].blurb}</dd>
+                  <dd className="display text-4xl normal-case tabular-nums text-ink">{model.counts[key]}</dd>
+                  <dd className="mt-0.5 text-sm text-ink-dim">{buckets[key].blurb}</dd>
                 </div>
               ))}
             </dl>
           </section>
 
-          <section className="py-6">
+          <section className="panel mt-3 p-5">
             <div className="mb-4 flex flex-wrap items-center gap-2">
               {FILTERS.map((key) => (
                 <Chip key={key} active={filter === key} onClick={() => setFilter(key)}>
@@ -639,7 +667,7 @@ export function CompareProgressPage() {
               <p className="mb-4">
                 <Link
                   to={`/orders/new?name=${encodeURIComponent(orderName)}&start=${neitherIds.join(',')}`}
-                  className="label border border-hairline-strong px-3 py-1.5 text-ink-dim transition-colors hover:text-ink"
+                  className="btn btn-sm"
                 >
                   Build an order from these {neitherIds.length}
                 </Link>
@@ -647,7 +675,7 @@ export function CompareProgressPage() {
             )}
 
             <div className="relative min-w-0">
-              <span aria-hidden="true" className="absolute inset-y-0 left-0 w-px bg-hairline" />
+              <span aria-hidden="true" className="absolute inset-y-0 left-0 w-[3px] bg-ink" />
 
               <MarkHeadings names={names} />
 
@@ -662,9 +690,9 @@ export function CompareProgressPage() {
                       <Link
                         to={`/movies/${movie.id}`}
                         data-row={movie.id}
-                        className="flex h-full w-full items-center gap-1.5 pl-3 transition-colors hover:bg-surface"
+                        className="flex h-full w-full items-center gap-1.5 pl-3 transition-colors hover:bg-raised"
                       >
-                        <span className="meta w-6 shrink-0 text-right text-[0.625rem] tabular-nums">
+                        <span className="meta w-6 shrink-0 text-right tabular-nums">
                           {index + 1}
                         </span>
                         {[yours, ...marks].map((on, column) => (
@@ -676,8 +704,8 @@ export function CompareProgressPage() {
                           </span>
                         ))}
                         <span
-                          className={`min-w-0 flex-1 truncate text-[0.8125rem] ${
-                            bucket === 'neither' ? 'text-ink-dim' : 'text-ink-faint'
+                          className={`min-w-0 flex-1 truncate text-sm ${
+                            bucket === 'neither' ? 'font-semibold text-ink' : 'text-ink-dim'
                           }`}
                         >
                           {movie.title}
@@ -686,7 +714,7 @@ export function CompareProgressPage() {
                          * distinction a low-vision reader loses, so the bucket
                          * is always in the accessible name. It is only *drawn*
                          * where there is room for it. */}
-                        <span className="meta hidden shrink-0 pr-1 text-[0.625rem] sm:block">
+                        <span className="meta hidden shrink-0 pr-1 sm:block">
                           {buckets[bucket].label}
                         </span>
                         <span className="sr-only sm:hidden">{buckets[bucket].label}</span>
