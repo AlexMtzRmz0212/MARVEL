@@ -7,7 +7,7 @@ import { ProgressBar } from '../../components/WatchToggle'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { SAGA_LABEL, formatTotalRuntime, phaseLabel } from '../../lib/format'
-import { clearAll, isWatched, progressFor, sortCounts } from '../../lib/watchStorage'
+import { clearAll, isInProgress, isWatched, progressFor, sortCounts } from '../../lib/watchStorage'
 
 function Row({ label, sublabel, movieIds, progress, to }) {
   const stats = progressFor(progress, movieIds)
@@ -51,6 +51,7 @@ export function ProgressPage() {
   const allIds = movies.map((movie) => movie.id)
   const overall = progressFor(progress, allIds)
   const sorted = sortCounts(progress, allIds)
+  const midSeason = movies.filter((movie) => isInProgress(progress, movie.id, movie.episode_count ?? 0))
 
   const watchedRuntime = movies
     .filter((movie) => isWatched(progress, movie.id))
@@ -72,6 +73,20 @@ export function ProgressPage() {
             {watchedRuntime > 0 && `, ${formatTotalRuntime(watchedRuntime)} behind you`}
             {remainingRuntime > 0 && `, ${formatTotalRuntime(remainingRuntime)} to go`}
           </p>
+          {midSeason.length > 0 && (
+            <p className="mt-1 text-sm text-ink-dim">
+              Partway through{' '}
+              {midSeason.map((movie, index) => (
+                <span key={movie.id}>
+                  {index > 0 && (index === midSeason.length - 1 ? ' and ' : ', ')}
+                  <Link to={`/movies/${movie.id}`} className="font-semibold text-ink underline underline-offset-4">
+                    {movie.title}
+                  </Link>
+                </span>
+              ))}
+              .
+            </p>
+          )}
           <div className="mt-4 max-w-xl">
             <ProgressBar percent={overall.percent} />
           </div>

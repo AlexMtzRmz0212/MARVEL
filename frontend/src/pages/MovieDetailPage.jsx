@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router'
 import { useMovie } from '../api/catalog'
 import { BackLink } from '../components/BackLink'
 import { LineBullet } from '../components/LineBullet'
+import { EpisodeList } from '../components/EpisodeList'
 import { WatchToggle } from '../components/WatchToggle'
 import { ErrorState, LoadingState } from '../components/states'
 import { useWatchProgress } from '../hooks/useWatchProgress'
@@ -340,7 +341,12 @@ export function MovieDetailPage() {
               {movie.title}
             </h1>
             <div className="mt-1 shrink-0">
-              <WatchToggle movieId={movie.id} watched={watched} title={movie.title} />
+              <WatchToggle
+                movieId={movie.id}
+                watched={watched}
+                title={movie.title}
+                episodeCount={movie.episodes?.length ?? 0}
+              />
             </div>
           </div>
 
@@ -368,6 +374,15 @@ export function MovieDetailPage() {
       <div className="mt-8">
         {watched && (
           <YourTake key={movie.id} movie={movie} entry={progress[movie.id]} voice={voice} />
+        )}
+
+        {movie.episodes?.length > 1 && (
+          <section className="panel mt-3 p-5" aria-labelledby="episodes">
+            <h2 id="episodes" className={`caption caption-corner ${voice}`}>
+              Episodes
+            </h2>
+            <EpisodeList movie={movie} />
+          </section>
         )}
 
         <CreditScenes movie={movie} voice={voice} />
