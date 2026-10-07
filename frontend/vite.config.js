@@ -58,7 +58,7 @@ export default defineConfig(({ mode }) => {
               urlPattern: ({ url, request }) =>
                 request.method === 'GET' &&
                 url.origin === self.location.origin &&
-                /^\/api\/(movies|orders\/(release|chronological)|graph)(\/|$)/.test(url.pathname),
+                /^\/api\/(movies|orders\/(release|chronological|recommended)|graph)(\/|$)/.test(url.pathname),
               handler: 'StaleWhileRevalidate',
               options: {
                 cacheName: 'catalog-api',

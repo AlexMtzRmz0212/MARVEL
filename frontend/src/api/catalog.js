@@ -66,3 +66,16 @@ export function useCompleteOrder() {
     mutationFn: (order) => api('/orders/complete', { method: 'POST', body: { order } }),
   })
 }
+
+/**
+ * Ready-made orders (release, story, Disney+'s timeline, the road to
+ * Doomsday...). One small list, fetched once: each entry carries ids only,
+ * and the catalog the client already holds supplies everything else.
+ */
+export function useRecommendedOrders() {
+  return useQuery({
+    queryKey: ['recommended-orders'],
+    queryFn: ({ signal }) => api('/orders/recommended', { signal }),
+    ...FOREVER,
+  })
+}

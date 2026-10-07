@@ -302,3 +302,62 @@ def test_edge_list_matches_the_chains(client):
     pairs = {(edge["from"], edge["to"]) for edge in edges}
     assert ("avengers-infinity-war", "avengers-endgame") in pairs
     assert all(edge["strength"] in {"essential", "recommended"} for edge in edges)
+
+
+# --------------------------------------------------------------------------- #
+# Recommended orders
+# --------------------------------------------------------------------------- #
+
+
+def test_recommended_orders_list_computed_then_curated(client):
+    orders = client.get("/api/orders/recommended").json()
+    ids = [order["id"] for order in orders]
+    assert ids[:2] == ["release", "story"]
+    assert {"disney-plus-timeline", "doomsday-express", "road-to-doomsday"} <= set(ids)
+    kinds = [order["kind"] for order in orders]
+    assert kinds == sorted(kinds)  # "computed" < "curated"
+
+
+def test_every_recommended_order_names_real_titles_once(client):
+    known = {movie["id"] for movie in client.get("/api/movies").json()}
+    for order in client.get("/api/orders/recommended").json():
+        assert order["movie_ids"], order["id"]
+        assert set(order["movie_ids"]) <= known, order["id"]
+        assert len(set(order["movie_ids"])) == len(order["movie_ids"]), order["id"]
+
+
+def test_curated_orders_cite_their_sources(client):
+    for order in client.get("/api/orders/recommended").json():
+        if order["kind"] == "curated" and order["id"] != "street-level":
+            assert order["sources"], order["id"]
+            assert all(source["url"].startswith("https://") for source in order["sources"])
+
+
+def test_orders_built_from_the_graph_never_break_it(client):
+    orders = {o["id"]: o for o in client.get("/api/orders/recommended").json()}
+    assert orders["story"]["out_of_order"] == 0
+    assert orders["road-to-doomsday"]["out_of_order"] == 0
+    assert orders["road-to-doomsday"]["skipped_essentials"] == 0
+    assert orders["road-to-doomsday"]["movie_ids"][-1] == "avengers-doomsday"
+
+
+def test_one_recommended_order_by_id(client):
+    response = client.get("/api/orders/recommended/doomsday-express")
+    assert response.status_code == 200
+    assert response.json()["movie_ids"][0] == "avengers-endgame"
+    assert client.get("/api/orders/recommended/nope").status_code == 404
+
+
+def test_a_curated_order_naming_an_unknown_title_fails_loudly():
+    import pytest
+
+    from app.catalog import get_catalog
+    from app.seed.schema import SeedValidationError
+    from app.services.recommended import CuratedOrder, build_recommended
+
+    bad = CuratedOrder(
+        id="bad", name="Bad", tagline="x", description="x", movie_ids=["iron-man", "iron-man-4"]
+    )
+    with pytest.raises(SeedValidationError) as caught:
+        build_recommended(get_catalog(), [bad])
+    assert any("iron-man-4" in problem for problem in caught.value.problems)

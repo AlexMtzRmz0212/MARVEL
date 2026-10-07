@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.enums import Strength
 from app.schemas.movie import MovieSummary
@@ -55,3 +57,31 @@ class CompleteOrderRequest(BaseModel):
 class CompleteOrderResponse(BaseModel):
     order: list[str]
     added_ids: list[str]
+
+
+class OrderSource(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    label: str
+    url: str
+
+
+class RecommendedOrderOut(BaseModel):
+    """A ready-made order. Ids only: the client already holds the catalog."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    tagline: str
+    description: str
+    # "computed" is a rule over the catalog; "curated" reproduces a published
+    # list, and `sources` says whose.
+    kind: Literal["computed", "curated"]
+    sources: list[OrderSource]
+    movie_ids: list[str]
+    runtime_min: int
+    # Prerequisites placed after the title that needs them, and essential
+    # prerequisites left out altogether -- a short list skips by design.
+    out_of_order: int
+    skipped_essentials: int

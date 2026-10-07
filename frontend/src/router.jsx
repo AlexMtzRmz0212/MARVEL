@@ -10,6 +10,7 @@ import { FriendsPage } from './features/friends/FriendsPage'
 import { HomePage } from './features/home/HomePage'
 import { OrderBuilderPage } from './features/builder/OrderBuilderPage'
 import { OrdersPage } from './features/builder/OrdersPage'
+import { RecommendedOrderPage } from './features/builder/RecommendedOrderPage'
 import { PrereqGraphPage } from './features/prereq/PrereqGraphPage'
 import { CompareProgressPage } from './features/progress/CompareProgressPage'
 import { ProgressPage } from './features/progress/ProgressPage'
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
       // are still friends -- so a leaked url is a sentence, not a disclosure.
       { path: 'friends/:friendId', element: <FriendProfilePage /> },
       { path: 'orders', element: <OrdersPage /> },
+      { path: 'orders/recommended/:orderId', element: <RecommendedOrderPage /> },
       { path: 'orders/new', element: <OrderBuilderPage /> },
       { path: 'orders/:orderId', element: <OrderBuilderPage /> },
       { path: 'timeline', element: <TimelinePage /> },

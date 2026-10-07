@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.api.deps import CatalogDep
 from app.catalog import Title
@@ -13,9 +13,11 @@ from app.schemas.order import (
     CompleteOrderRequest,
     CompleteOrderResponse,
     OrderResponse,
+    RecommendedOrderOut,
     ValidateOrderRequest,
     ValidationResult,
 )
+from app.services.recommended import get_recommended_orders
 from app.services.validation import build_validation_result
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -52,6 +54,20 @@ def chronological_order(
         description="In-universe timeline order. Titles with no agreed placement come last.",
         movies=_visible(catalog.in_chronological_order(), include_adjacent),
     )
+
+
+@router.get("/recommended", response_model=list[RecommendedOrderOut])
+def recommended_orders() -> list[RecommendedOrderOut]:
+    """Every ready-made order, computed ones first. See app.services.recommended."""
+    return [RecommendedOrderOut.model_validate(order) for order in get_recommended_orders()]
+
+
+@router.get("/recommended/{order_id}", response_model=RecommendedOrderOut)
+def recommended_order(order_id: str) -> RecommendedOrderOut:
+    for order in get_recommended_orders():
+        if order.id == order_id:
+            return RecommendedOrderOut.model_validate(order)
+    raise HTTPException(status.HTTP_404_NOT_FOUND, f"No recommended order {order_id!r}")
 
 
 @router.post("/validate", response_model=ValidationResult)

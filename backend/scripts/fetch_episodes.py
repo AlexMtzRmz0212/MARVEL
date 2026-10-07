@@ -68,7 +68,9 @@ def show_name(title: str) -> str:
     return name.removeprefix("Marvel's ").strip()
 
 
-def episode_rows(payload: dict[str, Any], season: int, wanted: tuple[int, int] | None) -> list[dict]:
+def episode_rows(
+    payload: dict[str, Any], season: int, wanted: tuple[int, int] | None
+) -> list[dict]:
     rows = []
     for episode in payload.get("episodes") or []:
         number = episode.get("episode_number")
@@ -176,7 +178,8 @@ def main(argv: list[str] | None = None) -> int:
             continue
         result[movie_id] = rows
         runtime = sum(row["runtime_min"] or 0 for row in rows)
-        print(f"{movie_id:40} {len(rows):3} episodes  {runtime:5} min  (catalog {movie.get('runtime_min')})")
+        catalog_runtime = movie.get("runtime_min")
+        print(f"{movie_id:40} {len(rows):3} episodes {runtime:5} min (catalog {catalog_runtime})")
 
     output = {
         "$comment": [

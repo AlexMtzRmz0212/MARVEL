@@ -1,0 +1,146 @@
+{
+  "$comment": [
+    "Hand-curated recommended orders, shown beside the computed ones (release, story,",
+    "saga cuts, the prerequisite road to Doomsday) built in app/services/recommended.py.",
+    "Each list reproduces its source as faithfully as the catalog allows; where the",
+    "catalog splits a show by season, the seasons sit together in the show's one slot.",
+    "Every id is checked against the catalog when the API starts."
+  ],
+  "version": 1,
+  "orders": [
+    {
+      "id": "disney-plus-timeline",
+      "name": "Disney+ timeline",
+      "tagline": "The MCU Complete Timeline, as Disney+ files it.",
+      "description": "Disney+'s own \"MCU Complete Timeline\" collection as of November 2025, which ends at The Fantastic Four: First Steps. Disney+ lists each show once, so later seasons sit beside the first here. It leaves out what Disney+ does not stream or count: Spider-Man: No Way Home, Agents of S.H.I.E.L.D. and the other ABC and Hulu shows, and the One-Shots. Two of its entries, Eyes of Wakanda (which opens it) and Marvel Zombies, are not in this catalog yet.",
+      "sources": [
+        {
+          "label": "ComingSoon: Entire MCU timeline with The Fantastic Four: First Steps revealed (Nov 2025)",
+          "url": "https://www.comingsoon.net/movies/news/2058269-mcu-timeline-fantastic-four-first-steps-disney"
+        },
+        {
+          "label": "The Direct: Disney+ reveals new MCU timeline with The Fantastic Four (Nov 2025)",
+          "url": "https://thedirect.com/article/mcu-timeline-the-fantastic-four"
+        }
+      ],
+      "movie_ids": [
+        "captain-america-the-first-avenger",
+        "captain-marvel",
+        "iron-man",
+        "iron-man-2",
+        "the-incredible-hulk",
+        "thor",
+        "the-avengers",
+        "thor-the-dark-world",
+        "iron-man-3",
+        "captain-america-the-winter-soldier",
+        "guardians-of-the-galaxy",
+        "guardians-of-the-galaxy-vol-2",
+        "i-am-groot",
+        "daredevil-season-1",
+        "daredevil-season-2",
+        "daredevil-season-3",
+        "jessica-jones-season-1",
+        "jessica-jones-season-2",
+        "avengers-age-of-ultron",
+        "ant-man",
+        "luke-cage-season-1",
+        "luke-cage-season-2",
+        "iron-fist-season-1",
+        "iron-fist-season-2",
+        "the-defenders-season-1",
+        "captain-america-civil-war",
+        "black-widow",
+        "black-panther",
+        "the-punisher-season-1",
+        "the-punisher-season-2",
+        "spider-man-homecoming",
+        "doctor-strange",
+        "thor-ragnarok",
+        "ant-man-and-the-wasp",
+        "avengers-infinity-war",
+        "avengers-endgame",
+        "loki",
+        "loki-season-2",
+        "what-if",
+        "what-if-season-2",
+        "what-if-season-3",
+        "wandavision",
+        "shang-chi-and-the-legend-of-the-ten-rings",
+        "the-falcon-and-the-winter-soldier",
+        "spider-man-far-from-home",
+        "eternals",
+        "doctor-strange-in-the-multiverse-of-madness",
+        "hawkeye",
+        "moon-knight",
+        "black-panther-wakanda-forever",
+        "echo",
+        "she-hulk-attorney-at-law",
+        "ms-marvel",
+        "thor-love-and-thunder",
+        "ironheart",
+        "werewolf-by-night",
+        "the-guardians-of-the-galaxy-holiday-special",
+        "ant-man-and-the-wasp-quantumania",
+        "guardians-of-the-galaxy-vol-3",
+        "secret-invasion",
+        "the-marvels",
+        "deadpool-and-wolverine",
+        "agatha-all-along",
+        "daredevil-born-again",
+        "captain-america-brave-new-world",
+        "thunderbolts",
+        "the-fantastic-four-first-steps"
+      ]
+    },
+    {
+      "id": "doomsday-express",
+      "name": "Doomsday express",
+      "tagline": "The shortest catch-up before Avengers: Doomsday.",
+      "description": "The \"non-negotiable\" and \"strongly recommended\" picks from 9to5Marvel's September 2026 guide, in release order: the end of the Infinity Saga, the multiverse rules (Loki, Multiverse of Madness, Quantumania, No Way Home), and the films that assemble the Doomsday line-up. For when the premiere is next week, not next month.",
+      "sources": [
+        {
+          "label": "9to5Marvel: What to watch before Avengers: Doomsday (Sep 2026)",
+          "url": "https://www.9to5marvel.com/what-to-watch-before-avengers-doomsday/"
+        }
+      ],
+      "movie_ids": [
+        "avengers-endgame",
+        "loki",
+        "spider-man-no-way-home",
+        "doctor-strange-in-the-multiverse-of-madness",
+        "ant-man-and-the-wasp-quantumania",
+        "loki-season-2",
+        "deadpool-and-wolverine",
+        "thunderbolts",
+        "the-fantastic-four-first-steps",
+        "spider-man-brand-new-day",
+        "avengers-doomsday"
+      ]
+    },
+    {
+      "id": "street-level",
+      "name": "Street level",
+      "tagline": "Hell's Kitchen, start to finish.",
+      "description": "The Netflix Defenders shows in the order they came out, which is the order their crossovers assume, then the Marvel Studios shows that pick up Matt Murdock, Wilson Fisk and Maya Lopez: Hawkeye, Echo and Daredevil: Born Again.",
+      "sources": [],
+      "movie_ids": [
+        "daredevil-season-1",
+        "jessica-jones-season-1",
+        "daredevil-season-2",
+        "luke-cage-season-1",
+        "iron-fist-season-1",
+        "the-defenders-season-1",
+        "the-punisher-season-1",
+        "jessica-jones-season-2",
+        "luke-cage-season-2",
+        "iron-fist-season-2",
+        "daredevil-season-3",
+        "the-punisher-season-2",
+        "hawkeye",
+        "echo",
+        "daredevil-born-again"
+      ]
+    }
+  ]
+}
