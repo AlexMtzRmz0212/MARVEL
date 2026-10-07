@@ -65,11 +65,23 @@ function OrderRow({ order, deleteOrder }) {
  */
 function Recommended() {
   const progress = useWatchProgress()
-  const { data: orders, isPending, error } = useRecommendedOrders()
+  const { data: orders, isPending, error, refetch } = useRecommendedOrders()
   const { data: movies } = useMovies({ order: 'release' })
 
   if (isPending) return <LoadingState label="Loading recommended orders" />
-  if (error) return <ErrorState error={error} />
+  // Its own message rather than the shared error panel: whatever went wrong,
+  // it went wrong with this list only, and the saved orders below still work.
+  if (error) {
+    return (
+      <div role="alert" className="panel max-w-lg border-l-[6px] border-l-danger p-5">
+        <p className="font-semibold text-ink">Couldn't load the recommended orders.</p>
+        <p className="mt-1 text-sm text-ink-dim">Your own orders below are not affected.</p>
+        <button type="button" onClick={() => refetch()} className="btn btn-sm mt-3">
+          Try again
+        </button>
+      </div>
+    )
+  }
 
   const titles = new Map((movies ?? []).map((movie) => [movie.id, movie.title]))
 

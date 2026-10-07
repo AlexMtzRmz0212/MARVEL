@@ -25,10 +25,13 @@ export function RecommendedOrderPage() {
 
   if (ordersQuery.isPending || moviesQuery.isPending) return <LoadingState label="Loading order" />
   const error = ordersQuery.error ?? moviesQuery.error
-  if (error) return <ErrorState error={error} onRetry={() => ordersQuery.refetch()} />
+  const notFound = 'There is no recommended order with that id.'
+  if (error) {
+    return <ErrorState error={error} notFound={notFound} onRetry={() => ordersQuery.refetch()} />
+  }
 
   const order = ordersQuery.data.find((item) => item.id === orderId)
-  if (!order) return <ErrorState error={{ status: 404 }} />
+  if (!order) return <ErrorState error={{ status: 404 }} notFound={notFound} />
 
   const byId = new Map(moviesQuery.data.map((movie) => [movie.id, movie]))
   const stats = orderStats(order, progress)

@@ -14,15 +14,17 @@ export function LoadingState({ label = 'Loading' }) {
   )
 }
 
-export function ErrorState({ error, onRetry }) {
+/**
+ * `notFound` is what a 404 means on the page at hand. Most callers fetch a
+ * title, hence the default; anything else should say what it was looking for.
+ */
+export function ErrorState({ error, onRetry, notFound = 'There is no title with that id in the catalog.' }) {
   const isNotFound = error?.status === 404
   return (
     <div role="alert" className="panel mx-1 my-12 max-w-lg border-l-[6px] border-l-danger p-6">
       <p className="display text-2xl text-danger">{isNotFound ? 'Not found' : 'Something went wrong'}</p>
       <p className="mt-2 text-sm leading-relaxed text-ink-dim">
-        {isNotFound
-          ? 'There is no title with that id in the catalog.'
-          : (error?.message ?? 'The request failed.')}
+        {isNotFound ? notFound : (error?.message ?? 'The request failed.')}
       </p>
       {onRetry && !isNotFound && (
         <button
