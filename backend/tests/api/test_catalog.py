@@ -115,12 +115,38 @@ def _validate_shipped_order(client, path, **params):
     return client.post("/api/orders/validate", json={"order": order}).json()
 
 
+def _released_before_its_prerequisite(client):
+    """Predicate for an edge that no release order can satisfy.
+
+    Some prerequisites came out after the title that needs them -- Captain
+    America: The First Avenger is recommended before The Incredible Hulk, but
+    was released three years later. Release order puts them the wrong way round
+    by definition, so the validator flagging them is expected, not a hole.
+    """
+    released = {movie["id"]: movie["release_date"] for movie in client.get("/api/movies").json()}
+
+    def check(violation):
+        return (
+            violation["kind"] == "out_of_order"
+            and released[violation["prerequisite_id"]] > released[violation["movie_id"]]
+        )
+
+    return check
+
+
 def test_the_complete_orders_are_valid_topological_orders(client):
-    """With nothing filtered out, both orders the app ships must satisfy the DAG."""
-    for path in ("/api/orders/chronological", "/api/orders/release"):
-        result = _validate_shipped_order(client, path, include_adjacent=True)
-        assert result["violations"] == []
-        assert result["is_valid"]
+    """With nothing filtered out, chronological order must satisfy the whole DAG.
+
+    Release order must satisfy every edge it can: the only violations allowed
+    are edges whose prerequisite was released after the title that needs it.
+    """
+    result = _validate_shipped_order(client, "/api/orders/chronological", include_adjacent=True)
+    assert result["violations"] == []
+    assert result["is_valid"]
+
+    unavoidable = _released_before_its_prerequisite(client)
+    result = _validate_shipped_order(client, "/api/orders/release", include_adjacent=True)
+    assert [violation for violation in result["violations"] if not unavoidable(violation)] == []
 
 
 def test_the_mcu_only_cut_drops_nothing_but_cross_continuity_prerequisites(client):
@@ -130,9 +156,11 @@ def test_the_mcu_only_cut_drops_nothing_but_cross_continuity_prerequisites(clien
     sit outside MCU_UNIVERSES, so an order restricted to MCU continuity cannot
     contain them and the validator is right to say so. A violation pointing at a
     title the cut *does* include would be a real hole in the order, so that is
-    what this pins.
+    what this pins. Release order is also excused the edges it cannot satisfy
+    (see _released_before_its_prerequisite).
     """
     universe = {movie["id"]: movie["universe"] for movie in client.get("/api/movies").json()}
+    unavoidable = _released_before_its_prerequisite(client)
 
     for path in ("/api/orders/chronological", "/api/orders/release"):
         result = _validate_shipped_order(client, path)
@@ -140,6 +168,7 @@ def test_the_mcu_only_cut_drops_nothing_but_cross_continuity_prerequisites(clien
             violation
             for violation in result["violations"]
             if universe[violation["prerequisite_id"]] not in MCU_UNIVERSES
+            or (path == "/api/orders/release" and unavoidable(violation))
         ]
 
 
