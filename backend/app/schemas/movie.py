@@ -18,6 +18,18 @@ class CreditSceneEpisode(BaseModel):
     note: str | None
 
 
+class EpisodeOut(BaseModel):
+    """One episode of a series entry; its position in the list is its number."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    season: int
+    episode: int
+    name: str
+    runtime_min: int | None
+    air_date: date | None
+
+
 class MovieSummary(BaseModel):
     """The catalog-card shape: everything a list or grid needs, nothing more."""
 
@@ -40,6 +52,10 @@ class MovieSummary(BaseModel):
     # means somebody sat through them and there was nothing. The card only draws
     # a mark for a positive number, so the two are never conflated on screen.
     credit_scenes: int | None = None
+
+    # How many episodes there are to tick off. 0 for anything that is not a
+    # series with a fetched episode list; the list itself is detail-only.
+    episode_count: int = 0
 
 
 class LinkedMovie(BaseModel):
@@ -65,6 +81,7 @@ class MovieDetail(MovieSummary):
     # film, where the count and the note say everything.
     credit_scene_note: str | None = None
     credit_scene_episodes: list[CreditSceneEpisode] = []
+    episodes: list[EpisodeOut] = []
 
     # Direct neighbours only. The full transitive chain is a separate endpoint
     # because it is a graph, not a list, and needs its own layout data.

@@ -4,15 +4,23 @@ import * as client from '../api/client'
 import { clearSyncError, getSnapshot as getSyncError } from './syncStatus'
 import {
   clearAll,
+  episodesWatched,
   getSnapshot,
+  isInProgress,
   isWatched,
+  markEpisodesThrough,
   markManyWatched,
   progressFor,
   resetToLocalStorage,
+  restoreEntry,
   setNotes,
   setRating,
+  setStatus,
   setWatchBackend,
+  sortCounts,
+  statusOf,
   subscribe,
+  toggleEpisode,
   toggleWatched,
 } from './watchStorage'
 
@@ -200,5 +208,132 @@ describe('progressFor', () => {
 
   it('reports zero rather than dividing by zero', () => {
     expect(progressFor(getSnapshot(), []).percent).toBe(0)
+  })
+})
+
+describe('quick-sort status', () => {
+  it('records unseen and unsure without a watch date', () => {
+    setStatus('thor', 'unseen')
+    setStatus('hulk', 'unsure')
+
+    expect(statusOf(getSnapshot(), 'thor')).toBe('unseen')
+    expect(statusOf(getSnapshot(), 'hulk')).toBe('unsure')
+    expect(isWatched(getSnapshot(), 'hulk')).toBe(false)
+    expect(statusOf(getSnapshot(), 'iron-man')).toBeNull()
+  })
+
+  it('reads a watch date as watched, whatever the status says', () => {
+    setStatus('thor', 'unsure')
+    setStatus('thor', 'watched')
+
+    expect(statusOf(getSnapshot(), 'thor')).toBe('watched')
+    expect(getSnapshot().thor.status).toBeNull()
+  })
+
+  it('keeps a rating when the verdict changes', () => {
+    setRating('thor', 7)
+    setStatus('thor', 'unsure')
+
+    expect(getSnapshot().thor.rating).toBe(7)
+  })
+
+  it('drops an entry with nothing left in it', () => {
+    setStatus('thor', 'unseen')
+    setStatus('thor', null)
+
+    expect(getSnapshot()).not.toHaveProperty('thor')
+  })
+
+  it('undoes back to the exact previous entry, or to nothing', () => {
+    setRating('thor', 4)
+    const before = getSnapshot().thor
+    setStatus('thor', 'watched')
+    restoreEntry('thor', before)
+    expect(getSnapshot().thor).toEqual(before)
+
+    setStatus('hulk', 'unsure')
+    restoreEntry('hulk', undefined)
+    expect(getSnapshot()).not.toHaveProperty('hulk')
+  })
+
+  it('counts every verdict', () => {
+    setStatus('a', 'watched')
+    setStatus('b', 'unseen')
+    setStatus('c', 'unsure')
+
+    expect(sortCounts(getSnapshot(), ['a', 'b', 'c', 'd'])).toEqual({
+      watched: 1,
+      unseen: 1,
+      unsure: 1,
+      unsorted: 1,
+    })
+  })
+
+  it('sends the status to the server with the rest of the entry', async () => {
+    const api = vi.spyOn(client, 'api').mockResolvedValue({})
+    setWatchBackend('remote', {})
+
+    setStatus('thor', 'unsure')
+    await flush()
+
+    expect(api).toHaveBeenCalledWith(
+      '/me/watch-progress/thor',
+      expect.objectContaining({
+        method: 'PUT',
+        body: expect.objectContaining({ status: 'unsure', watched_at: null }),
+      }),
+    )
+  })
+})
+
+describe('episodes', () => {
+  it('ticks episodes one at a time and marks the series on the last', () => {
+    toggleEpisode('loki', 1, 3)
+    toggleEpisode('loki', 2, 3)
+    expect(episodesWatched(getSnapshot(), 'loki', 3)).toEqual([1, 2])
+    expect(isInProgress(getSnapshot(), 'loki', 3)).toBe(true)
+    expect(isWatched(getSnapshot(), 'loki')).toBe(false)
+
+    toggleEpisode('loki', 3, 3)
+    expect(isWatched(getSnapshot(), 'loki')).toBe(true)
+    expect(isInProgress(getSnapshot(), 'loki', 3)).toBe(false)
+  })
+
+  it('un-ticking one from a watched series keeps the others', () => {
+    toggleWatched('loki')
+    toggleEpisode('loki', 2, 3)
+
+    expect(isWatched(getSnapshot(), 'loki')).toBe(false)
+    expect(episodesWatched(getSnapshot(), 'loki', 3)).toEqual([1, 3])
+  })
+
+  it('reads a watched series as every episode even without a stored list', () => {
+    toggleWatched('loki')
+    expect(episodesWatched(getSnapshot(), 'loki', 6)).toEqual([1, 2, 3, 4, 5, 6])
+  })
+
+  it('stores every episode when the count is known', () => {
+    toggleWatched('loki', 4)
+    expect(getSnapshot().loki.episodes).toEqual([1, 2, 3, 4])
+
+    setStatus('wandavision', 'watched', 2)
+    expect(getSnapshot().wandavision.episodes).toEqual([1, 2])
+  })
+
+  it('marks every episode up to a point', () => {
+    markEpisodesThrough('loki', 4, 6)
+    expect(episodesWatched(getSnapshot(), 'loki', 6)).toEqual([1, 2, 3, 4])
+  })
+
+  it('clears a quick-sort verdict once episodes are being counted', () => {
+    setStatus('loki', 'unseen')
+    toggleEpisode('loki', 1, 6)
+    expect(statusOf(getSnapshot(), 'loki')).toBeNull()
+  })
+
+  it('removes the entry when the last tick is taken back', () => {
+    toggleEpisode('loki', 1, 6)
+    toggleEpisode('loki', 1, 6)
+    expect(getSnapshot()).not.toHaveProperty('loki')
   })
 })

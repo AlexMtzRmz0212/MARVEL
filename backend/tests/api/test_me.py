@@ -195,6 +195,70 @@ def test_watch_progress_is_per_user(api, registered):
     assert api.get("/api/me/watch-progress").json() == {}
 
 
+def test_a_triage_status_round_trips(api, registered):
+    assert api.put("/api/me/watch-progress/iron-man", json={"status": "unsure"}).status_code == 200
+    api.put("/api/me/watch-progress/thor", json={"status": "unseen"})
+
+    progress = api.get("/api/me/watch-progress").json()
+    assert progress["iron-man"]["status"] == "unsure"
+    assert progress["iron-man"]["watched_at"] is None
+    assert progress["thor"]["status"] == "unseen"
+
+
+def test_an_unknown_status_is_rejected(api, registered):
+    response = api.put("/api/me/watch-progress/iron-man", json={"status": "watched"})
+    assert response.status_code == 422
+
+
+def test_watching_clears_the_status(api, registered):
+    response = api.put(
+        "/api/me/watch-progress/iron-man",
+        json={"watched_at": "2026-01-01T00:00:00Z", "status": "unsure"},
+    )
+    assert response.json()["status"] is None
+
+
+def test_episodes_round_trip_sorted_and_deduplicated(api, registered):
+    response = api.put("/api/me/watch-progress/loki", json={"episodes": [3, 1, 3, 2]})
+    assert response.status_code == 200, response.text
+    assert api.get("/api/me/watch-progress").json()["loki"]["episodes"] == [1, 2, 3]
+
+
+def test_episodes_past_the_end_of_the_season_are_rejected(api, registered):
+    # Loki season one has six episodes.
+    response = api.put("/api/me/watch-progress/loki", json={"episodes": [7]})
+    assert response.status_code == 422
+    assert "6 episode" in response.json()["detail"]
+
+
+def test_a_film_has_no_episodes_to_tick(api, registered):
+    response = api.put("/api/me/watch-progress/iron-man", json={"episodes": [1]})
+    assert response.status_code == 422
+
+
+def test_bulk_marking_a_series_ticks_every_episode(api, registered):
+    api.put("/api/me/watch-progress/loki", json={"episodes": [1], "status": "unsure"})
+    progress = api.post("/api/me/watch-progress/bulk", json={"movie_ids": ["loki"]}).json()
+    assert progress["loki"]["episodes"] == [1, 2, 3, 4, 5, 6]
+    assert progress["loki"]["status"] is None
+
+
+def test_import_carries_status_and_trims_impossible_episodes(api, registered):
+    response = api.post(
+        "/api/me/import",
+        json={
+            "watch_progress": {
+                "iron-man": {"status": "unseen"},
+                "loki": {"episodes": [1, 2, 40]},
+            }
+        },
+    )
+    assert response.status_code == 200, response.text
+    progress = api.get("/api/me/watch-progress").json()
+    assert progress["iron-man"]["status"] == "unseen"
+    assert progress["loki"]["episodes"] == [1, 2]
+
+
 # --------------------------------------------------------------------------- #
 # Preferences
 # --------------------------------------------------------------------------- #

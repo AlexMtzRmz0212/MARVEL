@@ -49,6 +49,17 @@ class CreditSceneEpisode:
 
 
 @dataclass(frozen=True, slots=True)
+class Episode:
+    """One episode of a series entry. Numbering is TMDb's, within its season."""
+
+    season: int
+    episode: int
+    name: str
+    runtime_min: int | None
+    air_date: date | None
+
+
+@dataclass(frozen=True, slots=True)
 class Title:
     """One catalog entry. Mirrors the `Movie` ORM model.
 
@@ -79,6 +90,14 @@ class Title:
     credit_scenes: int | None = None
     credit_scene_note: str | None = None
     credit_scene_episodes: tuple[CreditSceneEpisode, ...] = ()
+
+    # Empty for films, specials, and any series the episode script has not
+    # reached. Watch progress names an episode by its 1-based position here.
+    episodes: tuple[Episode, ...] = ()
+
+    @property
+    def episode_count(self) -> int:
+        return len(self.episodes)
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,6 +192,16 @@ def build_catalog(path: Path = DEFAULT_SEED_PATH) -> Catalog:
                     note=episode.note,
                 )
                 for episode in (movie.credit_scenes.episodes if movie.credit_scenes else ())
+            ),
+            episodes=tuple(
+                Episode(
+                    season=episode.season,
+                    episode=episode.episode,
+                    name=episode.name,
+                    runtime_min=episode.runtime_min,
+                    air_date=episode.air_date,
+                )
+                for episode in validated.episodes.get(movie.id, ())
             ),
         )
         for movie in validated.movies

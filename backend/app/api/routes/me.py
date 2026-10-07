@@ -242,8 +242,29 @@ def get_watch_progress(user: CurrentUserDep, db: DbDep) -> dict[str, WatchProgre
     return {row.movie_id: WatchProgressEntry.model_validate(row) for row in rows}
 
 
+def _episodes_in_range(catalog: Catalog, movie_id: str, episodes: list[int]) -> list[int]:
+    """The episode numbers that exist for this title; the rest are dropped."""
+    title = catalog.get(movie_id)
+    total = title.episode_count if title is not None else 0
+    return [number for number in episodes if number <= total]
+
+
+def _reject_out_of_range(catalog: Catalog, movie_id: str, episodes: list[int]) -> None:
+    if len(_episodes_in_range(catalog, movie_id, episodes)) != len(episodes):
+        total = catalog.get(movie_id).episode_count
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"{movie_id} has {total} episode(s); got {max(episodes)}",
+        )
+
+
+def _all_episodes(catalog: Catalog, movie_id: str) -> list[int]:
+    title = catalog.get(movie_id)
+    return list(range(1, (title.episode_count if title is not None else 0) + 1))
+
+
 def _upsert_progress(
-    db: Session, user: User, movie_id: str, entry: WatchProgressEntry
+    db: Session, user: User, movie_id: str, entry: WatchProgressEntry, catalog: Catalog
 ) -> WatchProgress:
     # Session.get takes a tuple for a composite primary key. A plain
     # get-then-update beats an ON CONFLICT upsert here: one row, one user, no
@@ -255,6 +276,10 @@ def _upsert_progress(
     row.watched_at = entry.watched_at
     row.rating = entry.rating
     row.notes = entry.notes
+    row.status = entry.status
+    # Out-of-range numbers are rejected by PUT before this point; anything that
+    # still gets here (an old guest import) is trimmed rather than failed.
+    row.episodes_watched = _episodes_in_range(catalog, movie_id, entry.episodes)
     return row
 
 
@@ -267,7 +292,8 @@ def set_watch_progress(
     catalog: CatalogDep,
 ) -> WatchProgressEntry:
     _reject_unknown([] if movie_id in catalog else [movie_id])
-    row = _upsert_progress(db, user, movie_id, payload)
+    _reject_out_of_range(catalog, movie_id, payload.episodes)
+    row = _upsert_progress(db, user, movie_id, payload, catalog)
     db.commit()
     db.refresh(row)
     return WatchProgressEntry.model_validate(row)
@@ -296,7 +322,8 @@ def bulk_mark_watched(
     """Backs "mark this whole chain watched" on the prerequisite graph.
 
     Already-watched titles keep their original timestamp -- markManyWatched does
-    the same, and rewriting them would misreport when they were seen.
+    the same, and rewriting them would misreport when they were seen. A series
+    marked watched this way has every episode ticked, as it would from the UI.
     """
     known, unknown = _known(catalog, payload.movie_ids)
     _reject_unknown(unknown)
@@ -305,9 +332,18 @@ def bulk_mark_watched(
     for movie_id in known:
         row = db.get(WatchProgress, (user.id, movie_id))
         if row is None:
-            db.add(WatchProgress(user_id=user.id, movie_id=movie_id, watched_at=now))
+            db.add(
+                WatchProgress(
+                    user_id=user.id,
+                    movie_id=movie_id,
+                    watched_at=now,
+                    episodes_watched=_all_episodes(catalog, movie_id),
+                )
+            )
         elif row.watched_at is None:
             row.watched_at = now
+            row.status = None
+            row.episodes_watched = _all_episodes(catalog, movie_id)
     db.commit()
 
     return get_watch_progress(user, db)
@@ -456,7 +492,7 @@ def import_local_data(
             continue
         if db.get(WatchProgress, (user.id, movie_id)) is not None:
             continue
-        _upsert_progress(db, user, movie_id, entry)
+        _upsert_progress(db, user, movie_id, entry, catalog)
         progress_imported += 1
 
     if payload.preferences is not None:

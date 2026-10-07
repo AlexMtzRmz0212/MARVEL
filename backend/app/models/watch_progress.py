@@ -5,13 +5,16 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
+    JSON,
     CheckConstraint,
     DateTime,
     ForeignKey,
     SmallInteger,
+    String,
     Text,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -29,6 +32,11 @@ class WatchProgress(Base):
     free (tracked but not yet watched) and makes completion a plain count of
     non-null `watched_at`. The alternative -- row existence as the watched
     signal -- would leave `watched_at` nullable for no reason.
+
+    `status` is the verdict on a title that is *not* watched -- "unseen" or
+    "unsure" (the quick-sort deck's left and down swipes). It is never set
+    alongside `watched_at`; "watched" is not one of its values because
+    `watched_at` already says so.
     """
 
     __tablename__ = "watch_progress"
@@ -46,6 +54,13 @@ class WatchProgress(Base):
     watched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     rating: Mapped[int | None] = mapped_column(SmallInteger)
     notes: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str | None] = mapped_column(String(8))
+
+    # 1-based episode numbers within this catalog entry. Assign a new list when
+    # writing: in-place mutation of a plain JSON value never flushes.
+    episodes_watched: Mapped[list[int]] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list, server_default="[]"
+    )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
@@ -56,6 +71,9 @@ class WatchProgress(Base):
 
     __table_args__ = (
         CheckConstraint("rating IS NULL OR rating BETWEEN 1 AND 10", name="rating_range"),
+        CheckConstraint(
+            "status IS NULL OR status IN ('unseen', 'unsure')", name="status_values"
+        ),
     )
 
     @property

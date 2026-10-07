@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 
 from app.schemas.auth import Preferences
 
@@ -44,12 +45,40 @@ class CustomOrderUpdate(BaseModel):
     movie_ids: list[str] = Field(default_factory=list, max_length=MAX_ORDER_LENGTH)
 
 
+# The verdict on a title that is *not* watched. "watched" is deliberately not a
+# value: a non-null watched_at already says it, and two fields that can disagree
+# are worse than one. See app.models.watch_progress.
+WatchStatus = Literal["unseen", "unsure"]
+
+# Longer than any season in the catalog by a wide margin (the longest is 22).
+MAX_EPISODES = 500
+
+
 class WatchProgressEntry(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     watched_at: datetime | None = None
     rating: int | None = Field(default=None, ge=1, le=10)
     notes: str | None = Field(default=None, max_length=2000)
+    status: WatchStatus | None = None
+
+    # 1-based positions in the title's episode list. The ORM column is
+    # `episodes_watched`; the wire name matches the frontend store.
+    episodes: list[int] = Field(
+        default_factory=list,
+        max_length=MAX_EPISODES,
+        validation_alias=AliasChoices("episodes", "episodes_watched"),
+    )
+
+    @model_validator(mode="after")
+    def _normalise(self) -> WatchProgressEntry:
+        if any(number < 1 for number in self.episodes):
+            raise ValueError("episode numbers start at 1")
+        self.episodes = sorted(set(self.episodes))
+        # Watched wins: a status only describes a title that is not watched.
+        if self.watched_at is not None:
+            self.status = None
+        return self
 
 
 class WatchProgressBulk(BaseModel):

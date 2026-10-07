@@ -108,6 +108,27 @@ class SeedMovie(BaseModel):
     prerequisites: list[SeedPrerequisite] = Field(default_factory=list)
 
 
+class SeedEpisode(BaseModel):
+    """One episode of a series entry, as `scripts/fetch_episodes.py` writes it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    season: int = Field(ge=0)
+    episode: int = Field(ge=0)
+    name: str = Field(max_length=200)
+    runtime_min: int | None = Field(default=None, gt=0)
+    air_date: date | None = None
+
+
+class EpisodesFile(BaseModel):
+    """The generated companion to the seed file: episode lists by title id."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    version: int
+    episodes: dict[Slug, list[SeedEpisode]] = Field(default_factory=dict)
+
+
 class SeedFile(BaseModel):
     # "ignore" rather than "forbid" so the $comment blocks that document the
     # file survive round-tripping through the enrichment script.
@@ -140,9 +161,10 @@ class ValidatedCatalog:
     chrono_order: dict[str, int]
     release_order: dict[str, int]
     warnings: list[str] = field(default_factory=list)
+    episodes: dict[str, list[SeedEpisode]] = field(default_factory=dict)
 
 
-def validate_catalog(seed: SeedFile) -> ValidatedCatalog:
+def validate_catalog(seed: SeedFile, episodes: EpisodesFile | None = None) -> ValidatedCatalog:
     """Run every structural check. Raises :class:`SeedValidationError` on failure."""
     problems: list[str] = []
     warnings: list[str] = []
@@ -190,6 +212,21 @@ def validate_catalog(seed: SeedFile) -> ValidatedCatalog:
         and movie.credit_scenes.episodes
         and movie.media_type is not MediaType.SERIES
     )
+
+    # -- episode lists -------------------------------------------------------
+    #
+    # Generated, so the only thing that can go wrong is drift: a title renamed
+    # or removed from the seed while its episodes linger. A series with no list
+    # is fine -- it just has nothing to tick off until the script is rerun.
+    media_types = {movie.id: movie.media_type for movie in seed.movies}
+    episode_lists = episodes.episodes if episodes is not None else {}
+    for movie_id, rows in episode_lists.items():
+        if movie_id not in media_types:
+            problems.append(f"episodes.json lists {movie_id}, which is not in the catalog")
+        elif media_types[movie_id] is not MediaType.SERIES:
+            problems.append(f"episodes.json lists {movie_id}, which is not a series")
+        elif not rows:
+            problems.append(f"episodes.json has an empty list for {movie_id}")
 
     if not seed.movies:
         problems.append("The seed file contains no titles.")
@@ -254,6 +291,7 @@ def validate_catalog(seed: SeedFile) -> ValidatedCatalog:
         chrono_order=chrono_order,
         release_order=release_order,
         warnings=warnings,
+        episodes=dict(episode_lists),
     )
 
 

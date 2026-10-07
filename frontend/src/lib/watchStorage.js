@@ -6,6 +6,13 @@
  * That gives a watchlist for free and makes completion a plain count of
  * non-null timestamps.
  *
+ * An entry that is not watched can carry a `status` -- `'unseen'` (sure they
+ * have not) or `'unsure'` (cannot remember) -- which is what the quick-sort
+ * deck's left and down swipes record. A series also carries `episodes`, the
+ * 1-based positions ticked off in its episode list. A watched series counts as
+ * every episode watched whatever that list says, so a title marked watched from
+ * somewhere that does not know its episode count still reads correctly.
+ *
  * Exposed as an external store so `useSyncExternalStore` can subscribe to it.
  * Marking a title watched on the catalog page has to update the progress bar,
  * the prerequisite graph and the header at once, and a store is far less
@@ -147,27 +154,153 @@ export function isWatched(progress, movieId) {
   return Boolean(progress[movieId]?.watched_at)
 }
 
-export function toggleWatched(movieId) {
+/** `'watched'`, `'unseen'`, `'unsure'`, or null for a title nobody has sorted. */
+export function statusOf(progress, movieId) {
+  const entry = progress[movieId]
+  if (entry?.watched_at) return 'watched'
+  return entry?.status ?? null
+}
+
+/** 1..n, the episode list of a fully watched series. */
+function allEpisodes(total) {
+  return Array.from({ length: total }, (_, index) => index + 1)
+}
+
+/** The episodes ticked off, reading a watched series as all of them. */
+export function episodesWatched(progress, movieId, total) {
+  if (!total) return []
+  if (isWatched(progress, movieId)) return allEpisodes(total)
+  return (progress[movieId]?.episodes ?? []).filter((n) => n >= 1 && n <= total)
+}
+
+/** Some episodes ticked, not all of them. */
+export function isInProgress(progress, movieId, total) {
+  const count = episodesWatched(progress, movieId, total).length
+  return count > 0 && count < total
+}
+
+/** True when an entry records nothing at all and can be dropped instead of stored. */
+function isEmpty(entry) {
+  return (
+    !entry.watched_at &&
+    !entry.status &&
+    entry.rating == null &&
+    !entry.notes &&
+    !(entry.episodes?.length > 0)
+  )
+}
+
+/** Write one entry, or delete it when there is nothing left in it. */
+function put(next, movieId, entry) {
+  if (isEmpty(entry)) {
+    if (!(movieId in next)) return
+    delete next[movieId]
+    write(next, { kind: 'clear', movieId })
+  } else {
+    next[movieId] = entry
+    write(next, { kind: 'set', movieId, entry })
+  }
+}
+
+/**
+ * Toggle watched. `episodeCount` is optional: when given, a series marked
+ * watched has every episode ticked in storage as well as on screen.
+ */
+export function toggleWatched(movieId, episodeCount = 0) {
   const current = read()
   const next = { ...current }
 
   if (next[movieId]?.watched_at) {
-    // Untracking entirely rather than leaving a null timestamp: without a
-    // watchlist feature there is nothing for a tracked-but-unwatched row to mean.
+    // Untracking entirely rather than leaving a null timestamp: an un-ticked
+    // title goes back to unsorted, not to "unseen", which is a claim the user
+    // did not make.
     delete next[movieId]
     write(next, { kind: 'clear', movieId })
     return
   }
 
-  next[movieId] = { ...next[movieId], watched_at: new Date().toISOString() }
-  write(next, { kind: 'set', movieId, entry: next[movieId] })
+  const entry = { ...next[movieId], watched_at: new Date().toISOString(), status: null }
+  if (episodeCount > 0) entry.episodes = allEpisodes(episodeCount)
+  next[movieId] = entry
+  write(next, { kind: 'set', movieId, entry })
 }
 
-export function markManyWatched(movieIds) {
+/**
+ * Record a quick-sort verdict: `'watched'`, `'unseen'`, `'unsure'`, or null to
+ * forget it. Rating and notes survive; a series' episodes follow the verdict
+ * only when it is "watched" (all of them).
+ */
+export function setStatus(movieId, status, episodeCount = 0) {
+  const next = { ...read() }
+  const entry = { ...next[movieId] }
+
+  if (status === 'watched') {
+    entry.watched_at = entry.watched_at ?? new Date().toISOString()
+    entry.status = null
+    if (episodeCount > 0) entry.episodes = allEpisodes(episodeCount)
+  } else {
+    entry.watched_at = null
+    entry.status = status ?? null
+  }
+  put(next, movieId, entry)
+}
+
+/**
+ * Put an entry back exactly as it was -- the deck's undo. `undefined` means
+ * there was no entry, so the title goes back to unsorted.
+ */
+export function restoreEntry(movieId, entry) {
+  const next = { ...read() }
+  if (entry === undefined) {
+    if (!(movieId in next)) return
+    delete next[movieId]
+    write(next, { kind: 'clear', movieId })
+    return
+  }
+  next[movieId] = entry
+  write(next, { kind: 'set', movieId, entry })
+}
+
+/**
+ * Replace the ticked episodes of a series with `episodes` (1-based).
+ *
+ * Ticking the last one marks the series watched; un-ticking any from a watched
+ * series un-marks it but keeps the rest. Either way a quick-sort verdict no
+ * longer applies once somebody is counting episodes, so it is cleared.
+ */
+export function setEpisodes(movieId, episodes, total) {
+  const next = { ...read() }
+  const entry = { ...next[movieId] }
+  const ticked = [...new Set(episodes)].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b)
+
+  entry.episodes = ticked
+  entry.status = null
+  entry.watched_at =
+    total > 0 && ticked.length === total ? (entry.watched_at ?? new Date().toISOString()) : null
+  put(next, movieId, entry)
+}
+
+export function toggleEpisode(movieId, episode, total) {
+  const current = episodesWatched(read(), movieId, total)
+  const has = current.includes(episode)
+  setEpisodes(movieId, has ? current.filter((n) => n !== episode) : [...current, episode], total)
+}
+
+/** Tick every episode up to and including `episode` -- "I'm up to here". */
+export function markEpisodesThrough(movieId, episode, total) {
+  setEpisodes(movieId, allEpisodes(Math.min(episode, total)), total)
+}
+
+/** `episodeCounts` (id -> count) is optional, as for `toggleWatched`. */
+export function markManyWatched(movieIds, episodeCounts = {}) {
   const next = { ...read() }
   const now = new Date().toISOString()
   for (const movieId of movieIds) {
-    if (!next[movieId]?.watched_at) next[movieId] = { ...next[movieId], watched_at: now }
+    if (!next[movieId]?.watched_at) {
+      next[movieId] = { ...next[movieId], watched_at: now, status: null }
+      const count = episodeCounts[movieId]
+      if (count > 0) next[movieId].episodes = allEpisodes(count)
+    }
   }
   write(next, { kind: 'bulk', movieIds })
 }
@@ -193,6 +326,13 @@ export function setNotes(movieId, notes) {
 
 export function clearAll() {
   write({}, { kind: 'reset' })
+}
+
+/** How a set of titles splits across the quick-sort verdicts. */
+export function sortCounts(progress, movieIds) {
+  const counts = { watched: 0, unseen: 0, unsure: 0, unsorted: 0 }
+  for (const id of movieIds) counts[statusOf(progress, id) ?? 'unsorted'] += 1
+  return counts
 }
 
 /** Completion over an arbitrary set of titles. */
