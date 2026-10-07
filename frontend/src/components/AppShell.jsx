@@ -1,48 +1,11 @@
 import { useSyncExternalStore } from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 
-import { useAuth } from '../auth/AuthContext'
 import { clearSyncError, getSnapshot, subscribe } from '../lib/syncStatus'
 import { GlobalSearch } from './GlobalSearch'
 import { InstallLink, InstallPrompt } from './InstallPrompt'
+import { BottomTabBar, SectionLinks, SectionTabs } from './navigation'
 import { UserMenu } from './UserMenu'
-
-const NAV = [
-  // No entry for "/": the wordmark to the left of these is the way home.
-  { to: '/catalog', label: 'Catalog' },
-  { to: '/timeline', label: 'Timeline' },
-  { to: '/compare', label: 'Compare' },
-  { to: '/orders', label: 'My orders' },
-  { to: '/progress', label: 'Progress' },
-  // The one entry that is not always here. Friends is the only feature in the
-  // app with no guest half -- a friendship is between two accounts, and a
-  // browser holding localStorage is not one of them -- so for a signed-out
-  // visitor this would be a nav item leading to a locked door. Every other page
-  // works signed out, and the nav should keep saying so.
-  { to: '/friends', label: 'Friends', accountOnly: true },
-]
-
-// The active stop is underlined in the Infinity yellow, like the lit segment
-// of a line diagram over a carriage door. The underline is a border rather
-// than `text-decoration` so it sits flush on the band's bottom edge.
-function navClass({ isActive }) {
-  return [
-    'label shrink-0 border-b-[3px] px-2 pt-3 pb-2.5 whitespace-nowrap transition-colors lg:px-3',
-    isActive
-      ? 'border-infinity text-on-masthead'
-      : 'border-transparent text-on-masthead-dim hover:text-on-masthead',
-  ].join(' ')
-}
-
-function NavLinks() {
-  const { user } = useAuth()
-
-  return NAV.filter((item) => !item.accountOnly || user).map((item) => (
-    <NavLink key={item.to} to={item.to} end={item.end} className={navClass}>
-      {item.label}
-    </NavLink>
-  ))
-}
 
 /**
  * Optimistic writes roll back silently when the server refuses them, which
@@ -61,7 +24,7 @@ function SyncErrorPopup() {
     <div
       role="alert"
       aria-live="assertive"
-      className="floating bubble bubble-below animate-popup-in fixed inset-x-4 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-40 border-danger sm:inset-x-auto sm:right-6 sm:max-w-sm"
+      className="floating bubble bubble-below animate-popup-in fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-40 lg:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] border-danger sm:inset-x-auto sm:right-6 sm:max-w-sm"
     >
       <div className="flex items-start gap-4 px-4 py-3">
         <p className="flex-1 text-sm leading-relaxed text-ink">{message}</p>
@@ -130,16 +93,12 @@ export function AppShell() {
             </span>
           </NavLink>
 
-          {/* Below `lg` the nav moves to its own row underneath. The logo, the
-           * nav items and the account control together need well over 414px of
-           * min-content, so on a 320-390px phone a single row cannot fit them.
-           * Rendering one nav or the other (rather than reordering a single one
-           * with `order`) keeps the focus order matching the visual order in
-           * both layouts, and the hidden copy is `display:none`, so assistive
-           * tech only ever sees one. The second row scrolls sideways on its
-           * own, so the page itself never grows wider than the viewport. */}
+          {/* Below `lg` the sections move to the tab bar along the bottom
+           * edge, where a thumb reaches them, and the masthead keeps one row.
+           * One nav or the other is `display:none`, so assistive tech only
+           * ever meets one "Main" landmark. */}
           <nav className="hidden items-end gap-1 self-stretch lg:flex" aria-label="Main">
-            <NavLinks />
+            <SectionLinks />
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
@@ -147,23 +106,20 @@ export function AppShell() {
             <UserMenu />
           </div>
         </div>
-
-        <nav
-          aria-label="Main"
-          className="mx-auto flex max-w-[1400px] items-center overflow-x-auto px-2 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
-        >
-          <NavLinks />
-        </nav>
       </header>
 
       <SyncErrorPopup />
       <InstallPrompt />
 
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-24 outline-none sm:px-6">
+        <SectionTabs />
         <Outlet />
       </main>
 
-      <footer className="border-t-2 border-ink pb-[env(safe-area-inset-bottom)]">
+      {/* On a phone the footer also makes room for the tab bar, so its last
+          line is never under it -- and pages that size themselves to "the
+          space above the footer", like the timeline, stop at the bar too. */}
+      <footer className="border-t-2 border-ink pb-[calc(4.25rem+env(safe-area-inset-bottom))] lg:pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-4 sm:px-6">
           <p className="meta">Marvel Watch Order</p>
           <InstallLink className="meta cursor-pointer underline-offset-4 transition-colors hover:text-ink hover:underline" />
@@ -186,6 +142,8 @@ export function AppShell() {
           </p>
         </div>
       </footer>
+
+      <BottomTabBar />
     </div>
   )
 }

@@ -237,7 +237,7 @@ function Deck({ movies, filters, counts, onRevisit, onRestart }) {
           <div
             className="relative"
             // Sized so the card and the buttons under it fit one phone screen.
-            style={{ width: 'min(20rem, 76vw, calc((100dvh - 25rem) * 2 / 3))', aspectRatio: '2 / 3' }}
+            style={{ width: 'min(20rem, 76vw, calc((100dvh - 29.5rem) * 2 / 3))', aspectRatio: '2 / 3' }}
           >
             {next && <SwipeCard key={next.id} movie={next} behind />}
             <SwipeCard

@@ -114,9 +114,10 @@
 
   html {
     color-scheme: light dark;
-    /* Keeps anything scrolled or tabbed to clear of the sticky masthead, which
-     * is one row on a desktop and two on a phone. */
-    scroll-padding-top: calc(7rem + env(safe-area-inset-top));
+    /* Keeps anything scrolled or tabbed to clear of the sticky masthead (one
+     * row everywhere now) and, on a phone, of the tab bar along the bottom. */
+    scroll-padding-top: calc(4.5rem + env(safe-area-inset-top));
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
     -webkit-tap-highlight-color: transparent;
   }
 
