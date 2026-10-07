@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 
 import { useWatchProgress } from '../hooks/useWatchProgress'
 import { MEDIA_LABEL, creditScenesLabel, formatRuntime, year } from '../lib/format'
-import { isWatched } from '../lib/watchStorage'
+import { isWatched, statusOf } from '../lib/watchStorage'
 import { LineBullet } from './LineBullet'
 import { WatchToggle } from './WatchToggle'
 
@@ -20,6 +20,7 @@ import { WatchToggle } from './WatchToggle'
 export function TitleCard({ movie }) {
   const progress = useWatchProgress()
   const watched = isWatched(progress, movie.id)
+  const unsure = statusOf(progress, movie.id) === 'unsure'
   const runtime = formatRuntime(movie.runtime_min)
   const creditScenes = movie.credit_scenes
   const details = [
@@ -68,8 +69,26 @@ export function TitleCard({ movie }) {
         <LineBullet movie={movie} className="absolute top-1.5 left-1.5" />
 
         <div className="absolute top-1 right-1">
-          <WatchToggle movieId={movie.id} watched={watched} title={movie.title} size="sm" />
+          <WatchToggle
+            movieId={movie.id}
+            watched={watched}
+            title={movie.title}
+            size="sm"
+            episodeCount={movie.episode_count}
+          />
         </div>
+
+        {/* Marked "don't recall" in quick sort: a question hung on the poster
+            so the maybes stand out when browsing for something to rewatch. */}
+        {unsure && (
+          <span
+            aria-hidden="true"
+            className="station absolute right-1 bottom-1 grid size-7 place-items-center bg-infinity font-bold text-on-infinity"
+            title="You couldn't remember this one"
+          >
+            ?
+          </span>
+        )}
 
         {/* The wink: something is still coming after the picture ends. Drawn
          * only for a positive count -- a recorded zero and an unrecorded title
@@ -89,6 +108,7 @@ export function TitleCard({ movie }) {
         <p className="meta mt-auto">
           {details.join(', ')}
           {watched && <span className="text-ok">, seen</span>}
+          {unsure && <span>, don't recall</span>}
         </p>
       </div>
     </Link>

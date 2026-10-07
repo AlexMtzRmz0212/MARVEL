@@ -13,6 +13,7 @@ import { OrdersPage } from './features/builder/OrdersPage'
 import { PrereqGraphPage } from './features/prereq/PrereqGraphPage'
 import { CompareProgressPage } from './features/progress/CompareProgressPage'
 import { ProgressPage } from './features/progress/ProgressPage'
+import { QuickSortPage } from './features/sort/QuickSortPage'
 import { TimelinePage } from './features/timeline/TimelinePage'
 import { MovieDetailPage } from './pages/MovieDetailPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
       // The share link people are handed is this path with `?with=<token>`.
       // One route, no redirect hop, and the parameter is naturally optional:
       // without it the page is "here is your link, or paste theirs".
+      { path: 'progress/sort', element: <QuickSortPage /> },
       { path: 'progress/compare', element: <CompareProgressPage /> },
       // Inside the shell rather than beside it: the header belongs on both, and
       // there is no route to guard — every page above works signed out, backed

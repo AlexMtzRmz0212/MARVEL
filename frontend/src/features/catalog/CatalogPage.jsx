@@ -6,7 +6,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/states'
 import { useWatchedDisplayMode } from '../../hooks/useWatchedDisplayMode'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { setWatchedDisplayMode } from '../../lib/watchDisplayPref'
-import { isWatched } from '../../lib/watchStorage'
+import { isWatched, statusOf } from '../../lib/watchStorage'
 import { FilterBar } from './FilterBar'
 
 const ORDERS = [
@@ -30,6 +30,13 @@ const ORDERS = [
 const ORDER_KEYS = new Set(ORDERS.map((item) => item.key))
 
 const FILTER_KEYS = ['phase', 'saga', 'universe', 'media_type', 'tier', 'q']
+
+/**
+ * Filters on the viewer's own quick-sort verdicts. Applied here rather than
+ * sent to the API, which knows nothing about who is asking. `unsorted` is the
+ * absence of a verdict.
+ */
+const STATUS_KEYS = new Set(['unsorted', 'unseen', 'unsure'])
 
 /** The two main sagas lead; everything else follows alphabetically. */
 const SAGA_RANK = { 'Infinity Saga': 0, 'Multiverse Saga': 1 }
@@ -69,6 +76,7 @@ export function CatalogPage() {
       (previous) => {
         const next = new URLSearchParams(previous)
         FILTER_KEYS.forEach((key) => next.delete(key))
+        next.delete('status')
         return next
       },
       { replace: true },
@@ -81,10 +89,13 @@ export function CatalogPage() {
 
   const watchProgress = useWatchProgress()
   const watchedDisplayMode = useWatchedDisplayMode()
-  const visibleMovies =
-    watchedDisplayMode === 'hide'
-      ? movies?.filter((movie) => !isWatched(watchProgress, movie.id))
-      : movies
+  const requestedStatus = searchParams.get('status')
+  const status = STATUS_KEYS.has(requestedStatus) ? requestedStatus : null
+  const visibleMovies = movies?.filter((movie) => {
+    if (watchedDisplayMode === 'hide' && isWatched(watchProgress, movie.id)) return false
+    if (status && (statusOf(watchProgress, movie.id) ?? 'unsorted') !== status) return false
+    return true
+  })
 
   const active = ORDERS.find((item) => item.key === order)
 
@@ -126,7 +137,7 @@ export function CatalogPage() {
 
       <div className="pb-4">
         <FilterBar
-          filters={filters}
+          filters={{ ...filters, status }}
           options={options}
           setFilter={setParam}
           reset={resetFilters}
@@ -143,7 +154,9 @@ export function CatalogPage() {
       {movies && movies.length === 0 && <EmptyState>No titles match these filters</EmptyState>}
 
       {movies && movies.length > 0 && visibleMovies.length === 0 && (
-        <EmptyState>Every matching title is already watched</EmptyState>
+        <EmptyState>
+          {status ? 'No matching title is sorted that way' : 'Every matching title is already watched'}
+        </EmptyState>
       )}
 
       {visibleMovies && visibleMovies.length > 0 && (

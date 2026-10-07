@@ -7,7 +7,7 @@ import { ProgressBar } from '../../components/WatchToggle'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { SAGA_LABEL, formatTotalRuntime, phaseLabel } from '../../lib/format'
-import { clearAll, isWatched, progressFor } from '../../lib/watchStorage'
+import { clearAll, isWatched, progressFor, sortCounts } from '../../lib/watchStorage'
 
 function Row({ label, sublabel, movieIds, progress, to }) {
   const stats = progressFor(progress, movieIds)
@@ -50,6 +50,7 @@ export function ProgressPage() {
 
   const allIds = movies.map((movie) => movie.id)
   const overall = progressFor(progress, allIds)
+  const sorted = sortCounts(progress, allIds)
 
   const watchedRuntime = movies
     .filter((movie) => isWatched(progress, movie.id))
@@ -82,6 +83,25 @@ export function ProgressPage() {
           </Link>
         </div>
       </div>
+
+      {(sorted.unsorted > 0 || sorted.unsure > 0) && (
+        <section className="panel benday mb-3 flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="display text-3xl text-ink">Quick sort</h2>
+            <p className="mt-1 text-sm text-ink-dim">
+              {sorted.unsorted > 0 && (
+                <>
+                  {sorted.unsorted} title{sorted.unsorted === 1 ? '' : 's'} you haven't sorted yet.{' '}
+                </>
+              )}
+              {sorted.unsure > 0 && <>{sorted.unsure} you couldn't remember.</>}
+            </p>
+          </div>
+          <Link to="/progress/sort" className="btn btn-primary shrink-0">
+            {sorted.unsorted > 0 ? 'Swipe through them' : 'Revisit the maybes'}
+          </Link>
+        </section>
+      )}
 
       <div className="grid items-start gap-3 md:grid-cols-2">
         <section className="panel">

@@ -417,6 +417,25 @@
     animation: sfx-pop 0.75s steps(9, end) forwards;
   }
 
+  /* A rubber stamp slammed onto a quick-sort card: the verdict, printed while
+   * the card is still in the hand so it can be taken back. Opacity is driven
+   * inline by how far the drag has gone. */
+  .stamp {
+    position: absolute;
+    z-index: 4;
+    pointer-events: none;
+    border: 4px solid currentColor;
+    background-color: var(--color-surface);
+    padding: 0.15rem 0.6rem 0.05rem;
+    font-family: var(--font-sfx);
+    font-size: 2.1rem;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 3px 3px 0 var(--color-ink);
+  }
+
   /* Speed lines: a ring of ink rays converging on a point, the action frame. */
   .speed-lines {
     background-image: repeating-conic-gradient(

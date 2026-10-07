@@ -165,6 +165,16 @@ export function HomePage() {
               See the map
             </Link>
           </div>
+          {/* Only for someone who has not started: the fastest way in for a
+              person who has already seen half of it is to say so, quickly. */}
+          {Object.keys(progress).length === 0 && (
+            <p className="mt-5 text-sm text-ink-dim">
+              Seen some already?{' '}
+              <Link to="/progress/sort" className="font-semibold text-ink underline underline-offset-4">
+                Swipe through them in a minute
+              </Link>
+            </p>
+          )}
         </div>
 
         <div className="panel halftone flex flex-col lg:col-span-7">

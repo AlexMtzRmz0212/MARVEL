@@ -22,7 +22,7 @@ export function CheckIcon({ className = 'size-3.5' }) {
   )
 }
 
-export function WatchToggle({ movieId, watched, title, size = 'md' }) {
+export function WatchToggle({ movieId, watched, title, size = 'md', episodeCount = 0 }) {
   const dimension = size === 'sm' ? 'size-7' : 'size-9'
   // Bumped each time a title is marked watched, so the sound effect replays
   // even on a quick second click. Never for un-watching: that is not an event.
@@ -39,7 +39,7 @@ export function WatchToggle({ movieId, watched, title, size = 'md' }) {
           event.preventDefault()
           event.stopPropagation()
           if (!watched) setBang((count) => count + 1)
-          toggleWatched(movieId)
+          toggleWatched(movieId, episodeCount)
         }}
         className={[
           dimension,

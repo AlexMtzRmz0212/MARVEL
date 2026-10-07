@@ -144,6 +144,22 @@ export function FilterBar({
           ))}
         </Group>
 
+        <Group label="Sorted as">
+          {[
+            ['unseen', 'Not seen'],
+            ['unsure', "Don't recall"],
+            ['unsorted', 'Unsorted'],
+          ].map(([status, label]) => (
+            <Toggle
+              key={status}
+              active={filters.status === status}
+              onClick={() => setFilter('status', filters.status === status ? null : status)}
+            >
+              {label}
+            </Toggle>
+          ))}
+        </Group>
+
         <Group label="Watched">
           <Toggle
             active={watchedDisplayMode === 'fade'}
