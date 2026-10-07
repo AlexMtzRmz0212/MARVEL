@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
 import { clearSyncError, getSnapshot, subscribe } from '../lib/syncStatus'
 import { GlobalSearch } from './GlobalSearch'
+import { InstallPrompt } from './InstallPrompt'
 import { UserMenu } from './UserMenu'
 
 const NAV = [
@@ -60,7 +61,7 @@ function SyncErrorPopup() {
     <div
       role="alert"
       aria-live="assertive"
-      className="floating bubble bubble-below animate-popup-in fixed inset-x-4 bottom-6 z-40 border-danger sm:inset-x-auto sm:right-6 sm:max-w-sm"
+      className="floating bubble bubble-below animate-popup-in fixed inset-x-4 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-40 border-danger sm:inset-x-auto sm:right-6 sm:max-w-sm"
     >
       <div className="flex items-start gap-4 px-4 py-3">
         <p className="flex-1 text-sm leading-relaxed text-ink">{message}</p>
@@ -109,7 +110,9 @@ function MisregisterFilter() {
 
 export function AppShell() {
   return (
-    <div className="flex min-h-dvh flex-col bg-paper">
+    // The side insets are the landscape notch on an installed iPhone; they are
+    // zero in a browser and on any screen without a notch.
+    <div className="flex min-h-dvh flex-col bg-paper pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
       <MisregisterFilter />
       <a
         href="#main"
@@ -154,12 +157,13 @@ export function AppShell() {
       </header>
 
       <SyncErrorPopup />
+      <InstallPrompt />
 
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-24 outline-none sm:px-6">
         <Outlet />
       </main>
 
-      <footer className="border-t-2 border-ink">
+      <footer className="border-t-2 border-ink pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-4 sm:px-6">
           <p className="meta">Marvel Watch Order</p>
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5" aria-label="Legal">

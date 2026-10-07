@@ -8,7 +8,7 @@ export function MergePrompt({ merge }) {
 
   if (summary) {
     return (
-      <div role="status" className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-6">
+      <div role="status" className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <div className="floating bubble bubble-below bubble-left animate-popup-in mb-3 flex max-w-lg items-start gap-4 px-5 py-4">
           <p className="text-sm leading-relaxed text-ink">{summary}</p>
           <button

@@ -1,0 +1,25 @@
+<!--
+  The home-screen icon: the favicon's two lines meeting at a station, set on
+  the masthead band rather than in a paper frame. A frame would be cropped by
+  the rounded mask every platform applies, so the band runs full bleed and the
+  mark is scaled into the maskable safe zone (the centre 80% circle).
+
+  Source for the PNGs in public/. Re-render them after editing this file:
+    node pwa/render-icons.mjs
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#17171c" />
+  <g transform="translate(16 16) scale(0.85) translate(-15.6 -16)">
+    <g fill="none" stroke-linecap="round">
+      <path d="M9 9.5 22 16" stroke="#e9ebe4" stroke-width="5.4" />
+      <path d="M9 22.5 22 16" stroke="#e9ebe4" stroke-width="5.4" />
+      <path d="M9 9.5 22 16" stroke="#f2c200" stroke-width="2.6" />
+      <path d="M9 22.5 22 16" stroke="#c8166e" stroke-width="2.6" />
+    </g>
+    <g fill="#17171c" stroke="#e9ebe4">
+      <circle cx="9" cy="9.5" r="3.2" stroke-width="1.8" />
+      <circle cx="9" cy="22.5" r="3.2" stroke-width="1.8" />
+      <circle cx="22" cy="16" r="4.4" stroke-width="2.2" />
+    </g>
+  </g>
+</svg>

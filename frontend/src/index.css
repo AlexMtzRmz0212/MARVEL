@@ -116,7 +116,7 @@
     color-scheme: light dark;
     /* Keeps anything scrolled or tabbed to clear of the sticky masthead, which
      * is one row on a desktop and two on a phone. */
-    scroll-padding-top: 7rem;
+    scroll-padding-top: calc(7rem + env(safe-area-inset-top));
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -189,6 +189,10 @@
   .masthead {
     background-color: var(--color-masthead);
     color: var(--color-on-masthead);
+    /* Installed on a phone, the app draws under the status bar (see the
+     * viewport-fit and status-bar-style tags in index.html). The band extends
+     * up behind it and pushes its own content back down. Zero in a browser. */
+    padding-top: env(safe-area-inset-top);
   }
   /* An ink ring would vanish on the band; yellow is the one colour that reads
    * on it in both editions. */
