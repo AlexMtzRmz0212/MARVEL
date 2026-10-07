@@ -7,23 +7,44 @@
  *
  * - iOS has no install API at all. Every browser there can add a page to the
  *   home screen from its Share menu, so the card says where to tap.
- * - Chromium (Android) fires `beforeinstallprompt`, which is held on to and
- *   replayed from an Install button.
+ * - Chromium (Android, desktop) fires `beforeinstallprompt`, which is held on
+ *   to and replayed from an Install button.
  *
- * Shown only on touch screens, never once installed, and never again once
- * dismissed.
+ * Two entry points share one store: the card, which offers itself once on a
+ * touch screen until dismissed, and the footer link, which is always there
+ * (until installed) for whoever dismissed the card and then wanted it back.
  */
 
-import { useState, useSyncExternalStore } from 'react'
+import { useSyncExternalStore } from 'react'
 
 const DISMISSED_KEY = 'mcu.install-prompt.dismissed.v1'
 
-// `beforeinstallprompt` can fire before React has mounted anything, so it is
-// caught at module load rather than in an effect, and held here.
-let deferredPrompt = null
+function readDismissed() {
+  try {
+    return localStorage.getItem(DISMISSED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function writeDismissed(value) {
+  try {
+    if (value) localStorage.setItem(DISMISSED_KEY, '1')
+    else localStorage.removeItem(DISMISSED_KEY)
+  } catch {
+    // Private mode: the card comes back next visit, which is no worse than that.
+  }
+}
+
+// Replaced, never mutated, so useSyncExternalStore sees each change.
+// `beforeinstallprompt` can fire before React has mounted anything, which is
+// why this lives at module scope and the listeners below are registered on
+// import rather than in an effect.
+let state = { prompt: null, dismissed: typeof window === 'undefined' ? true : readDismissed() }
 const listeners = new Set()
 
-function notify() {
+function setState(patch) {
+  state = { ...state, ...patch }
   for (const listener of listeners) listener()
 }
 
@@ -31,13 +52,9 @@ if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', (event) => {
     // Suppresses Chrome's own mini-infobar: the card below is the prompt.
     event.preventDefault()
-    deferredPrompt = event
-    notify()
+    setState({ prompt: event })
   })
-  window.addEventListener('appinstalled', () => {
-    deferredPrompt = null
-    notify()
-  })
+  window.addEventListener('appinstalled', () => setState({ prompt: null }))
 }
 
 function subscribe(listener) {
@@ -45,7 +62,26 @@ function subscribe(listener) {
   return () => listeners.delete(listener)
 }
 
-const getDeferredPrompt = () => deferredPrompt
+const getState = () => state
+const serverState = { prompt: null, dismissed: true }
+
+function useInstallState() {
+  return useSyncExternalStore(subscribe, getState, () => serverState)
+}
+
+function dismiss() {
+  writeDismissed(true)
+  setState({ dismissed: true })
+}
+
+async function install(prompt) {
+  prompt.prompt()
+  const { outcome } = await prompt.userChoice
+  // A prompt can be shown once. Either way it is spent; only an accept means
+  // there is nothing left to offer.
+  setState({ prompt: null })
+  if (outcome === 'accepted') dismiss()
+}
 
 function isInstalled() {
   return (
@@ -59,21 +95,14 @@ function isIOS() {
   return /iPad|iPhone|iPod/.test(userAgent) || (platform === 'MacIntel' && maxTouchPoints > 1)
 }
 
-function readDismissed() {
-  try {
-    return localStorage.getItem(DISMISSED_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
 /** The iOS Share glyph: a box with an arrow leaving it. */
 function ShareIcon() {
   return (
     <svg
       viewBox="0 0 16 20"
-      aria-hidden="true"
-      className="inline-block h-[1.1em] w-[0.9em] -translate-y-px align-middle"
+      aria-label="Share"
+      role="img"
+      className="inline-block h-[1.1em] w-[0.9em] -translate-y-px align-middle text-ink"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.6"
@@ -87,32 +116,12 @@ function ShareIcon() {
 }
 
 export function InstallPrompt() {
-  const prompt = useSyncExternalStore(subscribe, getDeferredPrompt, () => null)
-  const [dismissed, setDismissed] = useState(readDismissed)
+  const { prompt, dismissed } = useInstallState()
 
   if (dismissed || isInstalled() || !window.matchMedia('(pointer: coarse)').matches) return null
 
   const ios = isIOS()
   if (!ios && !prompt) return null
-
-  const dismiss = () => {
-    setDismissed(true)
-    try {
-      localStorage.setItem(DISMISSED_KEY, '1')
-    } catch {
-      // Private mode: it comes back next visit, which is no worse than that.
-    }
-  }
-
-  const install = async () => {
-    prompt.prompt()
-    const { outcome } = await prompt.userChoice
-    // A prompt can be shown once. Either way it is spent; only an accept
-    // means the card has nothing left to offer.
-    deferredPrompt = null
-    notify()
-    if (outcome === 'accepted') dismiss()
-  }
 
   return (
     <div
@@ -125,10 +134,22 @@ export function InstallPrompt() {
         <div className="min-w-0 flex-1">
           <p className="label text-ink">Get the app</p>
           {ios ? (
-            <p className="mt-1 text-sm leading-relaxed text-ink-dim">
-              Tap Share <ShareIcon /> then <span className="text-ink">Add to Home Screen</span> to
-              open Watch Order from its own icon, full screen.
-            </p>
+            <>
+              <p className="mt-1 text-sm leading-relaxed text-ink-dim">
+                Open Watch Order from its own icon, full screen, like any other app:
+              </p>
+              {/* Newer Safari tucks Share inside the ••• menu rather than on
+               * the toolbar, so the steps name both places it can be. */}
+              <ol className="mt-1.5 list-decimal space-y-0.5 pl-5 text-sm leading-relaxed text-ink-dim">
+                <li>
+                  Tap <span className="text-ink">Share</span> <ShareIcon /> (on newer iPhones,
+                  tap <span className="text-ink">•••</span> first)
+                </li>
+                <li>
+                  Choose <span className="text-ink">Add to Home Screen</span>
+                </li>
+              </ol>
+            </>
           ) : (
             <p className="mt-1 text-sm leading-relaxed text-ink-dim">
               Install Watch Order to open it from its own icon, full screen.
@@ -136,7 +157,7 @@ export function InstallPrompt() {
           )}
           <div className="mt-3 flex gap-2">
             {!ios && (
-              <button type="button" onClick={install} className="btn btn-primary btn-sm">
+              <button type="button" onClick={() => install(prompt)} className="btn btn-primary btn-sm">
                 Install
               </button>
             )}
@@ -147,5 +168,33 @@ export function InstallPrompt() {
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * The way back to the card once it has been dismissed. On Chromium it skips
+ * the card and opens the browser's own install dialog directly; on iOS, where
+ * there is no such dialog, it brings the instructions back up.
+ */
+export function InstallLink({ className }) {
+  const { prompt } = useInstallState()
+
+  if (isInstalled()) return null
+  const ios = isIOS()
+  if (!ios && !prompt) return null
+
+  const onClick = () => {
+    if (ios) {
+      writeDismissed(false)
+      setState({ dismissed: false })
+    } else {
+      install(prompt)
+    }
+  }
+
+  return (
+    <button type="button" onClick={onClick} className={className}>
+      Install the app
+    </button>
   )
 }

@@ -4,7 +4,7 @@ import { Link, NavLink, Outlet } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
 import { clearSyncError, getSnapshot, subscribe } from '../lib/syncStatus'
 import { GlobalSearch } from './GlobalSearch'
-import { InstallPrompt } from './InstallPrompt'
+import { InstallLink, InstallPrompt } from './InstallPrompt'
 import { UserMenu } from './UserMenu'
 
 const NAV = [
@@ -166,6 +166,7 @@ export function AppShell() {
       <footer className="border-t-2 border-ink pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-5 gap-y-1.5 px-4 py-4 sm:px-6">
           <p className="meta">Marvel Watch Order</p>
+          <InstallLink className="meta cursor-pointer underline-offset-4 transition-colors hover:text-ink hover:underline" />
           <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5" aria-label="Legal">
             <Link
               to="/privacy"
