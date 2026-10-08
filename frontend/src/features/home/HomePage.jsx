@@ -182,9 +182,15 @@ export function HomePage() {
               into, measured rather than guessed: 0.675 turned vertically for
               the phone, 2.65 laid out flat for everything else. A frame much
               squarer than its drawing is mostly empty frame. */}
+          {/* A map with no instructions reads as a bundle of lines. One sentence
+              of how to read it, on the phone where the picture is cut down to a
+              sample and there is no room to show more than that. */}
+          <p className="meta border-b-2 border-ink bg-surface px-4 py-2.5 text-ink-dim sm:hidden">
+            Read it top to bottom. Each line means the title above it comes first.
+          </p>
           <div className="flex flex-1 items-center p-2 sm:p-4">
             <div className="aspect-[27/40] w-full sm:aspect-[12/5]">
-            <HeroGraph />
+              <HeroGraph />
             </div>
           </div>
           <div className="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 border-t-2 border-ink bg-surface px-4 py-2.5">

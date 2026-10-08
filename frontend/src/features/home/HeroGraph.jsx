@@ -30,6 +30,10 @@ import { accentFor } from '../../lib/format'
  * War where all of it converges, and two series hanging off Endgame in the next
  * saga's colour.
  *
+ * `compact` marks the nine that stay on a phone, and `short` is the name each
+ * one wears there: at that size a dot nobody can name is just a dot, so every
+ * station on the narrow map is labelled, not only the landmarks.
+ *
  * `compact` marks the nine that stay on a phone. Ten dependency depths drawn
  * across a 320px screen is a row of specks, so the narrow layout keeps the last
  * third of the excerpt instead: the same funnel and the same two colours, four
@@ -41,18 +45,18 @@ const TITLES = [
   { id: 'captain-america-the-first-avenger', title: 'Captain America' },
   { id: 'thor', title: 'Thor' },
   { id: 'the-incredible-hulk', title: 'The Incredible Hulk', tier: 'supporting' },
-  { id: 'doctor-strange', title: 'Doctor Strange', compact: true },
-  { id: 'captain-marvel', title: 'Captain Marvel', compact: true },
+  { id: 'doctor-strange', title: 'Doctor Strange', short: 'Strange', compact: true },
+  { id: 'captain-marvel', title: 'Captain Marvel', short: 'Capt. Marvel', compact: true },
   { id: 'iron-man-2', title: 'Iron Man 2' },
   { id: 'the-avengers', title: 'The Avengers', mark: 'The Avengers' },
   { id: 'captain-america-the-winter-soldier', title: 'The Winter Soldier' },
   { id: 'thor-the-dark-world', title: 'The Dark World', tier: 'supporting' },
   { id: 'avengers-age-of-ultron', title: 'Age of Ultron' },
   { id: 'captain-america-civil-war', title: 'Civil War', mark: 'Civil War' },
-  { id: 'black-panther', title: 'Black Panther', compact: true },
-  { id: 'spider-man-homecoming', title: 'Homecoming', compact: true },
-  { id: 'thor-ragnarok', title: 'Ragnarok', compact: true },
-  { id: 'avengers-infinity-war', title: 'Infinity War', compact: true },
+  { id: 'black-panther', title: 'Black Panther', short: 'Panther', compact: true },
+  { id: 'spider-man-homecoming', title: 'Homecoming', short: 'Spider-Man', compact: true },
+  { id: 'thor-ragnarok', title: 'Ragnarok', short: 'Ragnarok', compact: true },
+  { id: 'avengers-infinity-war', title: 'Infinity War', short: 'Infinity War', compact: true },
   { id: 'avengers-endgame', title: 'Endgame', mark: 'Endgame', compact: true },
   {
     id: 'wandavision',
@@ -156,7 +160,7 @@ export function HeroGraph({ className = '' }) {
     // hang in: 52 because "WandaVision" reaches ~50 units either side of its own
     // dot and at 46 the wide layout clipped its last letter against the frame.
     // The narrow margin is halved with everything else it has to clear.
-    const box = boundsOf(built.nodes, wide ? 52 : 26)
+    const box = boundsOf(built.nodes, wide ? 52 : 34)
 
     // Someone who has asked for less motion gets the settled layout as a still.
     // Everyone else gets it assembled in front of them, from the same starting
@@ -253,7 +257,10 @@ export function HeroGraph({ className = '' }) {
         )}
       </g>
 
-      {graph.nodes.map((node) => (
+      {graph.nodes.map((node) => {
+        const label = wide ? node.mark : (node.mark ?? node.short)
+        const above = !wide && node.depth === 0
+        return (
         <g
           key={node.id}
           ref={(element) => {
@@ -269,9 +276,15 @@ export function HeroGraph({ className = '' }) {
             stroke="var(--color-ink)"
             strokeWidth={(node.degree > 2 ? 3.25 : 2.5) * scale}
           />
-          {node.mark && (
+          {label && (
             <text
-              y={radiusOf(node, scale) + 17 * scale}
+              y={
+                // Titles with nothing behind them have every line leaving
+                // downwards, straight through a label hung underneath.
+                above
+                  ? -(radiusOf(node, scale) + 6 * scale)
+                  : radiusOf(node, scale) + 17 * scale
+              }
               textAnchor="middle"
               fontSize={15 * scale}
               fontWeight={800}
@@ -281,11 +294,12 @@ export function HeroGraph({ className = '' }) {
               paintOrder="stroke"
               style={{ fontStretch: '75%', textTransform: 'uppercase', letterSpacing: '0.02em' }}
             >
-              {node.mark}
+              {label}
             </text>
           )}
         </g>
-      ))}
+        )
+      })}
     </svg>
   )
 }

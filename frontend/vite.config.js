@@ -16,10 +16,12 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       VitePWA({
-        // A new deploy takes over on the next launch without asking. Nothing in
-        // the app holds unsaved state worth a "reload to update?" prompt: watch
-        // progress and orders are written as they change.
-        registerType: 'autoUpdate',
+        // A new deploy installs in the background and waits; UpdateToast tells
+        // the visitor and swaps it in when they tap Reload. It registers the
+        // worker itself (and checks for updates on a timer), so the plugin must
+        // not inject a second registration.
+        registerType: 'prompt',
+        injectRegister: false,
         includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
         manifest: {
           name: 'Marvel Watch Order',

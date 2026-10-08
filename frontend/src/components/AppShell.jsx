@@ -5,6 +5,7 @@ import { clearSyncError, getSnapshot, subscribe } from '../lib/syncStatus'
 import { GlobalSearch } from './GlobalSearch'
 import { InstallLink, InstallPrompt } from './InstallPrompt'
 import { BottomTabBar, SectionLinks, SectionTabs } from './navigation'
+import { UpdateToast } from './UpdateToast'
 import { UserMenu } from './UserMenu'
 
 /**
@@ -110,6 +111,7 @@ export function AppShell() {
 
       <SyncErrorPopup />
       <InstallPrompt />
+      <UpdateToast />
 
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-24 outline-none sm:px-6">
         <SectionTabs />
