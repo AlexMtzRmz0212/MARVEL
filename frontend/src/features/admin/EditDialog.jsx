@@ -1,6 +1,8 @@
 import { useState } from 'react'
 
 import { fetchTmdbDetails, searchTmdb } from './api'
+import { CreditScenes } from './CreditScenes'
+import { cleanCredits, toDraft } from './creditData'
 import { Button, Dialog, Field, NumberInput, Problems, Segmented, Select, TextInput } from './ui'
 
 /**
@@ -24,6 +26,8 @@ const BLANK = {
   poster_url: '',
   synopsis: '',
   tmdb_id: null,
+  // null is "nobody has checked"; see creditData.js.
+  credit_scenes: null,
   prerequisites: [],
 }
 
@@ -40,8 +44,13 @@ function toDateInput(value) {
  *  it `null`, and `gt=0` on runtime means a literal 0 is a validation error. */
 function clean(draft) {
   const blank = (value) => (typeof value === 'string' ? value.trim() || null : value || null)
+  // Left out entirely, not written as null, when nobody has checked -- the same
+  // way the file spells it, so a save does not add a key to every title.
+  const { credit_scenes: credits, ...rest } = draft
+  const scenes = cleanCredits(credits, draft.media_type === 'series')
   return {
-    ...draft,
+    ...rest,
+    ...(scenes && { credit_scenes: scenes }),
     id: draft.id.trim(),
     title: draft.title.trim(),
     phase: draft.phase || null,
@@ -169,7 +178,14 @@ function TitleForm({
 }) {
   const isNew = !movie
   const [draft, setDraft] = useState(() =>
-    movie ? { ...BLANK, ...movie, release_date: toDateInput(movie.release_date) } : BLANK,
+    movie
+      ? {
+          ...BLANK,
+          ...movie,
+          release_date: toDateInput(movie.release_date),
+          credit_scenes: toDraft(movie.credit_scenes),
+        }
+      : BLANK,
   )
   const [insertBefore, setInsertBefore] = useState('')
   const [fetchingEpisodes, setFetchingEpisodes] = useState(false)
@@ -192,6 +208,22 @@ function TitleForm({
 
   const others = movies.filter((other) => other.id !== movie?.id)
   const chosen = new Set(draft.prerequisites.map((edge) => edge.id))
+
+  // The list is the whole catalog, so it is searched rather than scrolled. A
+  // ticked title stays listed whatever the search says: its strength and note
+  // are edited in place, and one that vanished the moment it was ticked would
+  // be unreachable. Order is never changed, so a row does not move under the
+  // cursor when it is ticked.
+  const [prereqQuery, setPrereqQuery] = useState('')
+  const needle = prereqQuery.trim().toLowerCase()
+  const visibleOthers = needle
+    ? others.filter(
+        (other) =>
+          chosen.has(other.id) ||
+          other.title.toLowerCase().includes(needle) ||
+          other.id.toLowerCase().includes(needle),
+      )
+    : others
 
   function togglePrerequisite(id) {
     setDraft((current) => ({
@@ -319,14 +351,32 @@ function TitleForm({
         </div>
       )}
 
+      <CreditScenes
+        value={draft.credit_scenes}
+        isSeries={draft.media_type === 'series'}
+        onChange={(credit_scenes) => set({ credit_scenes })}
+      />
+
       <section>
         <h3 className="meta mb-2 text-ink">Prerequisites</h3>
         <p className="meta mb-2 normal-case tracking-normal">
-          Watch these first. Both directions of the graph are editable on the Dependencies tab.
+          Watch these first. {chosen.size ? `${chosen.size} selected. ` : ''}Both directions of the
+          graph are editable on the Dependencies tab.
         </p>
+        <TextInput
+          type="search"
+          value={prereqQuery}
+          onChange={(event) => setPrereqQuery(event.target.value)}
+          placeholder="Search titles…"
+          aria-label="Search prerequisites"
+          className="mb-2"
+        />
         <div className="hairline max-h-64 space-y-1 overflow-y-auto border bg-paper p-2">
           {others.length === 0 && <p className="meta">Nothing else in the catalog yet.</p>}
-          {others.map((other) => {
+          {others.length > 0 && visibleOthers.length === 0 && (
+            <p className="meta">No title matches “{prereqQuery.trim()}”.</p>
+          )}
+          {visibleOthers.map((other) => {
             const edge = draft.prerequisites.find((candidate) => candidate.id === other.id)
             return (
               <div key={other.id}>
