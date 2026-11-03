@@ -72,6 +72,11 @@ def test_logout_clears_the_session(api, registered):
 
 
 def test_a_garbage_cookie_reads_as_signed_out(api, registered):
+    # Cleared first: setting a second cookie of the same name beside the real one
+    # sends both, and which of the two the server reads depends on the cookie
+    # jar's ordering -- which differs between httpx versions, and made this pass
+    # locally and fail in CI.
+    api.cookies.clear()
     api.cookies.set(COOKIE_NAME, "not-a-jwt")
     assert api.get("/api/auth/me").status_code == 401
 
