@@ -23,7 +23,35 @@ import { fetchSession, signIn, signOut } from './api'
  * The editor itself is a separate chunk, loaded only after sign-in, so no
  * ordinary visitor downloads it.
  */
-const EditorApp = lazy(() => import('./EditorApp').then((module) => ({ default: module.EditorApp })))
+const RELOADED_KEY = 'editor-chunk-reloaded'
+
+/**
+ * The editor chunk is deliberately not precached (vite.config.js), so after a
+ * deploy a browser still running the previous shell asks for a file that no
+ * longer exists. The service worker would hand the same stale shell back on a
+ * plain reload, so drop it first; the reload then fetches the new shell. Once
+ * per session, so a genuinely broken deploy shows the error instead of looping.
+ */
+async function loadEditor() {
+  try {
+    const module = await import('./EditorApp')
+    return { default: module.EditorApp }
+  } catch (failure) {
+    try {
+      if (sessionStorage.getItem(RELOADED_KEY)) throw failure
+      sessionStorage.setItem(RELOADED_KEY, '1')
+    } catch {
+      throw failure
+    }
+    const registrations = (await navigator.serviceWorker?.getRegistrations().catch(() => [])) ?? []
+    await Promise.all(registrations.map((registration) => registration.unregister()))
+    window.location.reload()
+    // Hold the Suspense fallback until the reload lands.
+    return new Promise(() => {})
+  }
+}
+
+const EditorApp = lazy(loadEditor)
 
 const SESSION_KEY = ['admin', 'session']
 
