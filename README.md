@@ -158,7 +158,8 @@ backend/          FastAPI + the graph engine
   tests/          185 tests, no infrastructure required
 frontend/         React + Vite + Tailwind v4
   src/lib/        dagLayout.js, forceGraph.js, validateOrder.js
-  src/features/   catalog, timeline, prereq graph, order builder, friends
+  src/features/   catalog, timeline, prereq graph, order builder, friends,
+                  admin (the catalog editor, behind a password)
 fixtures/         shared across both test suites
 server.py         production entrypoint: API + built SPA in one process
 ```
@@ -176,21 +177,58 @@ nobody has checked, which is not the claim a recorded `0` makes — so the catal
 grid marks only a positive count, and the title page is the only place that ever
 says there is nothing to wait for.
 
-Edit the catalog with the local editor: run `catalog.bat` at the repo root and
-it opens at `localhost:5173/editor.html`. It organises and edits
-`app/seed/data/mcu.json`, validates with the same checks as
-`app.seed.loader --check` before writing, and has a TMDb picker that shows every
-match so you choose the right one rather than trusting a blind first hit. Its
-Dependencies tab edits the graph directly: pick a title and connect or
-disconnect what it requires and what it unlocks, essential or recommended.
+## The catalog editor
 
-The editor is a second Vite entry point (`frontend/editor.html`) talking to a
-small local FastAPI app (`backend/scripts/catalog_api.py`) on port 8010. Vite
-builds `index.html` only and that API is separate from `app.main`, so neither
-half of the tool exists in a production build.
+The catalog is edited in the app, at `/admin`. The footer links there for
+everyone; the page asks for a password that only the owner knows, and the server
+refuses every editor request without it. It is the private half of the site:
 
-Needs `TMDB_API_KEY` in the root `.env` (see `.env.example`) for the picker. The
-editor writes back into the JSON so the result is reviewable as a diff.
+- **Sign-in** is one shared password, not an account. The server stores only an
+  argon2 hash of it (`ADMIN_PASSWORD_HASH`) and, on success, sets a second
+  HttpOnly cookie that is separate from the user session, expires after 12 hours
+  and is only ever sent to `/api/admin`. A user token cannot pass as an admin one
+  or the other way round. Five wrong guesses lock that client out for 15 minutes,
+  counted in the database because the app runs as serverless functions.
+- **It fails closed.** With no hash set, every `/api/admin` route is a 404 — except
+  when `ENVIRONMENT=dev`, where the editor is simply open so that `catalog.bat`
+  needs no password.
+- **Edits are live.** The live catalog is one row in Neon (`catalog_document`), in
+  the shape of `mcu.json`. Saving validates it with everything the app checks at
+  startup, plus the recommended orders, then stores it and reconciles `movies`
+  and `prerequisites` in the same transaction, so a new title can be saved to an
+  order straight away. There is no redeploy and no loader step.
+- **Undo.** Each save keeps the version it replaced (the last 30), and the editor
+  can restore one. A restore is a save like any other. **Export mcu.json** downloads
+  the live catalog byte for byte, to commit as a backup.
+- **`mcu.json` is the first copy and the fallback.** The first time the editor is
+  opened it imports the bundled file. Until then — and if the database cannot be
+  reached or the stored catalog fails validation — the public site serves the
+  bundled file instead of an error. Each server process re-checks the stored
+  revision at most every 30 seconds, so a page view costs no query, and another
+  instance can show an edit up to that long late.
+- `episodes.json` and `recommended_orders.json` are still files: they are
+  generated or curated outside the editor and change with a deploy. The editor
+  refuses a save that would orphan either.
+- Deleting a title deletes saved-order and watch-progress rows that point at it,
+  for every user (they are `ON DELETE CASCADE`), so the editor says how many first.
+
+Run it locally with `catalog.bat`, which starts the API and Vite and opens
+`localhost:5173/admin`. Local edits go to whichever database `backend/.env`
+names; the header shows which. The editor has a TMDb picker that shows every
+match so you choose the right one rather than trusting a blind first hit, and its
+Dependencies tab edits the graph directly: pick a title and connect or disconnect
+what it requires and what it unlocks, essential or recommended.
+
+To set the password:
+
+```bash
+cd backend
+.venv/Scripts/python.exe scripts/hash_admin_password.py
+```
+
+and put the printed `ADMIN_PASSWORD_HASH` in the Vercel project (and in
+`backend/.env` to try the real sign-in locally). `TMDB_API_KEY` is needed too, in
+the root `.env` or Vercel, for the picker.
 
 ## Deploying
 
@@ -202,16 +240,19 @@ vercel deploy
 ```
 
 `vercel.json` sets the build command; `requirements.txt` holds the runtime
-dependencies. The catalog half of the API still reads from JSON and touches no
-database, but accounts need one, so the driver and auth libraries ship too.
+dependencies. The database now holds the live catalog as well as accounts, so
+the driver, the auth libraries and `requests` (for the editor's TMDb picker)
+all ship.
 
-Set three environment variables in the Vercel project:
+Set these environment variables in the Vercel project:
 
 | Variable | Value |
 | --- | --- |
 | `ENVIRONMENT` | `prod` — drives both `cookie_secure` and the `NullPool` engine |
 | `DATABASE_URL` | Neon's **pooled** host (the one containing `-pooler`) |
 | `SECRET_KEY` | `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
+| `ADMIN_PASSWORD_HASH` | from `backend/scripts/hash_admin_password.py` — without it the editor does not exist |
+| `TMDB_API_KEY` | for the editor's poster picker |
 
 The app refuses to start in `prod` with the default `SECRET_KEY`, so a
 misconfigured deploy fails loudly rather than shipping forgeable sessions.
@@ -240,11 +281,21 @@ cannot hold a session open for DDL:
 cd backend && alembic upgrade head && python -m app.seed.loader
 ```
 
-The seed step is not optional. `custom_order_items.movie_id` and
+The seed step is not optional the first time. `custom_order_items.movie_id` and
 `watch_progress.movie_id` are foreign keys into `movies`, so an unseeded
-database cannot store an order at all — and **any change to
-`app/seed/data/mcu.json` needs the loader re-run against every database before
-the deploy that ships it.**
+database cannot store an order at all.
+
+After that the editor keeps `movies` in step by itself: every save reconciles it
+in the same transaction. The loader is only needed again if you change
+`app/seed/data/mcu.json` by hand — and note that the database, not that file, is
+what the site serves once the editor has been opened, so a hand edit to the file
+does not reach the site until it is imported (delete the `catalog_document` row,
+or paste the file's contents over it by saving through the editor).
+
+The first release of the editor needs `alembic upgrade head` (migration `0011`
+adds `catalog_document`, `catalog_history` and `admin_attempts`) run against the
+direct host before the deploy. Nothing needs seeding for it: until the editor is
+first opened the site keeps serving the bundled `mcu.json`.
 
 ## Status
 

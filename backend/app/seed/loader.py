@@ -20,6 +20,7 @@ from typing import Any
 
 from sqlalchemy import delete, insert, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
 
 from app.models import Movie, Prerequisite
@@ -118,6 +119,7 @@ def load(
     *,
     dry_run: bool = False,
     prune: bool = False,
+    commit: bool = True,
 ) -> LoadReport:
     """Reconcile the database with the catalog.
 
@@ -126,6 +128,9 @@ def load(
     data on every reseed. Edges are the exception -- they carry no user data,
     and a full replacement scoped to the titles in the file is the only way to
     handle an edge that was *removed*, which an upsert cannot express.
+
+    `commit=False` leaves the transaction open for the caller, which is how the
+    catalog editor saves the document and this reconciliation as one unit.
     """
     report = LoadReport(warnings=list(catalog.warnings))
     rows = movie_rows(catalog)
@@ -154,7 +159,10 @@ def load(
     if dry_run:
         return report
 
-    upsert = pg_insert(Movie).values(rows)
+    # SQLite speaks the same ON CONFLICT upsert; it is what the API test suite
+    # runs on. Production is Postgres.
+    insert_for = sqlite_insert if session.get_bind().dialect.name == "sqlite" else pg_insert
+    upsert = insert_for(Movie).values(rows)
     session.execute(
         upsert.on_conflict_do_update(
             index_elements=[Movie.id],
@@ -170,7 +178,10 @@ def load(
     if prune and report.absent_from_file:
         session.execute(delete(Movie).where(Movie.id.in_(report.absent_from_file)))
 
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
     report.applied = True
     return report
 

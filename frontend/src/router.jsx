@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 
 import { AppShell } from './components/AppShell'
+import { AdminPage } from './features/admin/AdminPage'
 import { LoginPage } from './features/auth/LoginPage'
 import { RegisterPage } from './features/auth/RegisterPage'
 import { CatalogPage } from './features/catalog/CatalogPage'
@@ -56,6 +57,9 @@ export const router = createBrowserRouter([
       // by localStorage, exactly as it did before accounts existed.
       { path: 'privacy', element: <PrivacyPage /> },
       { path: 'terms', element: <TermsPage /> },
+      // The catalog editor. Anyone can open the page; the server is what asks
+      // for the password (see features/admin/AdminPage.jsx).
+      { path: 'admin', element: <AdminPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: '*', element: <NotFoundPage /> },

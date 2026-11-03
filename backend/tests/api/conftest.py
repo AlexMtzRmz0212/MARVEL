@@ -31,7 +31,14 @@ from app.main import app
 
 # Importing for the side effect of registering the mappers: Base.metadata is
 # only complete once every model module has been imported.
-from app.models import custom_order, friendship, user, watch_progress  # noqa: F401
+from app.models import (  # noqa: F401
+    admin_attempt,
+    catalog_document,
+    custom_order,
+    friendship,
+    user,
+    watch_progress,
+)
 from app.models.movie import Movie
 
 
@@ -109,7 +116,9 @@ def engine() -> Iterator[Engine]:
 def db(engine: Engine) -> Iterator[Session]:
     """A session sharing the app's database, truncated between tests.
 
-    Per-user tables only: `movies` is reference data seeded once.
+    Per-user tables, and the editor's own, only: `movies` is reference data seeded
+    once -- though a save re-upserts it, which the editor tests rely on being a
+    no-op for the fields they do not touch.
     """
     factory = sessionmaker(bind=engine, autocommit=False, autoflush=False, class_=Session)
     session = factory()
@@ -124,6 +133,9 @@ def db(engine: Engine) -> Iterator[Session]:
                 "watch_progress",
                 "friendships",
                 "users",
+                "admin_attempts",
+                "catalog_history",
+                "catalog_document",
             ):
                 connection.exec_driver_sql(f"DELETE FROM {table}")
 

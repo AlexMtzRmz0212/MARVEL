@@ -1,30 +1,46 @@
-"""The catalog, held in memory, loaded from the curated JSON file.
+"""The catalog, held in memory, loaded from the database (or the curated JSON file).
 
 Nothing about the catalog is per-user: the same 54 titles and 80 edges are
-served to everybody, they change only when the seed file changes, and the whole
-thing is a few tens of kilobytes. So it is read once at startup and kept as
-frozen dataclasses. That keeps the read-only half of the API -- the catalog, the
-orders, and the prerequisite graph, which is to say the entire headline feature
--- working with no database at all.
+served to everybody, and the whole thing is a few tens of kilobytes. So it is
+held as frozen dataclasses and rebuilt only when it changes.
 
-Postgres is still where the *per-user* data belongs: accounts, saved custom
-orders, and watch progress. `app.models` and the migration are already in place
-for that; they simply are not needed yet.
+Where it comes from: the `catalog_document` row, which the catalog editor
+writes, so an edit is live without a deploy. The bundled `mcu.json` is the first
+copy of it and the fallback -- served when the table is empty (before the first
+save), when the database cannot be reached, or when the stored document fails
+validation -- so the public site degrades to "the last deployed catalog" rather
+than to an error. Tests, which run with no database, only ever see the file.
+
+Staying cheap: the stored revision is compared at most every REFRESH_SECONDS per
+process, and the document is only fetched and rebuilt when that revision moved.
+A page view therefore does not cost a database connection, which matters on
+Neon's pooler with one connection per request. The price is that another
+serverless instance can show an edit up to that long late.
 
 The `Title` record here mirrors the `Movie` ORM model field for field, so the
-API schemas validate identically from either source and the eventual switch is
-a change of dependency, not of shape.
+API schemas validate identically from either source.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import logging
+import threading
+import time
+from dataclasses import dataclass, replace
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
+from sqlalchemy import select
+
+from app.core.config import get_settings
 from app.core.graph import Graph, MovieId
-from app.seed.reader import DEFAULT_SEED_PATH, load_and_validate
+from app.db.session import SessionLocal
+from app.models.catalog_document import CatalogDocument
+from app.seed.reader import DEFAULT_SEED_PATH, load_and_validate, validate_document
+from app.seed.schema import ValidatedCatalog
+
+logger = logging.getLogger(__name__)
 
 # Titles with no agreed in-universe placement sort after every title that has
 # one, in release order. A large offset rather than None keeps the tie-break key
@@ -164,8 +180,11 @@ def build_catalog(path: Path = DEFAULT_SEED_PATH) -> Catalog:
     fails at startup with the same message it would fail a seed with -- there is
     no second, weaker code path.
     """
-    validated = load_and_validate(path)
+    return build_catalog_from(load_and_validate(path))
 
+
+def build_catalog_from(validated: ValidatedCatalog) -> Catalog:
+    """Index a catalog that has already been validated, wherever it came from."""
     titles = [
         Title(
             id=movie.id,
@@ -228,6 +247,106 @@ def build_catalog(path: Path = DEFAULT_SEED_PATH) -> Catalog:
     return Catalog(titles=titles, graph=graph, links=links)
 
 
+# --------------------------------------------------------------------------- #
+# Which copy is live
+# --------------------------------------------------------------------------- #
+
+REFRESH_SECONDS = 30.0
+
+
+@dataclass(frozen=True, slots=True)
+class _Snapshot:
+    catalog: Catalog
+    # None when this is the bundled file rather than a stored document.
+    revision: str | None
+    checked_at: float
+
+
+_snapshot: _Snapshot | None = None
+_lock = threading.Lock()
+
+
 @lru_cache
-def get_catalog() -> Catalog:
+def _bundled() -> Catalog:
     return build_catalog()
+
+
+def _database_enabled() -> bool:
+    """False under test, so the suite never reaches for whatever DATABASE_URL names."""
+    return get_settings().environment != "test"
+
+
+def _read_stored(known_revision: str | None) -> tuple[str | None, dict | None]:
+    """(revision, document) of the stored catalog; the document only if it moved."""
+    with SessionLocal() as session:
+        revision = session.scalar(select(CatalogDocument.revision).where(CatalogDocument.id == 1))
+        if revision is None or revision == known_revision:
+            return revision, None
+        return revision, session.scalar(
+            select(CatalogDocument.document).where(CatalogDocument.id == 1)
+        )
+
+
+def _fallback(current: _Snapshot | None, now: float) -> _Snapshot:
+    if current is not None:
+        return replace(current, checked_at=now)
+    return _Snapshot(_bundled(), None, now)
+
+
+def _refresh(current: _Snapshot | None, now: float) -> _Snapshot:
+    if not _database_enabled():
+        return _fallback(current, now)
+
+    try:
+        revision, document = _read_stored(current.revision if current else None)
+    except Exception:
+        # Unreachable, or the table is not there yet (migration not run). Keep
+        # serving what we have; the next attempt is a full interval away, so a
+        # down database costs one failed connection per interval, not per request.
+        logger.warning(
+            "Could not read the stored catalog; serving the last good copy", exc_info=True
+        )
+        return _fallback(current, now)
+
+    if revision is None:
+        # Nothing stored yet: the bundled file *is* the catalog.
+        return _fallback(current if current and current.revision is None else None, now)
+    if document is None:
+        return _fallback(current, now)  # same revision as before
+
+    try:
+        catalog = build_catalog_from(validate_document(document))
+    except Exception:
+        logger.error(
+            "The stored catalog (revision %s) is invalid; serving the last good copy",
+            revision,
+            exc_info=True,
+        )
+        return _fallback(current, now)
+    return _Snapshot(catalog, revision, now)
+
+
+def invalidate() -> None:
+    """Forget the cached catalog, so the next request re-reads it.
+
+    Called after the editor saves. Other processes notice on their own refresh.
+    """
+    global _snapshot
+    with _lock:
+        _snapshot = None
+
+
+def get_catalog() -> Catalog:
+    global _snapshot
+    snapshot = _snapshot
+    if snapshot is not None and time.monotonic() - snapshot.checked_at < REFRESH_SECONDS:
+        return snapshot.catalog
+
+    with _lock:
+        # Re-checked under the lock: the request that waited behind another's
+        # refresh should use its result rather than repeat it.
+        snapshot = _snapshot
+        now = time.monotonic()
+        if snapshot is None or now - snapshot.checked_at >= REFRESH_SECONDS:
+            snapshot = _snapshot = _refresh(snapshot, now)
+        return snapshot.catalog

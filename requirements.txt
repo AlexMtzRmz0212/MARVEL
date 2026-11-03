@@ -17,6 +17,10 @@ pydantic-settings>=2.7
 sqlalchemy>=2.0.36
 psycopg[binary]>=3.2
 
+# The catalog editor's TMDb picker. It ships because the editor does: it is part
+# of the deployed app now, behind the admin password.
+requests>=2.32
+
 # Sessions. Plain pyjwt rather than pyjwt[crypto]: HS256 signing needs no
 # `cryptography`, and leaving it out keeps the bundle well clear of the size
 # limit.

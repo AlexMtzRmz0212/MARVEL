@@ -1,0 +1,275 @@
+"""The TMDb client behind the catalog editor's poster picker.
+
+Trusted only for metadata fields -- poster, synopsis, runtime, release date, and
+TMDb id -- never for the fields the curated file owns: ids, phases, sagas, tiers,
+chronology and above all the prerequisite edges.
+
+Lives in the app package, rather than beside the scripts that also use it,
+because the editor is part of the deployed app now: `backend/scripts` is left
+out of the Vercel bundle (see `.vercelignore`). `scripts/enrich_tmdb.py` imports
+these back.
+
+`search_candidates` is what the editor drives: instead of committing to the top
+hit it hands the human every match -- title, year, poster, overview -- so a query
+like "X-Men: First Class" that returns both the film and a making-of special can
+be disambiguated by eye rather than by luck.
+"""
+
+from __future__ import annotations
+
+import re
+from typing import Any
+
+import requests
+
+TMDB = "https://api.themoviedb.org/3"
+POSTER_BASE = "https://image.tmdb.org/t/p/w500"
+
+_trust_store_injected = False
+
+
+def new_session() -> requests.Session:
+    """A requests session that verifies TLS against the OS trust store when it can.
+
+    This matters on any machine where antivirus or a corporate proxy inspects
+    HTTPS: those products re-sign traffic with their own root, install that root
+    into the OS store (so browsers work), and leave Python failing with
+    CERTIFICATE_VERIFY_FAILED because certifi has never heard of it. Deferring to
+    the OS fixes it while keeping verification fully on -- unlike verify=False,
+    which would disable it. `truststore` is a dev-only extra, so on the deployed
+    function this is a no-op.
+    """
+    global _trust_store_injected
+    if not _trust_store_injected:
+        _trust_store_injected = True
+        try:
+            import truststore
+
+            truststore.inject_into_ssl()
+        except ImportError:  # pragma: no cover - optional convenience
+            pass
+    return requests.Session()
+
+
+class TmdbError(RuntimeError):
+    pass
+
+
+def get(session: requests.Session, path: str, api_key: str, **params: Any) -> dict[str, Any]:
+    response = session.get(f"{TMDB}{path}", params={"api_key": api_key, **params}, timeout=20)
+    if response.status_code != 200:
+        raise TmdbError(f"{path} returned {response.status_code}: {response.text[:200]}")
+    return response.json()
+
+
+# "Loki: Season 2" is one catalog entry but is a season of one TMDb show, and
+# "I Am Groot: Seasons 1 & 2" is two of them.
+SEASONS_PATTERN = re.compile(r"^(?P<base>.+):\s*Seasons\s+(?P<first>\d+)\s*&\s*(?P<last>\d+)$")
+SEASON_PATTERN = re.compile(r"^(?P<base>.+):\s*Season\s+(?P<season>\d+)$")
+
+
+def parse_seasons(title: str) -> tuple[str, list[int]] | None:
+    """The show's name and the seasons a catalog title covers, if it names any.
+
+    None means the title names no season at all -- "Loki", "WandaVision" -- which
+    is not the same as covering none. See :func:`fetch_details`.
+    """
+    plural = SEASONS_PATTERN.match(title)
+    if plural:
+        first, last = int(plural.group("first")), int(plural.group("last"))
+        return plural.group("base"), list(range(first, last + 1))
+
+    single = SEASON_PATTERN.match(title)
+    if single:
+        return single.group("base"), [int(single.group("season"))]
+
+    return None
+
+
+def episode_runtime_total(season_payload: dict[str, Any]) -> int:
+    """Minutes across a season payload's episodes; 0 when TMDb lists none."""
+    episodes = season_payload.get("episodes")
+    if not isinstance(episodes, list):
+        return 0
+    return sum(
+        episode["runtime"] for episode in episodes if isinstance(episode.get("runtime"), int)
+    )
+
+
+def search_endpoints(media_type: str) -> list[str]:
+    """Which TMDb index to search, in preference order.
+
+    Specials are the awkward case: TMDb files some of them as movies (Werewolf
+    by Night, the Holiday Special) and others as television, with no way to
+    predict which. Trying both and taking whichever answers is more reliable
+    than guessing from our own media_type.
+    """
+    if media_type == "film":
+        return ["movie"]
+    if media_type == "series":
+        return ["tv"]
+    return ["movie", "tv"]
+
+
+def search_candidates(
+    session: requests.Session,
+    api_key: str,
+    kind: str,
+    title: str,
+    year: int | None,
+    limit: int = 8,
+) -> list[dict[str, Any]]:
+    """Every TMDb match for a title, newest-relevant first, as picker-ready rows.
+
+    This is the function the editor drives: instead of committing to the top hit
+    it hands the human all of them -- title, year, poster, overview -- so a query
+    like "X-Men: First Class" that returns both the film and a making-of special
+    can be disambiguated by eye rather than by luck.
+
+    Year still narrows the query when supplied (several titles share a name with
+    something older -- a 2007 animated Doctor Strange, say), but it is a filter on
+    the request, not a guarantee, so the caller always sees what came back.
+    """
+    params: dict[str, Any] = {"query": title}
+    if year is not None:
+        params.update({"first_air_date_year": year} if kind == "tv" else {"year": year})
+    payload = get(session, f"/search/{kind}", api_key, **params)
+    results = payload.get("results") or []
+
+    candidates: list[dict[str, Any]] = []
+    for result in results[:limit]:
+        # TMDb names the title and date fields differently for movie vs tv.
+        name = result.get("title") or result.get("name") or "(untitled)"
+        date_value = result.get("release_date") or result.get("first_air_date")
+        candidates.append(
+            {
+                "id": result["id"],
+                "kind": kind,
+                "title": name,
+                "year": extract_year(date_value),
+                "poster_path": result.get("poster_path"),
+                "overview": result.get("overview") or "",
+            }
+        )
+    return candidates
+
+
+def title_candidates(title: str) -> list[str]:
+    """Potential TMDb query variants for a curated title."""
+    candidates = [title]
+
+    # Strip common branding prefixes that TMDb omits.
+    marvel_prefix = "Marvel's "
+    if title.startswith(marvel_prefix):
+        candidates.append(title[len(marvel_prefix) :])
+
+    # TMDb often files these without the branding prefix.
+    one_shot_prefix = "Marvel One-Shot: "
+    if title.startswith(one_shot_prefix):
+        candidates.append(title[len(one_shot_prefix) :])
+
+    seen: set[str] = set()
+    unique: list[str] = []
+    for candidate in candidates:
+        if candidate not in seen:
+            seen.add(candidate)
+            unique.append(candidate)
+    return unique
+
+
+ISO_DATE_PREFIX = re.compile(r"^(\d{4}-\d{2}-\d{2})")
+
+
+def normalize_release_date(value: Any) -> str | None:
+    """Return YYYY-MM-DD when possible; otherwise None."""
+    if not isinstance(value, str):
+        return None
+    match = ISO_DATE_PREFIX.match(value)
+    return match.group(1) if match else None
+
+
+def extract_year(value: Any) -> int | None:
+    """Return a four-digit year from a local date string when possible."""
+    if not isinstance(value, str):
+        return None
+    match = ISO_DATE_PREFIX.match(value)
+    if not match:
+        return None
+    try:
+        return int(match.group(1)[:4])
+    except ValueError:
+        return None
+
+
+def fetch_details(
+    session: requests.Session,
+    api_key: str,
+    kind: str,
+    tmdb_id: int,
+    seasons: list[int] | None,
+    media_type: str,
+) -> dict[str, Any]:
+    # One named season is addressable directly, and its own payload is the
+    # better source for the date. Anything else -- no season named, or several
+    # covered by one entry -- reads the show, so that the date a caller already
+    # has on file is never disturbed by which seasons happen to be totalled.
+    only_season = seasons[0] if seasons and len(seasons) == 1 else None
+
+    if only_season is not None:
+        payload = get(session, f"/tv/{tmdb_id}/season/{only_season}", api_key)
+    else:
+        payload = get(session, f"/{kind}/{tmdb_id}", api_key)
+
+    poster_path = payload.get("poster_path")
+
+    # TMDb uses different date fields per endpoint.
+    if only_season is not None:
+        tmdb_release_date = payload.get("air_date")
+    elif kind == "tv":
+        tmdb_release_date = payload.get("first_air_date")
+    else:
+        tmdb_release_date = payload.get("release_date")
+
+    runtime_value = payload.get("runtime")
+    runtime_min = None
+    if isinstance(runtime_value, (int, float)) and runtime_value > 0:
+        runtime_min = int(runtime_value)
+
+    details: dict[str, Any] = {
+        "tmdb_id": tmdb_id,
+        "poster_url": f"{POSTER_BASE}{poster_path}" if poster_path else None,
+        "synopsis": payload.get("overview") or None,
+        "release_date": normalize_release_date(tmdb_release_date),
+    }
+
+    # For series, total the episodes of the seasons the entry covers. For other
+    # types, use the single value from TMDb.
+    #
+    # A series entry naming no season means the show's first one: this catalog
+    # gives later seasons their own line, so "Loki" and "Loki: Season 2" are two
+    # entries, not one. Defaulting to season 1 rather than giving up is the
+    # whole of the fix here -- `/tv/{id}` carries no usable total of its own
+    # (`episode_run_time` is empty for every modern show), so the old code fell
+    # through both branches and silently wrote nothing at all. That left the
+    # sixteen Disney+ series the catalog names after themselves with a null
+    # runtime while every ": Season N" entry beside them was filled.
+    if media_type == "series":
+        if only_season is not None:
+            total_runtime = episode_runtime_total(payload)
+        else:
+            total_runtime = 0
+            for number in seasons or [1]:
+                try:
+                    total_runtime += episode_runtime_total(
+                        get(session, f"/tv/{tmdb_id}/season/{number}", api_key)
+                    )
+                except TmdbError:
+                    # A show whose seasons are not numbered as assumed should
+                    # cost the caller a runtime, not the whole fetch.
+                    continue
+        if total_runtime > 0:
+            details["runtime_min"] = total_runtime
+    elif runtime_min:
+        details["runtime_min"] = runtime_min
+
+    return details

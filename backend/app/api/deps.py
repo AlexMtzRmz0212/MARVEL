@@ -6,13 +6,15 @@ from fastapi import Cookie, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.catalog import Catalog, get_catalog
-from app.core.security import COOKIE_NAME, decode_access_token
+from app.core.config import get_settings
+from app.core.security import ADMIN_COOKIE_NAME, COOKIE_NAME, decode_access_token, is_admin_token
 from app.db.session import get_db
 from app.models.user import User
 
-# The read-only half of the API needs no database: the catalog is the same for
-# everybody and is loaded from the curated JSON file at startup. Only the
-# per-user half below (accounts, saved orders, watch progress) touches Postgres.
+# The catalog is the same for everybody. `get_catalog` serves it from memory and
+# re-reads it from Postgres at most every few seconds (falling back to the
+# bundled JSON file if that fails), so a page view does not cost a query. The
+# per-user half below (accounts, saved orders, watch progress) always does.
 CatalogDep = Annotated[Catalog, Depends(get_catalog)]
 
 DbDep = Annotated[Session, Depends(get_db)]
@@ -54,3 +56,31 @@ def get_current_user(user: MaybeUserDep) -> User:
 
 
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
+
+
+AdminCookie = Annotated[str | None, Cookie(alias=ADMIN_COOKIE_NAME)]
+
+
+def require_admin_enabled() -> None:
+    """404, not 403, when the editor is switched off.
+
+    A deploy with no ADMIN_PASSWORD_HASH should look like a deploy with no
+    editor, rather than advertising a door that cannot be opened.
+    """
+    if not get_settings().admin_enabled:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found")
+
+
+def is_admin(admin_cookie: AdminCookie = None) -> bool:
+    settings = get_settings()
+    if settings.admin_open:
+        return True
+    return bool(admin_cookie) and is_admin_token(admin_cookie)
+
+
+def require_admin(admin_cookie: AdminCookie = None) -> None:
+    require_admin_enabled()
+    if not is_admin(admin_cookie):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Admin sign-in required"
+        )

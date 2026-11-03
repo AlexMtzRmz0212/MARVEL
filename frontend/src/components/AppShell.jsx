@@ -139,6 +139,13 @@ export function AppShell() {
               Terms of service
             </Link>
           </nav>
+          {/* Open to everyone on purpose: the page asks for the editor password. */}
+          <Link
+            to="/admin"
+            className="meta underline-offset-4 transition-colors hover:text-ink hover:underline"
+          >
+            Editor
+          </Link>
           <p className="meta w-full sm:ml-auto sm:w-auto">
             An unofficial fan project, not affiliated with Marvel or Disney.
           </p>

@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-import { accentFor } from '../lib/format'
+import { accentFor } from '../../lib/format'
 
 /**
  * Array order is the chronological order, so this list *is* the timeline.

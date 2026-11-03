@@ -201,7 +201,7 @@ function TitleForm({ movie, movies, enums, problems, saving, onSave, onDelete, o
 
   return (
     <div className="space-y-4">
-      <Problems title="Not saved — nothing was written to mcu.json" lines={problems} />
+      <Problems title="Not saved — nothing was changed" lines={problems} />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="id (kebab-case)" hint={isNew ? undefined : 'Fixed once created.'}>

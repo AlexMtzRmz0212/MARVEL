@@ -32,7 +32,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import requests
 from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -42,6 +41,7 @@ from enrich_tmdb import (  # noqa: E402
     SEED_PATH,
     TmdbError,
     get,
+    new_session,
     normalize_release_date,
     parse_seasons,
     resolve,
@@ -136,7 +136,7 @@ def main(argv: list[str] | None = None) -> int:
         if movie.get("tmdb_id"):
             show_ids.setdefault(show_name(movie["title"]), movie["tmdb_id"])
 
-    session = requests.Session()
+    session = new_session()
     result: dict[str, list[dict]] = {}
     failures: list[str] = []
 

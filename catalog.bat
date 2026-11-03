@@ -3,13 +3,14 @@ setlocal
 cd /d "%~dp0"
 
 REM Catalog editor:
-REM - Starts the local editor API (backend/scripts/catalog_api.py) on port 8010
-REM   and the Vite dev server on 5173, then opens the editor.
-REM - Reads/writes backend/app/seed/data/mcu.json and validates before saving.
+REM - The editor is part of the app now, at /admin. This starts the API (8000)
+REM   and the Vite dev server (5173), then opens it.
+REM - With no ADMIN_PASSWORD_HASH in backend\.env the editor is open in dev, so
+REM   there is no password to type here. Set one to try the real sign-in.
+REM - Edits are saved to the database DATABASE_URL names in backend\.env and are
+REM   live at once for anything reading that database. It needs the catalog
+REM   tables: run "alembic upgrade head" from the backend folder.
 REM - Needs TMDB_API_KEY in the root .env for the TMDb picker.
-REM
-REM The editor is a second Vite entry point (frontend/editor.html). Vite only
-REM builds index.html, so it exists in dev and never ships.
 
 echo.
 echo   Marvel catalog editor
@@ -42,8 +43,8 @@ if not exist "frontend\node_modules" (
     echo.
 )
 
-echo   [*] Starting the editor API on http://127.0.0.1:8010
-start "" /b cmd /c "cd /d "%~dp0backend" && .venv\Scripts\python.exe scripts\catalog_api.py"
+echo   [*] Starting the API on http://localhost:8000
+start "" /b cmd /c "cd /d "%~dp0backend" && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000"
 
 echo   [*] Starting the web app on http://localhost:5173
 start "" /b cmd /c "cd /d "%~dp0frontend" && npm run dev"
@@ -52,12 +53,13 @@ echo.
 echo   Waiting for the servers to come up...
 timeout /t 6 /nobreak >nul
 
-start "" "http://localhost:5173/editor.html"
+start "" "http://localhost:5173/admin"
 
 echo.
 echo   Running.
-echo     editor   http://localhost:5173/editor.html
-echo     api      http://127.0.0.1:8010/editor-api/docs
+echo     editor   http://localhost:5173/admin
+echo     site     http://localhost:5173
+echo     api      http://localhost:8000/api/docs
 echo.
 echo   Both servers are running in this terminal window.
 echo   Press Ctrl+C in this window to stop them.

@@ -1,4 +1,4 @@
-import { accentFor } from '../lib/format'
+import { accentFor } from '../../lib/format'
 import { Button, Select, TextInput } from './ui'
 
 /**

@@ -45,18 +45,23 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-          // Deep links open offline too, but /api and the dev-only editor are
-          // never answered with the app shell.
+          // The editor is a lazy chunk (features/admin/AdminPage.jsx) that only
+          // the owner ever loads; precaching it would make every installed app
+          // download it.
+          globIgnores: ['**/EditorApp-*.js'],
+          // Deep links open offline too, but /api is never answered with the
+          // app shell.
           navigateFallback: '/index.html',
-          navigateFallbackDenylist: [/^\/api\//, /^\/editor/],
+          navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
             {
-              // The catalog is the same for everybody and changes only between
-              // deploys: serve the last copy at once and refresh it behind the
-              // scenes, which is what makes the installed app open instantly
-              // and keeps it browsable offline. Anything per-user (/api/auth,
-              // /api/me, /api/share) is deliberately left off this list and
-              // always goes to the network.
+              // The catalog is the same for everybody and changes only when the
+              // editor saves: serve the last copy at once and refresh it behind
+              // the scenes, which is what makes the installed app open instantly
+              // and keeps it browsable offline (an edit reaches a returning
+              // visitor on their next load). Anything per-user (/api/auth,
+              // /api/me, /api/share) and the editor (/api/admin) is deliberately
+              // left off this list and always goes to the network.
               urlPattern: ({ url, request }) =>
                 request.method === 'GET' &&
                 url.origin === self.location.origin &&
@@ -95,11 +100,6 @@ export default defineConfig(({ mode }) => {
       // share an origin and the /api prefix is forwarded verbatim.
       proxy: {
         '/api': { target: 'http://localhost:8000', changeOrigin: true },
-        // The catalog editor's local backend (backend/scripts/catalog_api.py),
-        // a separate process on its own port so nothing dev-only is ever
-        // importable from the shipped app. Dev server only — `server.proxy`
-        // has no effect on a build, and `editor.html` is not built anyway.
-        '/editor-api': { target: 'http://127.0.0.1:8010', changeOrigin: true },
       },
     },
 

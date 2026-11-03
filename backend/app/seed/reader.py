@@ -65,5 +65,19 @@ def read_seed_file(path: Path = DEFAULT_SEED_PATH) -> SeedFile:
         raise SeedValidationError(_problems(exc)) from exc
 
 
+def validate_document(raw: dict, path: Path = DEFAULT_SEED_PATH) -> ValidatedCatalog:
+    """Validate a catalog that is already in memory, as the editor and the database hold it.
+
+    Same two stages as the file path -- shape, then structure -- and the episode
+    lists are still read from beside `path`, because they are generated files
+    that ship with the code rather than part of the editable document.
+    """
+    try:
+        seed = SeedFile.model_validate(raw)
+    except ValidationError as exc:
+        raise SeedValidationError(_problems(exc)) from exc
+    return validate_catalog(seed, read_episodes_file(episodes_path_for(path)))
+
+
 def load_and_validate(path: Path = DEFAULT_SEED_PATH) -> ValidatedCatalog:
     return validate_catalog(read_seed_file(path), read_episodes_file(episodes_path_for(path)))

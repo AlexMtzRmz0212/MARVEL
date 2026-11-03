@@ -20,7 +20,6 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import lru_cache
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -267,7 +266,20 @@ def build_recommended(catalog: Catalog, curated: list[CuratedOrder]) -> list[Rec
     return orders
 
 
-@lru_cache
+# Built once per catalog rather than once per process: the catalog can be
+# replaced while the process runs (see `app.catalog.get_catalog`), and these
+# orders are rules over it. Keyed on the catalog object itself, so a new catalog
+# is a new build with nothing to remember to invalidate.
+_built: tuple[Catalog, tuple[RecommendedOrder, ...]] | None = None
+
+
 def get_recommended_orders() -> tuple[RecommendedOrder, ...]:
-    return tuple(build_recommended(get_catalog(), read_curated()))
+    global _built
+    catalog = get_catalog()
+    built = _built
+    if built is not None and built[0] is catalog:
+        return built[1]
+    orders = tuple(build_recommended(catalog, read_curated()))
+    _built = (catalog, orders)
+    return orders
 

@@ -1,19 +1,21 @@
 import { useState } from 'react'
 
+import { EXPORT_URL, fetchUsage } from './api'
 import { Dependencies } from './Dependencies'
 import { EditDialog } from './EditDialog'
 import { Gallery } from './Gallery'
+import { History } from './History'
 import { Reorder } from './Reorder'
 import { useCatalog } from './useCatalog'
 import { Button, Problems } from './ui'
 
 /**
- * A local, visual editor for the curated catalog.
+ * The visual editor for the catalog, shown at `/admin` once the password is in.
  *
- * Three views of one file: the gallery for metadata, the dependency panel for
- * the graph, the reorder list for chronology. All three write through the same
- * validate-then-save path, so nothing invalid can reach mcu.json and a bad edit
- * cannot become a 500 on the deployed site.
+ * Three views of one document: the gallery for metadata, the dependency panel
+ * for the graph, the reorder list for chronology. All three write through the
+ * same validate-then-save path, so nothing invalid can reach the database and a
+ * bad edit cannot become a 500 on the public site. A valid edit is live at once.
  *
  * Replaces the Streamlit build this repo used to carry. That tool re-ran its
  * whole script on every interaction, which is why it needed a session_state
@@ -27,7 +29,7 @@ const TABS = [
   { id: 'timeline', label: 'Timeline order' },
 ]
 
-function StatusBar({ state, saving, onReload }) {
+function StatusBar({ state, saving, onReload, onHistory, onSignOut }) {
   const broken = state.problems.length > 0
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -43,15 +45,27 @@ function StatusBar({ state, saving, onReload }) {
         {state.counts.titles} titles · {state.counts.edges} edges
         {state.warnings.length > 0 ? ` · ${state.warnings.length} warning(s)` : ''}
       </span>
-      <span className="meta ml-auto">{saving ? 'Saving…' : 'Auto-saves when valid'}</span>
+      <span className="meta ml-auto">{saving ? 'Saving…' : 'Saves live when valid'}</span>
       <Button onClick={onReload} disabled={saving}>
-        Reload from disk
+        Reload
       </Button>
+      <Button onClick={onHistory} disabled={saving}>
+        Earlier versions
+      </Button>
+      {/* A download, not a request: the server answers with the file. */}
+      <a
+        href={EXPORT_URL}
+        download="mcu.json"
+        className="meta border border-hairline-strong px-2.5 py-1.5 text-ink-dim transition-colors hover:text-ink"
+      >
+        Export mcu.json
+      </a>
+      {onSignOut && <Button onClick={onSignOut}>Lock editor</Button>}
     </div>
   )
 }
 
-export function EditorApp() {
+export function EditorApp({ onSignOut }) {
   const catalog = useCatalog()
   const [tab, setTab] = useState('gallery')
   const [query, setQuery] = useState('')
@@ -60,24 +74,25 @@ export function EditorApp() {
   // null = closed, '' = the new-title dialog, otherwise the id being edited.
   const [editing, setEditing] = useState(null)
   const [showWarnings, setShowWarnings] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
 
   if (catalog.loading) {
-    return <p className="meta p-8">Reading mcu.json…</p>
+    return <p className="meta p-8">Reading the catalog…</p>
   }
   if (catalog.loadError || !catalog.state || !catalog.enums) {
-    // A 422 here is the file itself being unparseable, which is a different
-    // problem from the backend being down and wants a different instruction.
+    // A 422 here is the stored document being unreadable, which is a different
+    // problem from the server being down and wants a different instruction.
     const unparseable = catalog.loadError?.status === 422
     return (
       <div className="space-y-3 p-8">
         <Problems
-          title={unparseable ? 'mcu.json could not be read' : 'Could not reach the editor backend'}
+          title={unparseable ? 'The catalog could not be read' : 'Could not reach the server'}
           lines={
             unparseable
               ? catalog.loadError.problems
               : [
-                  catalog.loadError?.message ?? 'No response from /editor-api.',
-                  'Start it with catalog.bat, which runs it alongside the dev server.',
+                  catalog.loadError?.message ?? 'No response from /api/admin.',
+                  'Locally, start the API with run.bat or catalog.bat.',
                 ]
           }
         />
@@ -112,6 +127,21 @@ export function EditorApp() {
   }
 
   async function deleteTitle(id) {
+    // Saved orders and watch progress hold foreign keys into the title with
+    // ON DELETE CASCADE, so deleting it deletes those rows for every user. Say
+    // how many before it happens; a failed lookup does not block the delete.
+    let usage = null
+    try {
+      usage = await fetchUsage(id)
+    } catch {
+      // Falls through to the plain confirmation below.
+    }
+    const used = usage ? usage.watch_progress + usage.order_items : 0
+    const message = used
+      ? `Deleting '${id}' also deletes ${usage.watch_progress} watch-progress and ${usage.order_items} saved-order entries belonging to users. This is live at once. Delete anyway?`
+      : `Delete '${id}'? This is live at once.`
+    if (!window.confirm(message)) return
+
     const ok = await edit((document) => {
       document.movies = document.movies
         .filter((movie) => movie.id !== id)
@@ -130,15 +160,21 @@ export function EditorApp() {
       <header className="hairline mb-4 space-y-3 border-b pb-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="text-lg text-ink">Catalog editor</h1>
-          <code className="meta">{state.path}</code>
+          <code className="meta">{state.storage}</code>
         </div>
-        <StatusBar state={state} saving={saving} onReload={catalog.reload} />
+        <StatusBar
+          state={state}
+          saving={saving}
+          onReload={catalog.reload}
+          onHistory={() => setShowHistory(true)}
+          onSignOut={onSignOut}
+        />
         <Problems
-          title="Not saved — nothing was written to mcu.json"
+          title="Not saved — nothing was changed"
           lines={error}
           onDismiss={catalog.dismissError}
         />
-        <Problems title="mcu.json is currently invalid" lines={state.problems} />
+        <Problems title="The stored catalog is currently invalid" lines={state.problems} />
         {state.warnings.length > 0 && (
           <div>
             <Button onClick={() => setShowWarnings((value) => !value)}>
@@ -193,6 +229,13 @@ export function EditorApp() {
       )}
 
       {tab === 'timeline' && <Reorder movies={movies} onEdit={edit} />}
+
+      <History
+        open={showHistory}
+        onClose={() => setShowHistory(false)}
+        saving={saving}
+        onRestore={catalog.restore}
+      />
 
       <EditDialog
         open={editing !== null}
