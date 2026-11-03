@@ -27,7 +27,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -40,55 +39,12 @@ from enrich_tmdb import (  # noqa: E402
     REPO_ROOT,
     SEED_PATH,
     TmdbError,
-    get,
+    episode_rows_for,
     new_session,
-    normalize_release_date,
-    parse_seasons,
-    resolve,
+    show_ids_of,
 )
 
 OUTPUT_PATH = SEED_PATH.parent / "episodes.json"
-
-# "Marvel's Agents of S.H.I.E.L.D.: Season 1 (Episodes 8–16)". Any dash will do.
-EPISODE_RANGE = re.compile(r"\s*\(Episodes\s+(?P<first>\d+)\s*[-–—]\s*(?P<last>\d+)\)\s*$")
-
-
-def split_title(title: str) -> tuple[str, tuple[int, int] | None]:
-    """The title without its episode range, and the range if it names one."""
-    match = EPISODE_RANGE.search(title)
-    if not match:
-        return title, None
-    return title[: match.start()], (int(match.group("first")), int(match.group("last")))
-
-
-def show_name(title: str) -> str:
-    base, _ = split_title(title)
-    parsed = parse_seasons(base)
-    name = parsed[0] if parsed else base
-    return name.removeprefix("Marvel's ").strip()
-
-
-def episode_rows(
-    payload: dict[str, Any], season: int, wanted: tuple[int, int] | None
-) -> list[dict]:
-    rows = []
-    for episode in payload.get("episodes") or []:
-        number = episode.get("episode_number")
-        if not isinstance(number, int):
-            continue
-        if wanted and not (wanted[0] <= number <= wanted[1]):
-            continue
-        runtime = episode.get("runtime")
-        rows.append(
-            {
-                "season": season,
-                "episode": number,
-                "name": (episode.get("name") or f"Episode {number}").strip(),
-                "runtime_min": runtime if isinstance(runtime, int) and runtime > 0 else None,
-                "air_date": normalize_release_date(episode.get("air_date")),
-            }
-        )
-    return rows
 
 
 def dump(output: dict[str, Any]) -> str:
@@ -129,12 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     if OUTPUT_PATH.exists():
         existing = json.loads(OUTPUT_PATH.read_text(encoding="utf-8")).get("episodes", {})
 
-    # Later seasons carry no tmdb_id of their own; borrow the one the show's
-    # first entry was matched to, so nothing is searched for twice.
-    show_ids: dict[str, int] = {}
-    for movie in series:
-        if movie.get("tmdb_id"):
-            show_ids.setdefault(show_name(movie["title"]), movie["tmdb_id"])
+    show_ids = show_ids_of(series)
 
     session = new_session()
     result: dict[str, list[dict]] = {}
@@ -147,35 +98,12 @@ def main(argv: list[str] | None = None) -> int:
                 result[movie_id] = existing[movie_id]
             continue
 
-        base, wanted = split_title(movie["title"])
-        parsed = parse_seasons(base)
-        seasons = parsed[1] if parsed else [1]
-        if wanted and len(seasons) != 1:
-            failures.append(f"{movie_id}: an episode range needs exactly one season")
-            continue
-
-        show_id = show_ids.get(show_name(movie["title"]))
-        if show_id is None:
-            year = int(movie["release_date"][:4])
-            found = resolve(session, api_key, base, year, "series")
-            if not found:
-                failures.append(f"{movie_id}: no TMDb match for {base!r}")
-                continue
-            show_id = found[1]
-            show_ids[show_name(movie["title"])] = show_id
-
-        rows: list[dict] = []
         try:
-            for season in seasons:
-                payload = get(session, f"/tv/{show_id}/season/{season}", api_key)
-                rows.extend(episode_rows(payload, season, wanted))
+            rows = episode_rows_for(session, api_key, movie, show_ids)
         except TmdbError as exc:
             failures.append(f"{movie_id}: {exc}")
             continue
 
-        if not rows:
-            failures.append(f"{movie_id}: TMDb lists no episodes")
-            continue
         result[movie_id] = rows
         runtime = sum(row["runtime_min"] or 0 for row in rows)
         catalog_runtime = movie.get("runtime_min")

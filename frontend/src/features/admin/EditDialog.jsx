@@ -155,12 +155,24 @@ function TmdbPicker({ draft, onApply }) {
  * remounts it with new initial state and there is no reseed to accidentally
  * fire mid-edit and eat a keystroke.
  */
-function TitleForm({ movie, movies, enums, problems, saving, onSave, onDelete, onClose }) {
+function TitleForm({
+  movie,
+  movies,
+  enums,
+  problems,
+  saving,
+  episodeCount,
+  onFetchEpisodes,
+  onSave,
+  onDelete,
+  onClose,
+}) {
   const isNew = !movie
   const [draft, setDraft] = useState(() =>
     movie ? { ...BLANK, ...movie, release_date: toDateInput(movie.release_date) } : BLANK,
   )
   const [insertBefore, setInsertBefore] = useState('')
+  const [fetchingEpisodes, setFetchingEpisodes] = useState(false)
 
   const set = (patch) => setDraft((current) => ({ ...current, ...patch }))
 
@@ -350,6 +362,38 @@ function TitleForm({ movie, movies, enums, problems, saving, onSave, onDelete, o
           })}
         </div>
       </section>
+
+      {movie?.media_type === 'series' && (
+        <section className="space-y-1.5">
+          <h3 className="meta text-ink">Episodes</h3>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm text-ink-dim">
+              {episodeCount ? `${episodeCount} episodes` : 'None yet'}
+            </span>
+            <Button
+              disabled={saving || fetchingEpisodes}
+              onClick={async () => {
+                setFetchingEpisodes(true)
+                try {
+                  await onFetchEpisodes(movie.id)
+                } finally {
+                  setFetchingEpisodes(false)
+                }
+              }}
+            >
+              {fetchingEpisodes
+                ? 'Fetching…'
+                : episodeCount
+                  ? 'Refresh from TMDb'
+                  : 'Fetch from TMDb'}
+            </Button>
+          </div>
+          <p className="meta normal-case tracking-normal">
+            Saved straight away, separately from the form. Uses this title&apos;s saved TMDb id, or
+            searches by name; a show TMDb has not listed episodes for yet comes back empty.
+          </p>
+        </section>
+      )}
 
       <footer className="hairline flex items-center justify-between border-t pt-3">
         {movie ? (

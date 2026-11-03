@@ -206,9 +206,14 @@ refuses every editor request without it. It is the private half of the site:
   bundled file instead of an error. Each server process re-checks the stored
   revision at most every 30 seconds, so a page view costs no query, and another
   instance can show an edit up to that long late.
-- `episodes.json` and `recommended_orders.json` are still files: they are
-  generated or curated outside the editor and change with a deploy. The editor
-  refuses a save that would orphan either.
+- **Episodes** come from two places. `episodes.json` is the generated file
+  (`scripts/fetch_episodes.py`) that ships with a deploy; a series' dialog in the
+  editor also has **Fetch from TMDb**, which stores that show's episodes in the
+  document's own `episodes` key, overriding the file's list for that title. So a
+  series added in the editor gets its checklist as soon as TMDb lists the
+  episodes, with no deploy. Both are validated together on every save.
+- `recommended_orders.json` is still a file, curated outside the editor and
+  changed with a deploy. The editor refuses a save that would orphan it.
 - Deleting a title deletes saved-order and watch-progress rows that point at it,
   for every user (they are `ON DELETE CASCADE`), so the editor says how many first.
 

@@ -81,6 +81,11 @@ export const signOut = () => request('/logout', { method: 'POST' })
 /** What deleting a title would destroy: saved-order rows and progress rows. */
 export const fetchUsage = (movieId) => request(`/titles/${encodeURIComponent(movieId)}/usage`)
 
+/** TMDb's episode list for a saved series: rows to store in the document's
+ *  `episodes`. Writes nothing itself. */
+export const fetchTitleEpisodes = (movieId) =>
+  request(`/titles/${encodeURIComponent(movieId)}/episodes/fetch`, { method: 'POST' })
+
 export const fetchHistory = () => request('/catalog/history')
 
 export const restoreCatalog = (historyId, revision) =>

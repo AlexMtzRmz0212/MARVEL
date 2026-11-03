@@ -337,3 +337,101 @@ def test_recommended_orders_follow_the_catalog_they_were_built_from(admin, db, m
     second = admin.get("/api/orders/recommended").json()
     assert [o["id"] for o in first] == [o["id"] for o in second]
     assert first != second, "a runtime edit must reach the totals"
+
+
+# --------------------------------------------------------------------------- #
+# Episodes
+# --------------------------------------------------------------------------- #
+EPISODES = [
+    {"season": 1, "episode": 1, "name": "Pilot", "runtime_min": 40, "air_date": "2028-01-05"},
+    {"season": 1, "episode": 2, "name": "Second", "runtime_min": 38, "air_date": None},
+]
+
+
+def with_new_series(document: dict, **extra) -> dict:
+    """A copy with a series added at the end -- last in both orders, so nothing renumbers."""
+    changed = copy.deepcopy(document)
+    series = copy.deepcopy(next(m for m in changed["movies"] if m["id"] == "wonder-man"))
+    series.update(
+        id="test-series",
+        title="Test Series",
+        release_date="2028-01-01",
+        tmdb_id=None,
+        credit_scenes=None,
+        prerequisites=[{"id": "wandavision", "strength": "essential"}],
+    )
+    changed["movies"].append(series)
+    changed.update(extra)
+    return changed
+
+
+def test_episodes_saved_in_the_document_are_counted(admin):
+    state = admin.get("/api/admin/catalog").json()
+    document = with_new_series(state["document"], episodes={"test-series": EPISODES})
+
+    saved = admin.put(
+        "/api/admin/catalog", json={"document": document, "revision": state["revision"]}
+    )
+    assert saved.status_code == 200, saved.text
+    assert saved.json()["episode_counts"]["test-series"] == 2
+    # The file's own lists are still there beside it.
+    assert len(saved.json()["episode_counts"]) > 1
+
+
+def test_episodes_for_a_film_are_refused(admin):
+    state = admin.get("/api/admin/catalog").json()
+    document = copy.deepcopy(state["document"])
+    document["episodes"] = {"iron-man": EPISODES}
+
+    refused = admin.put(
+        "/api/admin/catalog", json={"document": document, "revision": state["revision"]}
+    )
+    assert refused.status_code == 422
+    assert any("iron-man" in problem for problem in refused.json()["detail"]["problems"])
+
+
+def test_fetching_episodes_returns_rows_and_writes_nothing(admin, monkeypatch):
+    import app.api.routes.admin as admin_routes
+
+    seen = {}
+
+    def fake(session, key, movie, show_ids):
+        seen["id"] = movie["id"]
+        return EPISODES
+
+    monkeypatch.setattr(admin_routes, "_tmdb_key", lambda: "key")
+    monkeypatch.setattr(admin_routes.tmdb, "episode_rows_for", fake)
+    before = admin.get("/api/admin/catalog").json()["revision"]
+
+    response = admin.post("/api/admin/titles/wonder-man/episodes/fetch")
+    assert response.status_code == 200, response.text
+    assert response.json() == {"episodes": EPISODES, "runtime_min": 78}
+    assert seen["id"] == "wonder-man"
+    assert admin.get("/api/admin/catalog").json()["revision"] == before
+
+
+def test_fetching_episodes_for_a_film_or_a_stranger_is_refused(admin, monkeypatch):
+    import app.api.routes.admin as admin_routes
+
+    monkeypatch.setattr(admin_routes, "_tmdb_key", lambda: "key")
+    assert admin.post("/api/admin/titles/iron-man/episodes/fetch").status_code == 422
+    assert admin.post("/api/admin/titles/no-such-title/episodes/fetch").status_code == 404
+
+
+def test_a_tmdb_failure_is_reported_as_a_sentence(admin, monkeypatch):
+    import app.api.routes.admin as admin_routes
+    from app.services.tmdb import TmdbError
+
+    def fail(*args, **kwargs):
+        raise TmdbError("TMDb lists no episodes")
+
+    monkeypatch.setattr(admin_routes, "_tmdb_key", lambda: "key")
+    monkeypatch.setattr(admin_routes.tmdb, "episode_rows_for", fail)
+
+    response = admin.post("/api/admin/titles/wonder-man/episodes/fetch")
+    assert response.status_code == 502
+    assert "TMDb lists no episodes" in response.json()["detail"]
+
+
+def test_fetching_needs_the_admin_cookie(api, configured):
+    assert api.post("/api/admin/titles/wonder-man/episodes/fetch").status_code == 401

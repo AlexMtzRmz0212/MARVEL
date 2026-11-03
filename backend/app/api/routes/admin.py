@@ -180,6 +180,13 @@ def _state(stored: StoredCatalog) -> dict[str, Any]:
             "titles": len(stored.document.get("movies", [])),
             "edges": len(validated.edges) if validated else 0,
         },
+        # Effective episode counts -- the file's lists and the document's -- so
+        # the title dialog can say whether a series has any.
+        "episode_counts": (
+            {movie_id: len(rows) for movie_id, rows in validated.episodes.items()}
+            if validated
+            else {}
+        ),
     }
 
 
@@ -244,6 +251,37 @@ def title_usage(movie_id: str, db: DbDep) -> dict[str, int]:
     """What deleting a title would take with it. Saved orders and progress hold
     foreign keys into `movies` with ON DELETE CASCADE."""
     return catalog_store.usage_of(db, movie_id)
+
+
+@protected.post("/titles/{movie_id}/episodes/fetch")
+def fetch_title_episodes(movie_id: str, db: DbDep) -> dict[str, Any]:
+    """TMDb's episode list for a saved series entry, ready to store in the document.
+
+    Reads the entry from the stored catalog rather than the request, so it works
+    from exactly what is live: its own TMDb id, a sibling season's, or a search
+    by name. Nothing is written here -- the editor puts the rows into the
+    document's `episodes` and saves through the usual validated path, which is
+    what makes the change undoable from the history like any other.
+    """
+    with _tables_present():
+        document = catalog_store.ensure_document(db).document
+    movies = document.get("movies", [])
+    movie = next((m for m in movies if m.get("id") == movie_id), None)
+    if movie is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"There is no title '{movie_id}'.")
+    if movie.get("media_type") != "series":
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Only a series has episodes.")
+
+    series = [m for m in movies if m.get("media_type") == "series"]
+    try:
+        rows = tmdb.episode_rows_for(
+            tmdb.new_session(), _tmdb_key(), movie, tmdb.show_ids_of(series)
+        )
+    except (tmdb.TmdbError, requests.RequestException) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Could not fetch episodes: {exc}"
+        ) from exc
+    return {"episodes": rows, "runtime_min": sum(row["runtime_min"] or 0 for row in rows)}
 
 
 @protected.get("/enums")

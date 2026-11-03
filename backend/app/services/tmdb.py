@@ -273,3 +273,134 @@ def fetch_details(
         details["runtime_min"] = runtime_min
 
     return details
+
+
+def search(
+    session: requests.Session, api_key: str, kind: str, title: str, year: int | None
+) -> int | None:
+    """The single best-guess TMDb id for a title, or None.
+
+    A thin convenience over :func:`search_candidates` for callers that want the
+    top hit without a human in the loop (e.g. :func:`resolve`). Anything
+    interactive should call ``search_candidates`` and let the user choose.
+    """
+    candidates = search_candidates(session, api_key, kind, title, year, limit=1)
+    return candidates[0]["id"] if candidates else None
+
+
+def resolve(
+    session: requests.Session, api_key: str, title: str, year: int, media_type: str
+) -> tuple[str, int, int | None] | None:
+    """Find a title on TMDb. Returns (kind, tmdb_id, season_numbers)."""
+    parsed = parse_seasons(title)
+    if parsed:
+        # Search for the show, not the season -- "Loki: Season 2" matches nothing.
+        base, seasons = parsed
+        for candidate_title in title_candidates(base):
+            # A later season's year will not match the show's first-air year.
+            show_id = search(session, api_key, "tv", candidate_title, year) or search(
+                session, api_key, "tv", candidate_title, None
+            )
+            if show_id:
+                return ("tv", show_id, seasons)
+        return None
+
+    for candidate_title in title_candidates(title):
+        for kind in search_endpoints(media_type):
+            # Try strict first, then adjacent years, then no year filter.
+            candidate_years = (None,) if year is None else (year, year + 1, year - 1, None)
+            for candidate_year in candidate_years:
+                found = search(session, api_key, kind, candidate_title, candidate_year)
+                if found:
+                    return (kind, found, None)
+    return None
+
+
+# "Marvel's Agents of S.H.I.E.L.D.: Season 1 (Episodes 8–16)". Any dash will do.
+EPISODE_RANGE = re.compile(r"\s*\(Episodes\s+(?P<first>\d+)\s*[-–—]\s*(?P<last>\d+)\)\s*$")
+
+
+def split_title(title: str) -> tuple[str, tuple[int, int] | None]:
+    """The title without its episode range, and the range if it names one."""
+    match = EPISODE_RANGE.search(title)
+    if not match:
+        return title, None
+    return title[: match.start()], (int(match.group("first")), int(match.group("last")))
+
+
+def show_name(title: str) -> str:
+    base, _ = split_title(title)
+    parsed = parse_seasons(base)
+    name = parsed[0] if parsed else base
+    return name.removeprefix("Marvel's ").strip()
+
+
+def episode_rows(
+    payload: dict[str, Any], season: int, wanted: tuple[int, int] | None
+) -> list[dict]:
+    rows = []
+    for episode in payload.get("episodes") or []:
+        number = episode.get("episode_number")
+        if not isinstance(number, int):
+            continue
+        if wanted and not (wanted[0] <= number <= wanted[1]):
+            continue
+        runtime = episode.get("runtime")
+        rows.append(
+            {
+                "season": season,
+                "episode": number,
+                "name": (episode.get("name") or f"Episode {number}").strip(),
+                "runtime_min": runtime if isinstance(runtime, int) and runtime > 0 else None,
+                "air_date": normalize_release_date(episode.get("air_date")),
+            }
+        )
+    return rows
+
+
+def show_ids_of(series: list[dict[str, Any]]) -> dict[str, int]:
+    """TMDb show ids already known, by show name.
+
+    Later seasons carry no tmdb_id of their own; they borrow the one the show's
+    first entry was matched to, so nothing is searched for twice.
+    """
+    ids: dict[str, int] = {}
+    for movie in series:
+        if movie.get("tmdb_id"):
+            ids.setdefault(show_name(movie["title"]), movie["tmdb_id"])
+    return ids
+
+
+def episode_rows_for(
+    session: requests.Session,
+    api_key: str,
+    movie: dict[str, Any],
+    show_ids: dict[str, int],
+) -> list[dict[str, Any]]:
+    """The episode list for one series entry, cut to the seasons it covers.
+
+    Raises :class:`TmdbError` with a sentence that says what to do about it. The
+    show id is the entry's own, else a sibling's, else a TMDb search -- and a
+    search that succeeds is remembered in `show_ids` for the next entry.
+    """
+    base, wanted = split_title(movie["title"])
+    parsed = parse_seasons(base)
+    seasons = parsed[1] if parsed else [1]
+    if wanted and len(seasons) != 1:
+        raise TmdbError("an episode range needs exactly one season")
+
+    name = show_name(movie["title"])
+    show_id = show_ids.get(name)
+    if show_id is None:
+        found = resolve(session, api_key, base, int(movie["release_date"][:4]), "series")
+        if not found:
+            raise TmdbError(f"no TMDb match for {base!r}")
+        show_id = show_ids[name] = found[1]
+
+    rows: list[dict[str, Any]] = []
+    for season in seasons:
+        payload = get(session, f"/tv/{show_id}/season/{season}", api_key)
+        rows.extend(episode_rows(payload, season, wanted))
+    if not rows:
+        raise TmdbError("TMDb lists no episodes")
+    return rows

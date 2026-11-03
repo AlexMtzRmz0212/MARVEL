@@ -65,18 +65,52 @@ def read_seed_file(path: Path = DEFAULT_SEED_PATH) -> SeedFile:
         raise SeedValidationError(_problems(exc)) from exc
 
 
+def _merge_episodes(
+    base: EpisodesFile | None, edited: object, present: set[str]
+) -> EpisodesFile | None:
+    """The file's episode lists, overlaid with the ones saved in the document.
+
+    The document's `episodes` key is where the editor puts what it fetches from
+    TMDb, so a series added after the last deploy can have an episode list
+    without anyone regenerating `episodes.json`. An entry there replaces the
+    file's list for the same title.
+
+    The file's lists are cut to the titles the document still has: deleting a
+    title in the editor must not be refused because the generated file still
+    remembers it. (The command-line check reads the file alone and still reports
+    that kind of drift.)
+    """
+    lists = {
+        movie_id: rows
+        for movie_id, rows in (base.episodes if base else {}).items()
+        if movie_id in present
+    }
+    if edited:
+        try:
+            parsed = EpisodesFile.model_validate({"version": 1, "episodes": edited})
+        except ValidationError as exc:
+            raise SeedValidationError(_problems(exc, "episodes: ")) from exc
+        lists.update(parsed.episodes)
+    return EpisodesFile(version=1, episodes=lists)
+
+
 def validate_document(raw: dict, path: Path = DEFAULT_SEED_PATH) -> ValidatedCatalog:
     """Validate a catalog that is already in memory, as the editor and the database hold it.
 
-    Same two stages as the file path -- shape, then structure -- and the episode
-    lists are still read from beside `path`, because they are generated files
-    that ship with the code rather than part of the editable document.
+    Same two stages as the file path -- shape, then structure. Episode lists come
+    from beside `path` (generated files that ship with the code) overlaid with any
+    in the document itself; see `_merge_episodes`.
     """
     try:
         seed = SeedFile.model_validate(raw)
     except ValidationError as exc:
         raise SeedValidationError(_problems(exc)) from exc
-    return validate_catalog(seed, read_episodes_file(episodes_path_for(path)))
+    episodes = _merge_episodes(
+        read_episodes_file(episodes_path_for(path)),
+        raw.get("episodes"),
+        {movie.id for movie in seed.movies},
+    )
+    return validate_catalog(seed, episodes)
 
 
 def load_and_validate(path: Path = DEFAULT_SEED_PATH) -> ValidatedCatalog:

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { EXPORT_URL, fetchUsage } from './api'
+import { EXPORT_URL, fetchTitleEpisodes, fetchUsage } from './api'
 import { Dependencies } from './Dependencies'
 import { EditDialog } from './EditDialog'
 import { Gallery } from './Gallery'
@@ -126,6 +126,21 @@ export function EditorApp({ onSignOut }) {
     if (ok) setEditing(null)
   }
 
+  /** Fetch a series' episodes from TMDb and store them in the document.
+   *  Saved at once, through the same validated path as any edit, rather than
+   *  held in the dialog's draft -- the list is not something to type. */
+  async function fetchEpisodes(id) {
+    try {
+      const { episodes } = await fetchTitleEpisodes(id)
+      return await edit((document) => {
+        document.episodes = { ...document.episodes, [id]: episodes }
+      })
+    } catch (failure) {
+      catalog.setError(failure.problems ?? [String(failure)])
+      return false
+    }
+  }
+
   async function deleteTitle(id) {
     // Saved orders and watch progress hold foreign keys into the title with
     // ON DELETE CASCADE, so deleting it deletes those rows for every user. Say
@@ -143,6 +158,13 @@ export function EditorApp({ onSignOut }) {
     if (!window.confirm(message)) return
 
     const ok = await edit((document) => {
+      // Its episode list goes with it; one naming a title that is gone is a
+      // dangling reference, like an edge.
+      if (document.episodes) {
+        document.episodes = Object.fromEntries(
+          Object.entries(document.episodes).filter(([key]) => key !== id),
+        )
+      }
       document.movies = document.movies
         .filter((movie) => movie.id !== id)
         // An edge pointing at a title that no longer exists is a dangling
@@ -246,6 +268,8 @@ export function EditorApp({ onSignOut }) {
         saving={saving}
         onSave={saveTitle}
         onDelete={deleteTitle}
+        episodeCount={current ? (state.episode_counts?.[current.id] ?? 0) : 0}
+        onFetchEpisodes={fetchEpisodes}
         onClose={() => {
           setEditing(null)
           catalog.dismissError()
