@@ -1,7 +1,7 @@
 """Print the hash to store as ADMIN_PASSWORD_HASH.
 
     cd backend
-    .venv\Scripts\python.exe scripts\hash_admin_password.py
+    .venv/Scripts/python.exe scripts/hash_admin_password.py
 
 Prompts for the password (nothing is echoed) and prints an argon2 hash. Put that
 in the Vercel project's environment variables -- and in backend/.env if you want
@@ -13,8 +13,12 @@ from __future__ import annotations
 
 import getpass
 import sys
+from pathlib import Path
 
-from app.core.security import hash_password
+# Run as a script, `app` is only importable if the package was installed.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app.core.security import hash_password  # noqa: E402  (path set above)
 
 
 def main() -> int:
