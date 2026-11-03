@@ -76,7 +76,8 @@ def login(
         return AdminSessionOut(authenticated=True, open=True)
 
     key = admin_auth.client_key(request)
-    wait = admin_auth.seconds_locked(db, key)
+    with _tables_present():
+        wait = admin_auth.seconds_locked(db, key)
     if wait:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -96,11 +97,13 @@ def login(
         ) from None
 
     if not ok:
-        admin_auth.record_failure(db, key)
+        with _tables_present():
+            admin_auth.record_failure(db, key)
         # One message whichever way it failed, as for accounts.
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password.")
 
-    admin_auth.clear_failures(db, key)
+    with _tables_present():
+        admin_auth.clear_failures(db, key)
     response.set_cookie(
         key=ADMIN_COOKIE_NAME,
         value=create_admin_token(),
