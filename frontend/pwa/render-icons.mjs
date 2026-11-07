@@ -15,8 +15,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const publicDir = join(here, '..', 'public')
 
-// One artwork for every size: it is drawn full bleed with the mark inside the
-// maskable safe zone, so it serves as both `any` and `maskable`.
+// One artwork for every size: the circular badge stays inside the maskable
+// safe zone, with transparent corners so desktop shortcuts keep its silhouette.
 const SIZES = {
   'pwa-192.png': 192,
   'pwa-512.png': 512,
@@ -54,6 +54,7 @@ try {
       '--headless=new',
       '--disable-gpu',
       '--hide-scrollbars',
+      '--default-background-color=00000000',
       '--force-device-scale-factor=1',
       `--user-data-dir=${join(work, 'profile')}`,
       `--window-size=${size},${size}`,
