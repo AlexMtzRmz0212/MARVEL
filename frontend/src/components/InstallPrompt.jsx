@@ -131,7 +131,7 @@ export function InstallPrompt() {
       className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] lg:pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
     >
       <div className="floating bubble bubble-below animate-popup-in flex w-full max-w-md items-start gap-4 px-4 py-3">
-        <img src="/apple-touch-icon.png" alt="" className="size-11 shrink-0 border-2 border-ink" />
+        <img src="/apple-touch-icon-v2.png" alt="" className="size-11 shrink-0 border-2 border-ink" />
         <div className="min-w-0 flex-1">
           <p className="label text-ink">Get the app</p>
           {ios ? (

@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
         // not inject a second registration.
         registerType: 'prompt',
         injectRegister: false,
-        includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+        includeAssets: ['favicon.svg', 'apple-touch-icon-v2.png'],
         manifest: {
           name: 'Marvel Watch Order',
           short_name: 'Watch Order',
@@ -36,10 +36,10 @@ export default defineConfig(({ mode }) => {
           background_color: '#17171c',
           theme_color: '#17171c',
           icons: [
-            { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
-            { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
+            { src: 'pwa-192-v2.png', sizes: '192x192', type: 'image/png' },
+            { src: 'pwa-512-v2.png', sizes: '512x512', type: 'image/png' },
             // The circular badge is inside the maskable safe zone (see pwa/icon.svg).
-            { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+            { src: 'pwa-512-v2.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
         workbox: {

@@ -18,9 +18,9 @@ const publicDir = join(here, '..', 'public')
 // One artwork for every size: the circular badge stays inside the maskable
 // safe zone, with transparent corners so desktop shortcuts keep its silhouette.
 const SIZES = {
-  'pwa-192.png': 192,
-  'pwa-512.png': 512,
-  'apple-touch-icon.png': 180,
+  'pwa-192-v2.png': 192,
+  'pwa-512-v2.png': 512,
+  'apple-touch-icon-v2.png': 180,
 }
 
 const CANDIDATES = [
