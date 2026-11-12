@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 
 import { useMovie } from '../../api/catalog'
@@ -23,18 +23,45 @@ export function TitleDrawer({ movieId, summary, onClose }) {
   const progress = useWatchProgress()
   const closeRef = useRef(null)
   const movie = detail ?? summary
+  // Closing slides the panel out first, and only then lets go of it. The page
+  // behind is told at the same moment (via `data-peek` on <html>), so whatever
+  // was pushed aside eases back in step with the panel leaving.
+  const [leaving, setLeaving] = useState(false)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
+  const requestClose = useCallback(() => {
+    setLeaving(true)
+  }, [])
 
   useEffect(() => {
     closeRef.current?.focus()
   }, [movieId])
 
   useEffect(() => {
+    const root = document.documentElement
+    root.dataset.peek = leaving ? 'closing' : 'open'
+    return () => {
+      delete root.dataset.peek
+    }
+  }, [leaving])
+
+  useEffect(() => {
+    if (!leaving) return undefined
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const timer = setTimeout(() => onCloseRef.current(), reduced ? 0 : 260)
+    return () => clearTimeout(timer)
+  }, [leaving])
+
+  useEffect(() => {
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') requestClose()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  }, [requestClose])
 
   if (!movie) return null
 
@@ -50,11 +77,14 @@ export function TitleDrawer({ movieId, summary, onClose }) {
   return (
     <aside
       aria-label={`${movie.title}, details`}
-      className="floating fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col overflow-y-auto border-l-2 border-ink bg-surface text-ink shadow-2xl"
+      className={[
+        'floating fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col overflow-y-auto border-l-2 border-ink bg-surface text-ink shadow-2xl',
+        leaving ? 'animate-peek-out' : 'animate-peek-in',
+      ].join(' ')}
     >
       <div className="flex items-center justify-between gap-3 border-b-2 border-ink px-4 py-3">
         <span className="label text-ink-dim">Title</span>
-        <button ref={closeRef} type="button" className="btn btn-sm" onClick={onClose}>
+        <button ref={closeRef} type="button" className="btn btn-sm" onClick={requestClose}>
           Close
         </button>
       </div>

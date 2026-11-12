@@ -69,6 +69,7 @@ class Universe(StrEnum):
     EARTH_10005_2029 = "Earth-10005 (2029)"
     EARTH_26320 = "Earth-26320"
     EARTH_701306 = "Earth-701306"
+    EARTH_828 = "Earth-828"
 
 
 # Earth-199999 and its direct branches/crossovers/multiverse-official designations.
@@ -83,6 +84,7 @@ MCU_UNIVERSES = frozenset(
         Universe.MULTIVERSE_TVA,
         Universe.MULTIVERSE_EARTH_199999,
         Universe.ALTERNATE_EARTH_199999,
+        Universe.EARTH_828,
         Universe.EARTH_199999_EARTH_838,
         Universe.ANIMATED_MULTIVERSE,
         Universe.EARTH_10005_AND_199999,

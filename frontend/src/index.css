@@ -680,6 +680,48 @@
   }
 }
 
+/* The title peek slides in from the right edge and out again. The page that
+ * opts in with `.peek-push` gives up the same width at the same pace, so its
+ * content is eased aside rather than covered. Only where the peek is a side
+ * panel (lg and up); below that it is full width and covers the page, as before. */
+@keyframes peek-in {
+  from { transform: translateX(100%); }
+}
+
+@keyframes peek-out {
+  to { transform: translateX(100%); }
+}
+
+.animate-peek-in {
+  animation: peek-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-peek-out {
+  animation: peek-out 0.26s cubic-bezier(0.55, 0, 0.8, 0.3) forwards;
+}
+
+.peek-push {
+  transition: padding-right 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 1024px) {
+  /* The drawer is 28rem wide. Whatever of that the page's own side margin
+   * (centred, max 1400px) does not already leave free is taken as padding. */
+  html[data-peek='open'] .peek-push {
+    padding-right: max(0px, calc(28rem - max(0px, calc((100vw - 1400px) / 2)) - 0.5rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-peek-in,
+  .animate-peek-out {
+    animation: none;
+  }
+  .peek-push {
+    transition: none;
+  }
+}
+
 /* A title already seen, sliding in from the right edge and settling with a
  * small overshoot, the way a card is slid across a table. */
 @keyframes seen-peek {

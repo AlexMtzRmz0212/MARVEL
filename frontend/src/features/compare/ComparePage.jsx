@@ -368,7 +368,7 @@ export function ComparePage() {
     : 'mx-auto grid max-w-md grid-cols-1 items-start'
 
   return (
-    <div ref={pageRef}>
+    <div ref={pageRef} className="peek-push">
       <div className="pt-8 pb-5">
         <h1 className="display text-5xl text-balance text-ink sm:text-6xl">
           Release against chronology

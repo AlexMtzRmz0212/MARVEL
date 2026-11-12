@@ -96,6 +96,7 @@ const MCU_UNIVERSES = new Set([
   'Multiverse / TVA',
   'Multiverse / Earth-199999',
   'Alternate Earth / 199999',
+  'Earth-828',
   'Earth-199999 / Earth-838',
   'Animated Multiverse',
   'Earth-10005 & 199999',

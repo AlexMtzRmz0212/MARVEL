@@ -14,13 +14,16 @@ const TABS = [
   { to: '/catalog', label: 'Catalog', owns: ['/catalog', '/movies'], Icon: BrowseIcon },
   { to: '/timeline', label: 'Timeline', owns: ['/timeline'], Icon: TimelineIcon },
   { to: '/orders', label: 'Orders', owns: ['/orders'], Icon: OrdersIcon },
-  { to: '/compare', label: 'Release vs story', short: 'Compare', owns: ['/compare'], Icon: CompareIcon },
+  { to: '/compare', label: 'Release vs Story', short: 'Compare', owns: ['/compare'], Icon: CompareIcon },
   { to: '/progress', label: 'Progress', owns: ['/progress'], Icon: ProgressIcon, exact: true },
   { to: '/progress/sort', label: 'Quick sort', owns: ['/progress/sort'], Icon: SortIcon },
   // Friends is the one feature with no guest half -- a friendship is between
   // two accounts -- so a signed-out visitor is not shown a tab that leads to a
   // locked door.
   { to: '/friends', label: 'Friends', owns: ['/friends'], Icon: FriendsIcon, accountOnly: true },
+  // Open to everyone, like the footer link: the page itself asks for the
+  // editor password.
+  { to: '/admin', label: 'Editor', owns: ['/admin'], Icon: EditorIcon },
 ]
 
 function owns(tab, pathname) {
@@ -204,6 +207,17 @@ function SortIcon({ className }) {
   return (
     <Glyph className={className}>
       <path d="M4 6h16M4 12h11M4 18h6" />
+    </Glyph>
+  )
+}
+
+/** A pencil over a baseline. */
+function EditorIcon({ className }) {
+  return (
+    <Glyph className={className}>
+      <path d="m15 5 4 4L9 19H5v-4z" />
+      <path d="m13 7 4 4" />
+      <path d="M13 20h8" />
     </Glyph>
   )
 }
