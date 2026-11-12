@@ -94,7 +94,7 @@ export function EditorApp({ onSignOut }) {
               ? catalog.loadError.problems
               : [
                   catalog.loadError?.message ?? 'No response from /api/admin.',
-                  'Locally, start the API with run.bat or catalog.bat.',
+                  'Locally, start the API with DEV.bat.',
                 ]
           }
         />

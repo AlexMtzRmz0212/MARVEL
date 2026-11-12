@@ -5,7 +5,8 @@ backend/alembic/
 backend/alembic.ini
 backend/scripts/
 fixtures/
-run.bat
+DEV.bat
 **/__pycache__/
 **/.pytest_cache/
 **/.ruff_cache/
+MIGRATE.bat

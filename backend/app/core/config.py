@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     # argon2 hash of the one password that unlocks the catalog editor (`/admin`).
     # Generate it with backend/scripts/hash_admin_password.py. Unset means the
     # editor is switched off -- except in dev, where it is open, so that
-    # catalog.bat works without ceremony. See `admin_enabled` / `admin_open`.
+    # DEV.bat works without ceremony. See `admin_enabled` / `admin_open`.
     admin_password_hash: SecretStr | None = None
 
     # TMDb, for the editor's poster/synopsis picker.

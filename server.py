@@ -6,7 +6,7 @@ this file exists rather than the `api/index.py` shim plus a rewrite rule that
 older guides describe. It is deliberately *not* named `app.py`: that would
 shadow the `app` package inside `backend/`.
 
-Locally this is optional. `run.bat` starts uvicorn and Vite separately, and Vite
+Locally this is optional. `DEV.bat` starts uvicorn and Vite separately, and Vite
 proxies `/api` to uvicorn, so the two environments have the same same-origin
 shape. Run this file instead to exercise exactly what production serves:
 

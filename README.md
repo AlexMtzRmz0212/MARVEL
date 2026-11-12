@@ -7,7 +7,7 @@ what you need to have watched first, and why.
 ## Run it
 
 ```
-run.bat
+DEV.bat
 ```
 
 That validates the catalog, starts both servers and opens the app. First run
@@ -190,7 +190,7 @@ refuses every editor request without it. It is the private half of the site:
   or the other way round. Five wrong guesses lock that client out for 15 minutes,
   counted in the database because the app runs as serverless functions.
 - **It fails closed.** With no hash set, every `/api/admin` route is a 404 — except
-  when `ENVIRONMENT=dev`, where the editor is simply open so that `catalog.bat`
+  when `ENVIRONMENT=dev`, where the editor is simply open so that `DEV.bat`
   needs no password.
 - **Edits are live.** The live catalog is one row in Neon (`catalog_document`), in
   the shape of `mcu.json`. Saving validates it with everything the app checks at
@@ -217,7 +217,7 @@ refuses every editor request without it. It is the private half of the site:
 - Deleting a title deletes saved-order and watch-progress rows that point at it,
   for every user (they are `ON DELETE CASCADE`), so the editor says how many first.
 
-Run it locally with `catalog.bat`, which starts the API and Vite and opens
+Run it locally with `DEV.bat`, which starts the API and Vite; open
 `localhost:5173/admin`. Local edits go to whichever database `backend/.env`
 names; the header shows which. The editor has a TMDb picker that shows every
 match so you choose the right one rather than trusting a blind first hit, and its

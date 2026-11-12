@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 
 import { useMovies } from '../../api/catalog'
 import { TitleLink } from '../../components/TitlePeek'
@@ -8,6 +9,8 @@ import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { accentFor, formatDate, formatTotalRuntime } from '../../lib/format'
 import { claimSearch } from '../../lib/searchTarget'
 import { isWatched } from '../../lib/watchStorage'
+import { FilterMenu } from './CompareFilters'
+import { COMPARE_FILTER_KEYS, matchesFilters } from './filters'
 import { OrderColumn } from './OrderColumn'
 import { ShiftLinks } from './ShiftLinks'
 
@@ -234,6 +237,34 @@ export function ComparePage() {
     runtime: true,
   })
   const [keyOpen, setKeyOpen] = useState(false)
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filters = Object.fromEntries(
+    COMPARE_FILTER_KEYS.map((key) => [key, searchParams.get(key) ?? null]),
+  )
+
+  function setFilter(key, value) {
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous)
+        if (value === null || value === undefined || value === '') next.delete(key)
+        else next.set(key, String(value))
+        return next
+      },
+      { replace: true },
+    )
+  }
+
+  function resetFilters() {
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous)
+        COMPARE_FILTER_KEYS.forEach((key) => next.delete(key))
+        return next
+      },
+      { replace: true },
+    )
+  }
   // Two separate things: pointing at a title lights it for as long as the
   // pointer is there, clicking keeps it lit so it survives a scroll. Pointing
   // wins while it lasts, which is what makes a hover a preview rather than a
@@ -258,8 +289,37 @@ export function ComparePage() {
     return () => window.removeEventListener('resize', measure)
   }, [])
 
-  const release = releaseQuery.data
-  const chrono = chronoQuery.data
+  // The same filter is applied to both lists, so each column still holds the
+  // same titles and the join below needs no change -- positions are simply
+  // within the subset, and so are the running hours.
+  const filterKey = COMPARE_FILTER_KEYS.map((key) => filters[key] ?? '').join('|')
+  const allRelease = releaseQuery.data
+  const release = useMemo(
+    () => allRelease?.filter((movie) => matchesFilters(movie, filters)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allRelease, filterKey],
+  )
+  const allChrono = chronoQuery.data
+  const chrono = useMemo(
+    () => allChrono?.filter((movie) => matchesFilters(movie, filters)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allChrono, filterKey],
+  )
+
+  // Choices come from the catalog itself, as on the catalog page.
+  const options = useMemo(() => {
+    const distinct = (pick) =>
+      [...new Set((allRelease ?? []).map(pick).filter(Boolean))].sort((a, b) =>
+        String(a).localeCompare(String(b)),
+      )
+    const rank = { 'Infinity Saga': 0, 'Multiverse Saga': 1 }
+    return {
+      sagas: distinct((movie) => movie.saga).sort(
+        (a, b) => (rank[a] ?? 2) - (rank[b] ?? 2) || a.localeCompare(b),
+      ),
+      universes: distinct((movie) => movie.universe),
+    }
+  }, [allRelease])
 
   // The join. Both lists hold the same titles in a different order, so a
   // position lookup each way is all it takes -- and the threads carry indices
@@ -398,14 +458,32 @@ export function ComparePage() {
             </p>
           )}
 
-          <KeyMenu
-            open={keyOpen}
-            onToggle={() => setKeyOpen((value) => !value)}
-            show={show}
-            setShow={setShow}
-            canLink={both}
-            floored={Boolean(model?.floored)}
-          />
+          <div className="flex shrink-0 items-center gap-1.5">
+            <FilterMenu
+              open={filterOpen}
+              onToggle={() => {
+                setFilterOpen((value) => !value)
+                setKeyOpen(false)
+              }}
+              filters={filters}
+              options={options}
+              setFilter={setFilter}
+              reset={resetFilters}
+              resultCount={release?.length ?? 0}
+              totalCount={allRelease?.length ?? 0}
+            />
+            <KeyMenu
+              open={keyOpen}
+              onToggle={() => {
+                setKeyOpen((value) => !value)
+                setFilterOpen(false)
+              }}
+              show={show}
+              setShow={setShow}
+              canLink={both}
+              floored={Boolean(model?.floored)}
+            />
+          </div>
         </div>
 
         {(show.release || show.chronological) && (
@@ -429,7 +507,11 @@ export function ComparePage() {
         <EmptyState>Both lines are hidden. Turn one back on in the key.</EmptyState>
       )}
 
-      {model && (show.release || show.chronological) && (
+      {release && release.length === 0 && (
+        <EmptyState>No titles match these filters. Clear them in Filter.</EmptyState>
+      )}
+
+      {model && release.length > 0 && (show.release || show.chronological) && (
         <div className={grid}>
           {show.release && (
             <OrderColumn

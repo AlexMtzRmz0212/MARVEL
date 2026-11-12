@@ -143,3 +143,20 @@ describe('ComparePage', () => {
     expect(container.querySelectorAll('path')).toHaveLength(0)
   })
 })
+
+describe('ComparePage filters', () => {
+  it('narrows both lines to the same subset', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/compare?saga=Multiverse+Saga']}>
+        <ComparePage />
+      </MemoryRouter>,
+    )
+
+    expect(columns(container)).toEqual([
+      ['c', 'd'],
+      ['c', 'd'],
+    ])
+    expect(container.querySelectorAll('path')).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Filter · 1' })).toBeInTheDocument()
+  })
+})

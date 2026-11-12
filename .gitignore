@@ -40,3 +40,6 @@ Thumbs.db
 .env*
 
 .claude\*
+
+# Holds a pasted production connection string
+MIGRATE.bat
