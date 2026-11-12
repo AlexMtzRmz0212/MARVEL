@@ -8,8 +8,11 @@ import {
   getSnapshot,
   isInProgress,
   isWatched,
+  isPlanned,
+  isWatching,
   markEpisodesThrough,
   markManyWatched,
+  needsRewatch,
   progressFor,
   resetToLocalStorage,
   restoreEntry,
@@ -335,5 +338,51 @@ describe('episodes', () => {
     toggleEpisode('loki', 1, 6)
     toggleEpisode('loki', 1, 6)
     expect(getSnapshot()).not.toHaveProperty('loki')
+  })
+})
+
+describe('watching and rewatch', () => {
+  it('marks a title as being watched without counting it as watched', () => {
+    setStatus('thor', 'watching')
+    expect(isWatching(getSnapshot(), 'thor')).toBe(true)
+    expect(isWatched(getSnapshot(), 'thor')).toBe(false)
+    expect(statusOf(getSnapshot(), 'thor')).toBe('watching')
+  })
+
+  it('reads a series with some episodes ticked as watching, with no status set', () => {
+    toggleEpisode('loki', 1, 6)
+    expect(isWatching(getSnapshot(), 'loki', 6)).toBe(true)
+    expect(isWatching(getSnapshot(), 'loki', 0)).toBe(false)
+  })
+
+  it('stops watching once the title is marked watched', () => {
+    setStatus('thor', 'watching')
+    toggleWatched('thor')
+    expect(isWatching(getSnapshot(), 'thor')).toBe(false)
+  })
+
+  it('marks a title as wanted without counting it as watched, until it is', () => {
+    setStatus('thor', 'planned')
+    expect(isPlanned(getSnapshot(), 'thor')).toBe(true)
+    expect(isWatched(getSnapshot(), 'thor')).toBe(false)
+    expect(statusOf(getSnapshot(), 'thor')).toBe('planned')
+    toggleWatched('thor')
+    expect(isPlanned(getSnapshot(), 'thor')).toBe(false)
+  })
+
+  it('keeps a rewatch title watched, and still counts it as watched', () => {
+    setStatus('iron-man', 'rewatch')
+    const progress = getSnapshot()
+    expect(isWatched(progress, 'iron-man')).toBe(true)
+    expect(needsRewatch(progress, 'iron-man')).toBe(true)
+    expect(statusOf(progress, 'iron-man')).toBe('watched')
+    expect(progressFor(progress, ['iron-man', 'thor']).watched).toBe(1)
+  })
+
+  it('takes rewatch back without un-watching the title', () => {
+    setStatus('iron-man', 'rewatch')
+    setStatus('iron-man', 'watched')
+    expect(needsRewatch(getSnapshot(), 'iron-man')).toBe(false)
+    expect(isWatched(getSnapshot(), 'iron-man')).toBe(true)
   })
 })

@@ -1,21 +1,24 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router'
 
 import { useMovies } from '../api/catalog'
-import { year } from '../lib/format'
 import { getSnapshot, subscribe } from '../lib/searchTarget'
+import { FindBubble } from './FindBubble'
 
 /**
  * Jump to any title from anywhere in the app.
  *
  * A lens rather than a text field: every other page already has its own way
  * to browse (the catalog's filters, the timeline's graph), so this only
- * needs to answer "where is X", not compete with them for space. Closed, it
- * is a single glyph the same weight as the sign-in control beside it; open,
- * it is a short field and a handful of matches, and nothing else moves.
+ * needs to answer "where is X". Closed, it is a single glyph the same weight as
+ * the sign-in control beside it. Open, it is the `FindBubble`, which flies out
+ * of the page's own search field if the page has one and out of this lens if
+ * not.
+ *
+ * What a pick does is up to the page that claimed the lens (see
+ * `lib/searchTarget`); with no claim it opens the title's page.
  */
-
-const RESULT_LIMIT = 8
 
 function LensIcon() {
   return (
@@ -26,15 +29,33 @@ function LensIcon() {
   )
 }
 
+/** Whether an element is on screen, so the bubble never flies in from nowhere. */
+function visible(element) {
+  if (!element?.isConnected) return false
+  const rect = element.getBoundingClientRect()
+  return (
+    rect.width > 0 &&
+    rect.height > 0 &&
+    rect.bottom > 0 &&
+    rect.top < window.innerHeight &&
+    rect.right > 0 &&
+    rect.left < window.innerWidth
+  )
+}
+
 export function GlobalSearch() {
   const navigate = useNavigate()
   const { data: movies } = useMovies()
   const onPage = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
   const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState('')
-  const containerRef = useRef(null)
-  const inputRef = useRef(null)
+  const [origin, setOrigin] = useState(null)
   const buttonRef = useRef(null)
+
+  function openBubble() {
+    const preferred = onPage?.origin?.()
+    setOrigin(visible(preferred) ? preferred : buttonRef.current)
+    setOpen(true)
+  }
 
   // Ctrl/Cmd-F, but only while a page is claiming the lens: everywhere else
   // the page really is text and the browser's find is the better tool, and
@@ -46,71 +67,52 @@ export function GlobalSearch() {
     const onFind = (event) => {
       if (event.key !== 'f' || !(event.ctrlKey || event.metaKey) || event.altKey) return
       event.preventDefault()
-      setOpen(true)
-      // Already open with something typed: select it, so a second Ctrl-F
-      // starts a fresh search rather than appending to the last one.
-      inputRef.current?.select()
+      // Already open: select what is typed, so a second Ctrl-F starts a fresh
+      // search rather than appending to the last one.
+      if (open) document.querySelector('[data-find-input]')?.select()
+      else openBubble()
     }
 
     document.addEventListener('keydown', onFind)
     return () => document.removeEventListener('keydown', onFind)
-  }, [onPage])
+    // `openBubble` reads the claim and the lens, both of which this effect
+    // already depends on or that are stable refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onPage, open])
 
-  useEffect(() => {
-    if (!open) return
-    inputRef.current?.focus()
-
-    const onPointerDown = (event) => {
-      if (!containerRef.current?.contains(event.target)) setOpen(false)
-    }
-    const onKeyDown = (event) => {
-      if (event.key !== 'Escape') return
-      close()
-      // Escape is "give me back what I was doing", so the keyboard goes back
-      // there too: to the page if it wants it — the timeline takes it into the
-      // graph, where the arrow keys work — and otherwise to the lens itself,
-      // which is where it came from. Leaving focus on the panel as it unmounts
-      // would drop it on the body, and the next Tab would restart from the top
-      // of the document.
-      if (onPage?.refocus) onPage.refocus()
-      else buttonRef.current?.focus()
-    }
-    document.addEventListener('pointerdown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open, onPage])
-
-  function close() {
+  function close(reason) {
     setOpen(false)
-    setQuery('')
+    // Escape is "give me back what I was doing", so the keyboard goes back
+    // there too: to the page if it wants it — the timeline takes it into the
+    // graph, where the arrow keys work — and otherwise to the lens itself,
+    // which is where it came from. Leaving focus on the bubble as it unmounts
+    // would drop it on the body, and the next Tab would restart from the top
+    // of the document.
+    if (reason !== 'escape') return
+    if (onPage?.refocus) onPage.refocus()
+    else buttonRef.current?.focus()
   }
 
   function go(movie) {
-    close()
-    // The page gets first refusal. It declines for anything it cannot show —
-    // a title missing from the graph, say — and then this is an ordinary jump
+    // The page gets first refusal. `find` declines for anything it cannot show
+    // — a title missing from the graph, say — and then this is an ordinary jump
     // to the title's page like anywhere else in the app.
-    if (onPage?.find(movie)) return
+    if (onPage?.find?.(movie)) return
+    if (onPage?.onPick) {
+      onPage.onPick(movie)
+      return
+    }
     navigate(`/movies/${movie.id}`)
   }
 
-  const trimmed = query.trim().toLowerCase()
-  const results = trimmed
-    ? (movies ?? [])
-        .filter((movie) => movie.title.toLowerCase().includes(trimmed))
-        .slice(0, RESULT_LIMIT)
-    : []
-
   return (
-    <div ref={containerRef} className="relative">
+    <div className="relative">
       <button
         ref={buttonRef}
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => (open ? close('dismiss') : openBubble())}
         aria-expanded={open}
+        aria-haspopup="dialog"
         aria-label={onPage ? 'Find a title on this page' : 'Search titles'}
         title={onPage ? 'Find a title on this page (Ctrl-F)' : 'Search titles'}
         className="grid size-9 place-items-center text-on-masthead-dim transition-colors hover:text-on-masthead"
@@ -118,45 +120,23 @@ export function GlobalSearch() {
         <LensIcon />
       </button>
 
-      {open && (
-        <div className="floating bubble animate-popup-in absolute right-0 top-full z-40 mt-4 w-[min(18rem,calc(100vw-2rem))] p-2 text-ink">
-          <input
-            ref={inputRef}
-            type="search"
-            name="title"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && results[0]) go(results[0])
-            }}
+      {/* Portalled to the body: the masthead is its own stacking context, and
+          the tab bar along the bottom would otherwise sit on top of the dimming. */}
+      {open &&
+        createPortal(
+          <FindBubble
+            movies={movies}
+            origin={origin}
+            label={onPage ? 'Find a title on this page' : 'Search titles'}
             placeholder={onPage ? 'Find on this page…' : 'Search titles…'}
-            aria-label={onPage ? 'Find a title on this page' : 'Search titles'}
-            autoComplete="off"
-            spellCheck={false}
-            className="field"
-          />
-
-          {trimmed && (
-            <ul className="mt-2 flex flex-col">
-              {results.length === 0 && (
-                <li className="meta px-2 py-2">No matches</li>
-              )}
-              {results.map((movie) => (
-                <li key={movie.id}>
-                  <button
-                    type="button"
-                    onClick={() => go(movie)}
-                    className="flex w-full items-baseline justify-between gap-2 px-2 py-2 text-left text-sm font-medium text-ink transition-colors hover:bg-raised"
-                  >
-                    <span className="truncate">{movie.title}</span>
-                    <span className="meta shrink-0">{year(movie.release_date)}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+            initialQuery={onPage?.initialQuery?.() ?? ''}
+            onQuery={onPage?.onQuery}
+            onPick={go}
+            renderPicked={onPage?.renderPicked}
+            onClose={close}
+          />,
+          document.body,
+        )}
     </div>
   )
 }

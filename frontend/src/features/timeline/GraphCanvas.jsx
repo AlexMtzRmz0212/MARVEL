@@ -84,12 +84,16 @@ export function GraphCanvas({
   onPinned,
   command,
   showAllLabels,
+  showAxis = true,
   onZoom,
 }) {
   const svgRef = useRef(null)
   const viewportRef = useRef(null)
   const nodeRefs = useRef(new Map())
   const linkRefs = useRef(new Map())
+  const axisRef = useRef(null)
+  const bandRefs = useRef(new Map())
+  const labelRefs = useRef(new Map())
 
   const view = useRef({ x: 0, y: 0, k: 1 })
   /** The flight to a searched title, if one is in the air. */
@@ -118,7 +122,52 @@ export function GraphCanvas({
   const highlighted = new Set([...activeIds, ...related])
 
   // ------------------------------------------------------------- drawing --
+  /**
+   * The depth axis: one column per dependency depth, behind everything else.
+   * Positioned here with the rest of the geometry rather than through React,
+   * because its x is `depth * levelGap` and the gap changes with Spread.
+   *
+   * Labels are drawn in screen-sized type whatever the zoom (the viewport's
+   * scale is divided back out), and thin to every fifth depth when zoomed so far
+   * out that neighbouring numbers would overlap.
+   */
+  const paintAxis = useCallback(() => {
+    const axis = axisRef.current
+    if (!axis || !showAxis) return
+
+    const gap = simulation.levelGap
+    const k = view.current.k
+    let top = Infinity
+    let bottom = -Infinity
+    for (const node of nodes) {
+      if (node.y < top) top = node.y
+      if (node.y > bottom) bottom = node.y
+    }
+    if (!Number.isFinite(top)) return
+    top -= 60
+    bottom += 60
+
+    const fontSize = Math.min(12 / k, 48)
+    for (let depth = 0; depth <= graph.maxDepth; depth += 1) {
+      const band = bandRefs.current.get(depth)
+      if (band) {
+        band.setAttribute('x', (depth - 0.5) * gap)
+        band.setAttribute('y', top)
+        band.setAttribute('width', gap)
+        band.setAttribute('height', bottom - top)
+      }
+      const label = labelRefs.current.get(depth)
+      if (label) {
+        label.setAttribute('x', depth * gap)
+        label.setAttribute('y', top + fontSize * 1.2)
+        label.setAttribute('font-size', fontSize)
+        label.setAttribute('display', k < 0.4 && depth % 5 !== 0 ? 'none' : 'inline')
+      }
+    }
+  }, [nodes, graph.maxDepth, simulation, showAxis])
+
   const paint = useCallback(() => {
+    paintAxis()
     for (const node of nodes) {
       const element = nodeRefs.current.get(node.id)
       if (element) element.setAttribute('transform', `translate(${node.x} ${node.y})`)
@@ -133,12 +182,13 @@ export function GraphCanvas({
       element.setAttribute('x2', to.x)
       element.setAttribute('y2', to.y)
     }
-  }, [nodes, links])
+  }, [nodes, links, paintAxis])
 
   const applyView = useCallback(() => {
     const { x, y, k } = view.current
     viewportRef.current?.setAttribute('transform', `translate(${x} ${y}) scale(${k})`)
-  }, [])
+    paintAxis()
+  }, [paintAxis])
 
   const stopGlide = useCallback(() => {
     if (!glide.current) return
@@ -403,17 +453,6 @@ export function GraphCanvas({
     return { x: (local.x - x) / k, y: (local.y - y) / k }
   }
 
-  function unpin(node) {
-    if (!pinned.has(node.id)) return
-    node.fx = null
-    node.fy = null
-    const next = new Set(pinned)
-    next.delete(node.id)
-    onPinned(next)
-    simulation.reheat(0.4)
-    run()
-  }
-
   /** Start (or restart) a pinch from whichever two pointers are down. */
   function startPinch() {
     const [a, b] = pointers.current.values()
@@ -531,7 +570,7 @@ export function GraphCanvas({
       // Left where it was dropped, and everything else redistributes around it.
       // That is the point of being able to move a title at all: you are
       // rearranging the graph to read it, not flicking it and watching it
-      // spring back. Double-click hands it back to the simulation.
+      // spring back. Reset hands everything back to the simulation.
       onPinned(new Set(pinned).add(state.node.id))
       simulation.reheat(0.5)
       run()
@@ -634,6 +673,38 @@ export function GraphCanvas({
       </defs>
 
       <g ref={viewportRef}>
+        {showAxis && (
+          <g ref={axisRef} aria-hidden="true" pointerEvents="none">
+            {Array.from({ length: graph.maxDepth + 1 }, (_, depth) => (
+              <g key={depth}>
+                {/* Every other column is tinted, so the bands read as columns
+                    rather than as a scatter of numbers. */}
+                {depth % 2 === 0 && (
+                  <rect
+                    ref={(element) => {
+                      if (element) bandRefs.current.set(depth, element)
+                      else bandRefs.current.delete(depth)
+                    }}
+                    fill="var(--color-ink)"
+                    opacity="0.045"
+                  />
+                )}
+                <text
+                  ref={(element) => {
+                    if (element) labelRefs.current.set(depth, element)
+                    else labelRefs.current.delete(depth)
+                  }}
+                  textAnchor="middle"
+                  fill="var(--color-ink)"
+                  opacity="0.55"
+                  fontWeight="700"
+                >
+                  {depth}
+                </text>
+              </g>
+            ))}
+          </g>
+        )}
         <g fill="none">
           {links.map((link) => {
             const lit = highlighted.has(link.from) && highlighted.has(link.to)
@@ -704,9 +775,11 @@ export function GraphCanvas({
               onPointerEnter={() => onHover(node.id)}
               onPointerLeave={() => onHover(null)}
               onFocus={() => onSelect(node.id)}
+              // Double-click opens the title, the same as Enter on the selected
+              // one. Stopped here so the canvas does not also refit the view.
               onDoubleClick={(event) => {
                 event.stopPropagation()
-                unpin(node)
+                onOpen(node.id)
               }}
             >
               {/* A generous invisible disc, so a 5px dot is still something a

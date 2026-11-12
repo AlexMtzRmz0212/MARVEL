@@ -45,6 +45,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 124,
+      "in_universe_date": "1943–1945",
       "credit_scenes": {
         "count": 1
       },
@@ -63,6 +64,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 15,
+      "in_universe_date": "1946",
       "prerequisites": [],
       "tmdb_id": 211387,
       "poster_url": "https://image.tmdb.org/t/p/w500/4vFKKWPvCVDJTOWiwReBfpAMScP.jpg",
@@ -78,6 +80,7 @@
       "media_type": "series",
       "tier": "core",
       "runtime_min": 343,
+      "in_universe_date": "1946",
       "credit_scenes": {
         "count": 0
       },
@@ -96,6 +99,7 @@
       "media_type": "series",
       "tier": "core",
       "runtime_min": 434,
+      "in_universe_date": "1947",
       "credit_scenes": {
         "count": 0
       },
@@ -120,6 +124,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 132,
+      "in_universe_date": "1962",
       "credit_scenes": {
         "count": 0
       },
@@ -138,6 +143,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 115,
+      "in_universe_date": "1964",
       "credit_scenes": {
         "count": 2
       },
@@ -156,6 +162,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 132,
+      "in_universe_date": "1973",
       "credit_scenes": {
         "count": 1
       },
@@ -193,6 +200,7 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 144,
+      "in_universe_date": "1983",
       "credit_scenes": {
         "count": 1
       },
@@ -211,6 +219,7 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 114,
+      "in_universe_date": "1992",
       "credit_scenes": {
         "count": 0
       },
@@ -235,6 +244,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 124,
+      "in_universe_date": "1995",
       "credit_scenes": {
         "count": 2
       },
@@ -553,6 +563,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 126,
+      "in_universe_date": "2010",
       "credit_scenes": {
         "count": 1
       },
@@ -571,6 +582,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 124,
+      "in_universe_date": "2011",
       "credit_scenes": {
         "count": 1
       },
@@ -595,6 +607,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 114,
+      "in_universe_date": "2011",
       "credit_scenes": {
         "count": 0,
         "note": "The Tony Stark scene plays just before the credits rather than after them."
@@ -620,6 +633,7 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 4,
+      "in_universe_date": "2011",
       "prerequisites": [
         {
           "id": "iron-man-2",
@@ -641,6 +655,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 115,
+      "in_universe_date": "2011",
       "credit_scenes": {
         "count": 1
       },
@@ -670,6 +685,7 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 4,
+      "in_universe_date": "2011",
       "prerequisites": [
         {
           "id": "the-incredible-hulk",
@@ -696,6 +712,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 143,
+      "in_universe_date": "2012",
       "credit_scenes": {
         "count": 2
       },
@@ -735,6 +752,7 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 12,
+      "in_universe_date": "2012",
       "prerequisites": [
         {
           "id": "the-avengers",
@@ -774,6 +792,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 130,
+      "in_universe_date": "2013",
       "credit_scenes": {
         "count": 1
       },
@@ -846,6 +865,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 112,
+      "in_universe_date": "2013",
       "credit_scenes": {
         "count": 2
       },
@@ -894,6 +914,7 @@
       "media_type": "film",
       "tier": "optional",
       "runtime_min": 14,
+      "in_universe_date": "2014",
       "prerequisites": [
         {
           "id": "iron-man-3",
@@ -915,6 +936,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 136,
+      "in_universe_date": "2014",
       "credit_scenes": {
         "count": 2
       },
@@ -993,6 +1015,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 121,
+      "in_universe_date": "2014",
       "credit_scenes": {
         "count": 1
       },
@@ -1017,6 +1040,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 137,
+      "in_universe_date": "2014",
       "credit_scenes": {
         "count": 5,
         "note": "Five of them, more than any other Marvel film."
@@ -1066,6 +1090,7 @@
       "media_type": "series",
       "tier": "core",
       "runtime_min": 712,
+      "in_universe_date": "2015",
       "credit_scenes": {
         "count": 0
       },
@@ -1114,6 +1139,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 141,
+      "in_universe_date": "2015",
       "credit_scenes": {
         "count": 1
       },
@@ -1167,6 +1193,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 117,
+      "in_universe_date": "2015",
       "credit_scenes": {
         "count": 2
       },
@@ -1209,6 +1236,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 698,
+      "in_universe_date": "2015",
       "credit_scenes": {
         "count": 0
       },
@@ -1275,6 +1303,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 712,
+      "in_universe_date": "2015",
       "credit_scenes": {
         "count": 0
       },
@@ -1299,6 +1328,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 704,
+      "in_universe_date": "2015",
       "credit_scenes": {
         "count": 0
       },
@@ -1347,6 +1377,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 147,
+      "in_universe_date": "2016",
       "credit_scenes": {
         "count": 2
       },
@@ -1376,6 +1407,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 134,
+      "in_universe_date": "2016",
       "credit_scenes": {
         "count": 1
       },
@@ -1400,6 +1432,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 135,
+      "in_universe_date": "2016",
       "credit_scenes": {
         "count": 2
       },
@@ -1453,6 +1486,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 133,
+      "in_universe_date": "2016",
       "credit_scenes": {
         "count": 2
       },
@@ -1477,6 +1511,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 726,
+      "in_universe_date": "2016",
       "credit_scenes": {
         "count": 0
       },
@@ -1495,6 +1530,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 115,
+      "in_universe_date": "2016–2017",
       "credit_scenes": {
         "count": 2
       },
@@ -1561,6 +1597,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 394,
+      "in_universe_date": "2016",
       "credit_scenes": {
         "count": 0
       },
@@ -1600,6 +1637,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 699,
+      "in_universe_date": "2016",
       "credit_scenes": {
         "count": 0
       },
@@ -1660,6 +1698,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 131,
+      "in_universe_date": "2017",
       "credit_scenes": {
         "count": 2
       },
@@ -1694,6 +1733,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 673,
+      "in_universe_date": "2017",
       "credit_scenes": {
         "count": 0
       },
@@ -1742,6 +1782,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 763,
+      "in_universe_date": "2017",
       "credit_scenes": {
         "count": 0
       },
@@ -1771,6 +1812,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 526,
+      "in_universe_date": "2017",
       "credit_scenes": {
         "count": 0
       },
@@ -1800,6 +1842,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 676,
+      "in_universe_date": "2017",
       "credit_scenes": {
         "count": 0
       },
@@ -1853,6 +1896,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 685,
+      "in_universe_date": "2018",
       "credit_scenes": {
         "count": 0
       },
@@ -1964,6 +2008,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 119,
+      "in_universe_date": "2018",
       "credit_scenes": {
         "count": 2
       },
@@ -1993,6 +2038,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 149,
+      "in_universe_date": "2018",
       "credit_scenes": {
         "count": 1
       },
@@ -2145,6 +2191,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 181,
+      "in_universe_date": "2023",
       "credit_scenes": {
         "count": 0,
         "note": "No scene. The credits close on the sound of Tony hammering in his workshop."
@@ -2240,6 +2287,7 @@
       "media_type": "series",
       "tier": "core",
       "runtime_min": 363,
+      "in_universe_date": "2023",
       "credit_scenes": {
         "episodes": [
           {
@@ -2281,6 +2329,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 330,
+      "in_universe_date": "2024",
       "credit_scenes": {
         "episodes": [
           {
@@ -2341,6 +2390,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 132,
+      "in_universe_date": "2024",
       "credit_scenes": {
         "count": 2
       },
@@ -2370,6 +2420,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 156,
+      "in_universe_date": "2024",
       "credit_scenes": {
         "count": 2
       },
@@ -2394,6 +2445,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 129,
+      "in_universe_date": "2024",
       "credit_scenes": {
         "count": 2
       },
@@ -2418,6 +2470,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 148,
+      "in_universe_date": "2024",
       "credit_scenes": {
         "count": 2
       },
@@ -2452,6 +2505,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 126,
+      "in_universe_date": "2024",
       "credit_scenes": {
         "count": 2
       },
@@ -2510,6 +2564,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 297,
+      "in_universe_date": "2024",
       "credit_scenes": {
         "episodes": [
           {
@@ -2546,6 +2601,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 128,
+      "in_universe_date": "2024",
       "credit_scenes": {
         "count": 1,
         "note": "A montage runs through the credits; the scene itself is right at the end."
@@ -2586,6 +2642,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 302,
+      "in_universe_date": "2025",
       "credit_scenes": {
         "episodes": [
           {
@@ -2610,6 +2667,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 213,
+      "in_universe_date": "2025",
       "credit_scenes": {
         "episodes": [
           {
@@ -2640,6 +2698,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 289,
+      "in_universe_date": "2025",
       "credit_scenes": {
         "episodes": [
           {
@@ -2675,6 +2734,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 309,
+      "in_universe_date": "2025",
       "credit_scenes": {
         "note": "One after each of the first four episodes, then nothing until the finale.",
         "episodes": [
@@ -2731,6 +2791,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 119,
+      "in_universe_date": "2025",
       "credit_scenes": {
         "count": 2
       },
@@ -2755,6 +2816,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 53,
+      "in_universe_date": "2014",
       "prerequisites": [
         {
           "id": "guardians-of-the-galaxy-vol-2",
@@ -2795,6 +2857,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 162,
+      "in_universe_date": "2025",
       "credit_scenes": {
         "count": 1,
         "note": "Mid-credits only. Nothing at the very end."
@@ -2830,6 +2893,7 @@
       "media_type": "special",
       "tier": "optional",
       "runtime_min": 45,
+      "in_universe_date": "2025",
       "credit_scenes": {
         "count": 1
       },
@@ -2859,6 +2923,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 125,
+      "in_universe_date": "2026",
       "credit_scenes": {
         "count": 2
       },
@@ -2893,6 +2958,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 150,
+      "in_universe_date": "2026",
       "credit_scenes": {
         "count": 2
       },
@@ -2917,6 +2983,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 262,
+      "in_universe_date": "2026",
       "credit_scenes": {
         "count": 0,
         "note": "Skipped deliberately; the story is meant to close."
@@ -2947,6 +3014,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 105,
+      "in_universe_date": "2026",
       "credit_scenes": {
         "count": 1,
         "note": "Mid-credits only. Nothing at the very end."
@@ -3058,6 +3126,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 305,
+      "in_universe_date": "2025",
       "credit_scenes": {
         "episodes": [
           {
@@ -3087,6 +3156,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 379,
+      "in_universe_date": "2026",
       "credit_scenes": {
         "count": 0,
         "note": "None in any episode, by the showrunner's choice."
@@ -3112,6 +3182,7 @@
       "media_type": "series",
       "tier": "supporting",
       "runtime_min": 455,
+      "in_universe_date": "2026–2027",
       "credit_scenes": {
         "episodes": [
           {
@@ -3151,6 +3222,7 @@
       "media_type": "film",
       "tier": "supporting",
       "runtime_min": 119,
+      "in_universe_date": "2027",
       "credit_scenes": {
         "count": 1,
         "note": "Mid-credits only. Nothing at the very end."
@@ -3186,6 +3258,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 127,
+      "in_universe_date": "2027",
       "credit_scenes": {
         "count": 2
       },
@@ -3225,6 +3298,7 @@
       "media_type": "series",
       "tier": "optional",
       "runtime_min": 267,
+      "in_universe_date": "2025–2027",
       "prerequisites": [
         {
           "id": "she-hulk-attorney-at-law",
@@ -3251,6 +3325,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 137,
+      "in_universe_date": "2029",
       "credit_scenes": {
         "count": 0
       },
@@ -3275,6 +3350,7 @@
       "media_type": "film",
       "tier": "core",
       "runtime_min": 145,
+      "in_universe_date": "2028",
       "prerequisites": [
         {
           "id": "spider-man-no-way-home",

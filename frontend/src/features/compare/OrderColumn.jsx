@@ -34,8 +34,12 @@ export function OrderColumn({
   selectedId,
   onHover,
   onSelect,
+  onOpen,
 }) {
   const facingLeft = spine === 'right'
+  // One column of figures, or several: the chronological line carries the Earth
+  // date and the running time side by side. Listed outermost last.
+  const asides = [].concat(aside ?? [])
 
   function idAt(event) {
     return event.target.closest?.('[data-row]')?.dataset.row ?? null
@@ -56,6 +60,12 @@ export function OrderColumn({
         onClick={(event) => {
           const id = idAt(event)
           if (id) onSelect(id)
+        }}
+        // Double-click opens the title. The first click of the pair has already
+        // selected it, so the row is lit by the time the page changes.
+        onDoubleClick={(event) => {
+          const id = idAt(event)
+          if (id) onOpen?.(id)
         }}
       >
         {movies.map((movie, index) => {
@@ -91,9 +101,16 @@ export function OrderColumn({
                   style={{ backgroundColor: colour }}
                 />
 
-                {facingLeft && aside && (
-                  <Aside value={aside.values[index]} width={aside.width} dim={watched} side="left" />
-                )}
+                {facingLeft &&
+                  asides.map((one, at) => (
+                    <Aside
+                      key={at}
+                      value={one.values[index]}
+                      width={one.width}
+                      dim={watched}
+                      side="left"
+                    />
+                  ))}
                 {!facingLeft && <Position index={index} dim={watched} />}
 
                 <span
@@ -107,14 +124,16 @@ export function OrderColumn({
                 </span>
 
                 {facingLeft && <Position index={index} dim={watched} />}
-                {!facingLeft && aside && (
-                  <Aside
-                    value={aside.values[index]}
-                    width={aside.width}
-                    dim={watched}
-                    side="right"
-                  />
-                )}
+                {!facingLeft &&
+                  asides.map((one, at) => (
+                    <Aside
+                      key={at}
+                      value={one.values[index]}
+                      width={one.width}
+                      dim={watched}
+                      side="right"
+                    />
+                  ))}
               </button>
             </li>
           )

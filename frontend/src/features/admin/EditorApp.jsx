@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { EXPORT_URL, fetchTitleEpisodes, fetchUsage } from './api'
 import { Dependencies } from './Dependencies'
 import { EditDialog } from './EditDialog'
 import { Gallery } from './Gallery'
 import { History } from './History'
+import { RedundantEdges } from './RedundantEdges'
 import { Reorder } from './Reorder'
 import { useCatalog } from './useCatalog'
 import { Button, Problems } from './ui'
@@ -75,6 +76,7 @@ export function EditorApp({ onSignOut }) {
   const [editing, setEditing] = useState(null)
   const [showWarnings, setShowWarnings] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const tabsRef = useRef(null)
 
   if (catalog.loading) {
     return <p className="meta p-8">Reading the catalog…</p>
@@ -103,6 +105,7 @@ export function EditorApp({ onSignOut }) {
 
   const { state, movies, enums, saving, error, edit } = catalog
   const current = editing ? movies.find((movie) => movie.id === editing) : null
+  const otherWarnings = state.warnings.filter((warning) => !warning.startsWith('Redundant edge'))
 
   async function saveTitle(entry, insertBefore) {
     const existing = movies.findIndex((movie) => movie.id === entry.id)
@@ -139,6 +142,31 @@ export function EditorApp({ onSignOut }) {
       catalog.setError(failure.problems ?? [String(failure)])
       return false
     }
+  }
+
+  /** Drop edges the catalog already implies, in one validated write. */
+  function removeRedundant(edges) {
+    return edit((document) => {
+      for (const movie of document.movies) {
+        const gone = new Set(
+          edges.filter((edge) => edge.owner_id === movie.id).map((edge) => edge.prerequisite_id),
+        )
+        if (gone.size === 0) continue
+        movie.prerequisites = (movie.prerequisites ?? []).filter((edge) => !gone.has(edge.id))
+      }
+    })
+  }
+
+  /** Jump to a title's edges, where its note can be written. */
+  function openDependencies(id) {
+    setFocusId(id)
+    setTab('dependencies')
+    // The warnings list sits above the tabs and can be tall, so the title it
+    // just switched to may be off screen: with nothing visibly moving, the
+    // button looks dead. Bring the panel into view once it has rendered.
+    requestAnimationFrame(() => {
+      tabsRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+    })
   }
 
   async function deleteTitle(id) {
@@ -203,15 +231,28 @@ export function EditorApp({ onSignOut }) {
               {showWarnings ? 'Hide' : 'Show'} {state.warnings.length} warning(s)
             </Button>
             {showWarnings && (
-              <div className="mt-2">
-                <Problems title="Warnings" lines={state.warnings} tone="warn" />
+              <div className="mt-2 space-y-2">
+                <RedundantEdges
+                  edges={state.redundant_edges}
+                  movies={movies}
+                  saving={saving}
+                  onRemove={removeRedundant}
+                  onRemoveAll={removeRedundant}
+                  onOpen={openDependencies}
+                />
+                {/* The redundancy sentences are the list above, with buttons. */}
+                <Problems
+                  title="Warnings"
+                  lines={otherWarnings}
+                  tone="warn"
+                />
               </div>
             )}
           </div>
         )}
       </header>
 
-      <nav className="mb-4 flex gap-1.5">
+      <nav ref={tabsRef} className="mb-4 flex scroll-mt-4 gap-1.5">
         {TABS.map((entry) => (
           <Button
             key={entry.id}
@@ -241,7 +282,9 @@ export function EditorApp({ onSignOut }) {
         <Dependencies
           movies={movies}
           enums={enums}
-          warnings={state.warnings}
+          warnings={otherWarnings}
+          redundantEdges={state.redundant_edges}
+          onRemoveRedundant={removeRedundant}
           problems={error}
           saving={saving}
           focusId={focusId}

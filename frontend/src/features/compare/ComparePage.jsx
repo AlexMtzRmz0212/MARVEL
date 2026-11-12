@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 
 import { useMovies } from '../../api/catalog'
 import { EmptyState, ErrorState, LoadingState } from '../../components/states'
@@ -151,6 +151,12 @@ function KeyMenu({ open, onToggle, show, setShow, canLink, floored }) {
               onChange={() => setShow((value) => ({ ...value, dates: !value.dates }))}
             />
             <Line
+              label="Earth dates"
+              colour="var(--color-ink)"
+              checked={show.earth}
+              onChange={() => setShow((value) => ({ ...value, earth: !value.earth }))}
+            />
+            <Line
               label="Running time"
               colour="var(--color-ink)"
               checked={show.runtime}
@@ -216,12 +222,15 @@ export function ComparePage() {
   const releaseQuery = useMovies({ order: 'release' })
   const chronoQuery = useMovies({ order: 'chronological' })
   const progress = useWatchProgress()
+  const navigate = useNavigate()
+  const openTitle = (id) => navigate(`/movies/${id}`)
 
   const [show, setShow] = useState({
     release: true,
     chronological: true,
     links: true,
     dates: true,
+    earth: true,
     runtime: true,
   })
   const [keyOpen, setKeyOpen] = useState(false)
@@ -275,8 +284,12 @@ export function ComparePage() {
     // on the page.
     const dates = release.map((movie) => formatDate(movie.release_date))
     const hours = runningTime(chrono)
+    // When each title happens on its own Earth. A dash for the ones nobody has
+    // placed, so a gap reads as "unknown" rather than as a missing column.
+    const earth = chrono.map((movie) => movie.in_universe_date ?? '–')
 
     return {
+      earth,
       releaseAt,
       chronoAt,
       byId,
@@ -363,7 +376,8 @@ export function ComparePage() {
         <p className="mt-2 max-w-2xl text-base leading-relaxed text-ink-dim">
           Every title in both orders at once. The thread between them is how far it moves: flat
           where the two agree, and steep where a film arrived years after the events it depicts.
-          The release line is dated; the chronological one counts the hours as they add up.
+          The release line is dated; the chronological one gives each title&rsquo;s date on its own
+          Earth and counts the hours as they add up.
         </p>
       </div>
 
@@ -428,6 +442,7 @@ export function ComparePage() {
               selectedId={selectedId}
               onHover={setHoverId}
               onSelect={setSelectedId}
+              onOpen={openTitle}
             />
           )}
 
@@ -451,11 +466,15 @@ export function ComparePage() {
               row={ROW}
               spine="left"
               progress={progress}
-              aside={show.runtime ? { width: 'w-12', values: model.hours } : null}
+              aside={[
+                show.earth && { width: 'w-[4.75rem]', values: model.earth },
+                show.runtime && { width: 'w-12', values: model.hours },
+              ].filter(Boolean)}
               activeId={activeId}
               selectedId={selectedId}
               onHover={setHoverId}
               onSelect={setSelectedId}
+              onOpen={openTitle}
             />
           )}
         </div>

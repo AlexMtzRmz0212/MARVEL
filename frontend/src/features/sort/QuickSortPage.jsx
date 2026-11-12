@@ -5,7 +5,15 @@ import { useMovies } from '../../api/catalog'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { phaseLabel } from '../../lib/format'
-import { getSnapshot, restoreEntry, setStatus, sortCounts, statusOf } from '../../lib/watchStorage'
+import { useSearchClaim } from '../../lib/useSearchClaim'
+import {
+  getSnapshot,
+  isWatched,
+  restoreEntry,
+  setStatus,
+  sortCounts,
+  statusOf,
+} from '../../lib/watchStorage'
 import { SwipeCard } from './SwipeCard'
 import { DIRECTIONS, VERDICT, buildQueue } from './swipe'
 import { useSwipeGesture } from './useSwipeGesture'
@@ -164,12 +172,47 @@ export function QuickSortPage() {
 
 function Deck({ movies, filters, counts, onRevisit, onRestart }) {
   const byId = useMemo(() => new Map(movies.map((movie) => [movie.id, movie])), [movies])
-  const [queue] = useState(() => buildQueue(movies, getSnapshot(), filters, statusOf))
+  const [queue, setQueue] = useState(() => buildQueue(movies, getSnapshot(), filters, statusOf))
   const [index, setIndex] = useState(0)
   // Each verdict with the entry it replaced, so undo restores exactly.
   const [history, setHistory] = useState([])
   const [leaving, setLeaving] = useState(null)
   const [announcement, setAnnouncement] = useState('')
+  // A title found by Ctrl-F that is already marked seen: it is not dealt, but
+  // it does peek in from the side with the chance to change its mind.
+  const [peek, setPeek] = useState(null)
+
+  // Ctrl-F finds a title. Anything not yet seen goes to the top of the deck, so
+  // it is the next card; a title already seen is shown beside the deck instead,
+  // because dealing it again would read as the deck not having remembered.
+  //
+  // Inserted at the current position rather than moved, so the cards already
+  // sorted keep their places and Undo still walks back through them. A card
+  // that is mid-flight has already been counted, so the insert goes after it.
+  useSearchClaim({
+    onPick: (movie) => {
+      if (isWatched(getSnapshot(), movie.id)) {
+        setPeek(movie)
+        return
+      }
+      setPeek(null)
+      const at = leaving ? index + 1 : index
+      setQueue((current) => [
+        ...current.slice(0, at),
+        movie.id,
+        ...current.slice(at).filter((id) => id !== movie.id),
+      ])
+      setAnnouncement(`${movie.title} is on top of the deck.`)
+    },
+  })
+
+  function reconsider(movie, status) {
+    setStatus(movie.id, status, movie.episode_count ?? 0)
+    setPeek(null)
+    setAnnouncement(
+      `${movie.title}: ${status === 'unsure' ? "don't recall" : 'not seen'}.`,
+    )
+  }
 
   const current = byId.get(queue[index])
   const next = byId.get(queue[index + 1])
@@ -207,6 +250,10 @@ function Deck({ movies, filters, counts, onRevisit, onRestart }) {
     function onKey(event) {
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return
       if (isTyping(event.target)) return
+      if (event.key === 'Escape' && peek) {
+        setPeek(null)
+        return
+      }
       const direction = Object.keys(DIRECTIONS).find((key) => DIRECTIONS[key].key === event.key)
       if (direction && current) {
         event.preventDefault()
@@ -227,6 +274,15 @@ function Deck({ movies, filters, counts, onRevisit, onRestart }) {
       <p className="sr-only" aria-live="polite">
         {announcement}
       </p>
+
+      {peek && (
+        <SeenPeek
+          key={peek.id}
+          movie={peek}
+          onChoose={(status) => reconsider(peek, status)}
+          onDismiss={() => setPeek(null)}
+        />
+      )}
 
       {current ? (
         <>
@@ -287,6 +343,54 @@ function Deck({ movies, filters, counts, onRevisit, onRestart }) {
         </button>
       )}
     </div>
+  )
+}
+
+/**
+ * "Already seen it", peeking in from the right edge: the app's watched colour,
+ * a SEEN! stamp as on the card, and the two ways to take it back.
+ *
+ * Fixed to the viewport rather than to the deck, so it comes from the same side
+ * on a phone as on a desktop, and sits over the page without moving the card.
+ */
+function SeenPeek({ movie, onChoose, onDismiss }) {
+  return (
+    <aside
+      role="group"
+      aria-label={`${movie.title} is already marked seen`}
+      className="fixed top-1/2 right-0 z-40 -mt-28 w-[min(14rem,70vw)]"
+    >
+      <div
+        className="floating animate-seen-peek relative border-r-0 px-4 pt-7 pb-4"
+        style={{ backgroundColor: 'var(--color-ok)', color: 'var(--color-on-ok)' }}
+      >
+        <span
+          aria-hidden="true"
+          className="stamp -top-4 -left-5 -rotate-6 !text-[1.7rem]"
+          style={{ color: 'var(--color-ok)' }}
+        >
+          {DIRECTIONS.right.stamp}
+        </span>
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Close"
+          className="absolute top-1 right-2 grid size-7 place-items-center text-lg leading-none font-bold"
+        >
+          ×
+        </button>
+        <p className="text-base leading-tight font-bold text-pretty">{movie.title}</p>
+        <p className="mt-1 text-sm">You marked this one seen.</p>
+        <div className="mt-3 flex flex-col gap-2">
+          <button type="button" className="btn btn-sm text-ink" onClick={() => onChoose('unsure')}>
+            Don't recall
+          </button>
+          <button type="button" className="btn btn-sm text-ink" onClick={() => onChoose('unseen')}>
+            Not seen
+          </button>
+        </div>
+      </div>
+    </aside>
   )
 }
 

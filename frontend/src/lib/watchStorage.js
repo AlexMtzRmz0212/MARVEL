@@ -154,11 +154,36 @@ export function isWatched(progress, movieId) {
   return Boolean(progress[movieId]?.watched_at)
 }
 
-/** `'watched'`, `'unseen'`, `'unsure'`, or null for a title nobody has sorted. */
+/**
+ * `'watched'`, `'unseen'`, `'unsure'`, `'watching'`, `'planned'`, or null for a title nobody
+ * has sorted. A title marked for rewatching is still `'watched'` here: that
+ * flag rides alongside being watched, see `needsRewatch`.
+ */
 export function statusOf(progress, movieId) {
   const entry = progress[movieId]
   if (entry?.watched_at) return 'watched'
   return entry?.status ?? null
+}
+
+/** Seen, and wants seeing again. Still counts as watched everywhere else. */
+export function needsRewatch(progress, movieId) {
+  const entry = progress[movieId]
+  return Boolean(entry?.watched_at) && entry?.status === 'rewatch'
+}
+
+/** Not started, but wanted: "want to watch". Dropped the moment it is watched. */
+export function isPlanned(progress, movieId) {
+  return !isWatched(progress, movieId) && progress[movieId]?.status === 'planned'
+}
+
+/**
+ * Started but not finished: either marked so by hand, or a series with some of
+ * its episodes ticked. `episodeTotal` is the series' episode count (0 for a
+ * film), which is what lets ticked episodes count without a second status.
+ */
+export function isWatching(progress, movieId, episodeTotal = 0) {
+  if (isWatched(progress, movieId)) return false
+  return progress[movieId]?.status === 'watching' || isInProgress(progress, movieId, episodeTotal)
 }
 
 /** 1..n, the episode list of a fully watched series. */
@@ -226,17 +251,18 @@ export function toggleWatched(movieId, episodeCount = 0) {
 }
 
 /**
- * Record a quick-sort verdict: `'watched'`, `'unseen'`, `'unsure'`, or null to
- * forget it. Rating and notes survive; a series' episodes follow the verdict
+ * Record a verdict: `'watched'`, `'unseen'`, `'unsure'`, `'watching'`,
+ * `'planned'` (want to watch), `'rewatch'` (watched, and wants another go), or null to forget it. Rating and notes survive; a series' episodes follow the verdict
  * only when it is "watched" (all of them).
  */
 export function setStatus(movieId, status, episodeCount = 0) {
   const next = { ...read() }
   const entry = { ...next[movieId] }
 
-  if (status === 'watched') {
+  if (status === 'watched' || status === 'rewatch') {
     entry.watched_at = entry.watched_at ?? new Date().toISOString()
-    entry.status = null
+    // "rewatch" is the one status kept next to a watched title.
+    entry.status = status === 'rewatch' ? 'rewatch' : null
     if (episodeCount > 0) entry.episodes = allEpisodes(episodeCount)
   } else {
     entry.watched_at = null
@@ -331,7 +357,12 @@ export function clearAll() {
 /** How a set of titles splits across the quick-sort verdicts. */
 export function sortCounts(progress, movieIds) {
   const counts = { watched: 0, unseen: 0, unsure: 0, unsorted: 0 }
-  for (const id of movieIds) counts[statusOf(progress, id) ?? 'unsorted'] += 1
+  for (const id of movieIds) {
+    // `watching` appears as a key only once something has it, so the four-way
+    // shape the quick-sort deck reads is unchanged for everyone else.
+    const key = statusOf(progress, id) ?? 'unsorted'
+    counts[key] = (counts[key] ?? 0) + 1
+  }
   return counts
 }
 

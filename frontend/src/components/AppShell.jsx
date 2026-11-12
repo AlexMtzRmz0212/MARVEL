@@ -4,9 +4,10 @@ import { Link, NavLink, Outlet } from 'react-router'
 import { clearSyncError, getSnapshot, subscribe } from '../lib/syncStatus'
 import { GlobalSearch } from './GlobalSearch'
 import { InstallLink, InstallPrompt } from './InstallPrompt'
-import { BottomTabBar, SectionLinks, SectionTabs } from './navigation'
+import { BottomTabBar, SectionLinks } from './navigation'
 import { UpdateToast } from './UpdateToast'
 import { UserMenu } from './UserMenu'
+import { WatchingDeck } from './WatchingDeck'
 
 /**
  * Optimistic writes roll back silently when the server refuses them, which
@@ -94,7 +95,7 @@ export function AppShell() {
             </span>
           </NavLink>
 
-          {/* Below `lg` the sections move to the tab bar along the bottom
+          {/* Below `lg` the tabs move to the tab bar along the bottom
            * edge, where a thumb reaches them, and the masthead keeps one row.
            * One nav or the other is `display:none`, so assistive tech only
            * ever meets one "Main" landmark. */}
@@ -114,7 +115,6 @@ export function AppShell() {
       <UpdateToast />
 
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] flex-1 px-4 pb-24 outline-none sm:px-6">
-        <SectionTabs />
         <Outlet />
       </main>
 
@@ -153,6 +153,7 @@ export function AppShell() {
       </footer>
 
       <BottomTabBar />
+      <WatchingDeck />
     </div>
   )
 }

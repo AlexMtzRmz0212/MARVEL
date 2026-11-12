@@ -48,7 +48,10 @@ class CustomOrderUpdate(BaseModel):
 # The verdict on a title that is *not* watched. "watched" is deliberately not a
 # value: a non-null watched_at already says it, and two fields that can disagree
 # are worse than one. See app.models.watch_progress.
-WatchStatus = Literal["unseen", "unsure"]
+#
+# "rewatch" is the exception that proves it: it needs `watched_at` and is dropped
+# without it, while every other value is dropped *with* it. See `_normalise`.
+WatchStatus = Literal["unseen", "unsure", "watching", "planned", "rewatch"]
 
 # Longer than any season in the catalog by a wide margin (the longest is 22).
 MAX_EPISODES = 500
@@ -75,8 +78,12 @@ class WatchProgressEntry(BaseModel):
         if any(number < 1 for number in self.episodes):
             raise ValueError("episode numbers start at 1")
         self.episodes = sorted(set(self.episodes))
-        # Watched wins: a status only describes a title that is not watched.
+        # Watched wins over every status that describes a title not yet seen, and
+        # "rewatch" only makes sense for one that has been.
         if self.watched_at is not None:
+            if self.status != "rewatch":
+                self.status = None
+        elif self.status == "rewatch":
             self.status = None
         return self
 

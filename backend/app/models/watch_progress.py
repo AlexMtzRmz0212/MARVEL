@@ -34,9 +34,12 @@ class WatchProgress(Base):
     signal -- would leave `watched_at` nullable for no reason.
 
     `status` is the verdict on a title that is *not* watched -- "unseen" or
-    "unsure" (the quick-sort deck's left and down swipes). It is never set
-    alongside `watched_at`; "watched" is not one of its values because
-    `watched_at` already says so.
+    "unsure" (the quick-sort deck's left and down swipes), "watching" (started,
+    not finished) or "planned" ("want to watch": not started, but wanted). Those are never set alongside `watched_at`; "watched" is not
+    one of its values because `watched_at` already says so.
+
+    "rewatch" is the one exception: it is set *with* `watched_at`, because a
+    title you want to see again is still a title you have seen.
     """
 
     __tablename__ = "watch_progress"
@@ -72,7 +75,8 @@ class WatchProgress(Base):
     __table_args__ = (
         CheckConstraint("rating IS NULL OR rating BETWEEN 1 AND 10", name="rating_range"),
         CheckConstraint(
-            "status IS NULL OR status IN ('unseen', 'unsure')", name="status_values"
+            "status IS NULL OR status IN ('unseen', 'unsure', 'watching', 'planned', 'rewatch')",
+            name="status_values",
         ),
     )
 

@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import { useMovies } from '../../api/catalog'
@@ -5,9 +6,11 @@ import { TitleCard } from '../../components/TitleCard'
 import { EmptyState, ErrorState, LoadingState } from '../../components/states'
 import { useWatchedDisplayMode } from '../../hooks/useWatchedDisplayMode'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
+import { useSearchClaim } from '../../lib/useSearchClaim'
 import { setWatchedDisplayMode } from '../../lib/watchDisplayPref'
-import { isWatched, statusOf } from '../../lib/watchStorage'
+import { isWatching, isWatched, needsRewatch, statusOf } from '../../lib/watchStorage'
 import { FilterBar } from './FilterBar'
+import { TitleDrawer } from './TitleDrawer'
 
 const ORDERS = [
   {
@@ -36,7 +39,7 @@ const FILTER_KEYS = ['phase', 'saga', 'universe', 'media_type', 'tier', 'q']
  * sent to the API, which knows nothing about who is asking. `unsorted` is the
  * absence of a verdict.
  */
-const STATUS_KEYS = new Set(['unsorted', 'unseen', 'unsure'])
+const STATUS_KEYS = new Set(['unsorted', 'unseen', 'unsure', 'watching', 'planned', 'rewatch'])
 
 /** The two main sagas lead; everything else follows alphabetically. */
 const SAGA_RANK = { 'Infinity Saga': 0, 'Multiverse Saga': 1 }
@@ -92,9 +95,51 @@ export function CatalogPage() {
   const requestedStatus = searchParams.get('status')
   const status = STATUS_KEYS.has(requestedStatus) ? requestedStatus : null
   const visibleMovies = movies?.filter((movie) => {
-    if (watchedDisplayMode === 'hide' && isWatched(watchProgress, movie.id)) return false
+    // A title marked for rewatching is the one watched title the reader asked
+    // to see again, so hiding watched titles must not hide it.
+    if (
+      watchedDisplayMode === 'hide' &&
+      isWatched(watchProgress, movie.id) &&
+      !needsRewatch(watchProgress, movie.id)
+    )
+      return false
+    if (status === 'rewatch') return needsRewatch(watchProgress, movie.id)
+    if (status === 'watching') {
+      return isWatching(watchProgress, movie.id, movie.episode_count > 1 ? movie.episode_count : 0)
+    }
     if (status && (statusOf(watchProgress, movie.id) ?? 'unsorted') !== status) return false
     return true
+  })
+
+  // The title open in the side panel. Kept as an id so the panel survives a
+  // change of filters that would drop the title from the grid.
+  const [openId, setOpenId] = useState(null)
+  // Enter pressed in the search. Held as a request rather than acted on at once:
+  // the results for what was just typed may still be on their way, and "open the
+  // first match" has to mean the first match of *that* search, not of the last.
+  const [wantFirst, setWantFirst] = useState(false)
+  // Settled during render, which React allows for a component's own state and
+  // which avoids a frame of the old panel between the results and the opening.
+  if (wantFirst && !isPending && visibleMovies) {
+    setWantFirst(false)
+    if (visibleMovies[0]) setOpenId(visibleMovies[0].id)
+  }
+  const closeDrawer = useCallback(() => {
+    setOpenId(null)
+    document.getElementById('catalog-search')?.focus()
+  }, [])
+
+  // Ctrl/Cmd-F opens the search bubble rather than the browser's find: the grid
+  // is lazily rendered, so browser find only sees what has scrolled past. The
+  // bubble flies out of the catalog's own search field and stands in for it --
+  // what is typed filters the grid behind it, and a pick opens that title in
+  // the side panel.
+  useSearchClaim({
+    origin: () => document.getElementById('catalog-search'),
+    initialQuery: () => filters.q ?? '',
+    onQuery: (text) => setParam('q', text.trim()),
+    onPick: (movie) => setOpenId(movie.id),
+    refocus: () => document.getElementById('catalog-search')?.focus(),
   })
 
   const active = ORDERS.find((item) => item.key === order)
@@ -145,6 +190,7 @@ export function CatalogPage() {
           totalCount={allMovies?.length ?? 0}
           watchedDisplayMode={watchedDisplayMode}
           setWatchedDisplayMode={setWatchedDisplayMode}
+          onSearchEnter={() => setWantFirst(true)}
         />
       </div>
 
@@ -167,6 +213,14 @@ export function CatalogPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {openId && (
+        <TitleDrawer
+          movieId={openId}
+          summary={(allMovies ?? []).find((movie) => movie.id === openId)}
+          onClose={closeDrawer}
+        />
       )}
     </>
   )

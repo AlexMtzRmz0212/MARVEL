@@ -3,10 +3,12 @@ import { Link } from 'react-router'
 import { useMovies } from '../../api/catalog'
 import { useOrders } from '../../api/userOrders'
 import { useAuth } from '../../auth/AuthContext'
+import { TitleLocator } from '../../components/TitleLocator'
 import { ProgressBar } from '../../components/WatchToggle'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { SAGA_LABEL, formatTotalRuntime, phaseLabel } from '../../lib/format'
+import { useSearchClaim } from '../../lib/useSearchClaim'
 import { clearAll, isInProgress, isWatched, progressFor, sortCounts } from '../../lib/watchStorage'
 
 function Row({ label, sublabel, movieIds, progress, to }) {
@@ -44,6 +46,54 @@ export function ProgressPage() {
   // Saved orders are a secondary panel here, so a slow load should not hold up
   // the phase and saga breakdowns -- default to none until they arrive.
   const { data: orders = [] } = useOrders()
+
+  // Ctrl-F asks where a title is: its poster, and how far through each phase,
+  // saga and order of yours it sits. The poster opens the title.
+  useSearchClaim({
+    renderPicked: (movie, { close }) => {
+      const all = movies ?? []
+      const share = (ids) => `${progressFor(progress, ids).percent}% watched`
+      const lines = []
+      if (movie.phase) {
+        lines.push({
+          key: 'phase',
+          group: 'Phase',
+          label: phaseLabel(movie.phase),
+          detail: share(all.filter((m) => m.phase === movie.phase).map((m) => m.id)),
+          to: `/catalog?phase=${movie.phase}`,
+        })
+      }
+      if (movie.saga) {
+        lines.push({
+          key: 'saga',
+          group: 'Saga',
+          label: SAGA_LABEL[movie.saga] ?? movie.saga,
+          detail: share(all.filter((m) => m.saga === movie.saga).map((m) => m.id)),
+          to: `/catalog?saga=${encodeURIComponent(movie.saga)}`,
+        })
+      }
+      for (const order of orders) {
+        const at = order.movie_ids.indexOf(movie.id)
+        if (at < 0) continue
+        lines.push({
+          key: `order-${order.id}`,
+          group: `Your order, #${at + 1} of ${order.movie_ids.length}`,
+          label: order.name,
+          detail: share(order.movie_ids),
+          to: `/orders/${order.id}`,
+        })
+      }
+      return (
+        <TitleLocator
+          movie={movie}
+          lines={lines}
+          note={isWatched(progress, movie.id) ? 'watched' : 'not watched'}
+          empty="Not part of any phase, saga or order."
+          onNavigate={close}
+        />
+      )
+    },
+  })
 
   if (isPending) return <LoadingState label="Loading catalog" />
   if (error) return <ErrorState error={error} onRetry={refetch} />

@@ -176,6 +176,8 @@ def _state(stored: StoredCatalog) -> dict[str, Any]:
         "storage": _storage_label(),
         "problems": problems,
         "warnings": warnings,
+        # Same findings as the redundancy warnings, as data the editor can act on.
+        "redundant_edges": validated.redundant_edges if validated else [],
         "counts": {
             "titles": len(stored.document.get("movies", [])),
             "edges": len(validated.edges) if validated else 0,

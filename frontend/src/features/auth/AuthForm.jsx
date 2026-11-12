@@ -39,18 +39,25 @@ export function AuthForm({ mode }) {
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
 
+  const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [displayName, setDisplayName] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState(null)
   const [isBusy, setIsBusy] = useState(false)
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError(null)
+    // Checked before anything is sent: a typo in a password nobody can see is
+    // the commonest way to create an account you cannot get back into.
+    if (isRegister && password !== confirm) {
+      setError('The two passwords do not match.')
+      return
+    }
     setIsBusy(true)
     try {
-      if (isRegister) await signUp({ email, password, displayName })
+      if (isRegister) await signUp({ email, password, displayName: displayName.trim() })
       else await signIn({ email, password })
       // The catalog rather than the landing page: someone who has just signed
       // in came here to use the thing, not to be sold it.
@@ -70,6 +77,22 @@ export function AuthForm({ mode }) {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
+        {isRegister && (
+          <label className="block">
+            <span className="label text-ink">Name</span>
+            <input
+              type="text"
+              name="display_name"
+              required
+              maxLength={80}
+              autoComplete="name"
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              className={inputClass}
+            />
+          </label>
+        )}
+
         <label className="block">
           <span className="label text-ink">Email</span>
           <input
@@ -104,14 +127,14 @@ export function AuthForm({ mode }) {
 
         {isRegister && (
           <label className="block">
-            <span className="label text-ink">Display name (optional)</span>
+            <span className="label text-ink">Confirm password</span>
             <input
-              type="text"
-              name="display_name"
-              maxLength={80}
-              autoComplete="nickname"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
+              type="password"
+              name="confirm_password"
+              required
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(event) => setConfirm(event.target.value)}
               className={inputClass}
             />
           </label>

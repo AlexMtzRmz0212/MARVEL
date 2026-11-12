@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { RedundantEdges } from './RedundantEdges'
 import { Button, Combobox, Field, Problems, Segmented, TextInput } from './ui'
 
 /**
@@ -139,7 +140,18 @@ function ConnectForm({ eligible, movies, strengths, emptyHint, label, onConnect,
   )
 }
 
-export function Dependencies({ movies, enums, warnings, problems, saving, focusId, onFocus, onEdit }) {
+export function Dependencies({
+  movies,
+  enums,
+  warnings,
+  redundantEdges,
+  onRemoveRedundant,
+  problems,
+  saving,
+  focusId,
+  onFocus,
+  onEdit,
+}) {
   const focus = movies.find((movie) => movie.id === focusId) ?? movies[0]
   if (!focus) return <p className="meta py-8 text-center">Add a title first.</p>
 
@@ -184,6 +196,11 @@ export function Dependencies({ movies, enums, warnings, problems, saving, focusI
   // The catalog keeps its edges transitively reduced, so a warning naming the
   // focused title is worth seeing right here rather than in the status panel.
   const mine = (warnings ?? []).filter((warning) => warning.includes(focus.title))
+  // Redundant edges touching this title, from either end. Writing the note that
+  // keeps one is done on the row below, so no "open" button is needed here.
+  const redundantHere = (redundantEdges ?? []).filter(
+    (edge) => edge.owner_id === focus.id || edge.prerequisite_id === focus.id,
+  )
 
   return (
     <div className="space-y-3">
@@ -204,6 +221,13 @@ export function Dependencies({ movies, enums, warnings, problems, saving, focusI
 
       <Problems title="Change rejected and undone — nothing was written" lines={problems} />
       <Problems title="Worth a look" lines={mine} tone="warn" />
+      <RedundantEdges
+        edges={redundantHere}
+        movies={movies}
+        saving={saving}
+        onRemove={onRemoveRedundant}
+        onRemoveAll={onRemoveRedundant}
+      />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="space-y-2">

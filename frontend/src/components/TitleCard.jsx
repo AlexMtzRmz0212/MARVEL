@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 
 import { useWatchProgress } from '../hooks/useWatchProgress'
 import { MEDIA_LABEL, creditScenesLabel, formatRuntime, year } from '../lib/format'
-import { episodesWatched, isWatched, statusOf } from '../lib/watchStorage'
+import { episodesWatched, isWatched, isWatching, needsRewatch, statusOf } from '../lib/watchStorage'
 import { EpisodeSheet, EpisodeTrack } from './EpisodeList'
 import { LineBullet } from './LineBullet'
 import { WatchToggle } from './WatchToggle'
@@ -23,10 +23,13 @@ export function TitleCard({ movie }) {
   const progress = useWatchProgress()
   const watched = isWatched(progress, movie.id)
   const unsure = statusOf(progress, movie.id) === 'unsure'
+  const planned = statusOf(progress, movie.id) === 'planned'
   // Episode tracking is for series with an episode list; a one-episode
   // special has nothing to count beyond the check button.
   const episodeTotal = movie.episode_count > 1 ? movie.episode_count : 0
   const episodesSeen = episodesWatched(progress, movie.id, episodeTotal).length
+  const watching = isWatching(progress, movie.id, episodeTotal)
+  const rewatch = needsRewatch(progress, movie.id)
   const [sheetOpen, setSheetOpen] = useState(false)
   const runtime = formatRuntime(movie.runtime_min)
   const creditScenes = movie.credit_scenes
@@ -98,6 +101,30 @@ export function TitleCard({ movie }) {
             </span>
           )}
 
+          {/* Marked "want to watch": a plus, so what you have lined up stands
+              out while browsing. */}
+          {planned && (
+            <span
+              aria-hidden="true"
+              className="station absolute right-1 bottom-1 grid size-7 place-items-center bg-infinity font-bold text-on-infinity"
+              title="Want to watch"
+            >
+              +
+            </span>
+          )}
+
+          {/* Marked "need to rewatch": a loop on the poster, so the ones you
+              want another go at can be spotted while browsing. */}
+          {rewatch && (
+            <span
+              aria-hidden="true"
+              className="station absolute right-1 bottom-1 grid size-7 place-items-center bg-multiverse font-bold text-on-multiverse"
+              title="Need to rewatch"
+            >
+              ↻
+            </span>
+          )}
+
           {/* The wink: something is still coming after the picture ends. Drawn
            * only for a positive count -- a recorded zero and an unrecorded title
            * both leave the corner empty, and the detail page tells them apart. */}
@@ -121,9 +148,17 @@ export function TitleCard({ movie }) {
           <h2 className="text-sm leading-snug font-bold text-pretty text-ink group-hover:underline group-hover:underline-offset-2">
             {movie.title}
           </h2>
+          {movie.in_universe_date && (
+            <p className="meta" title={`Set in ${movie.in_universe_date}, on its own Earth`}>
+              Set in {movie.in_universe_date}
+            </p>
+          )}
           <p className="meta mt-auto">
             {details.join(', ')}
             {watched && <span className="text-ok">, seen</span>}
+            {rewatch && <span>, rewatch</span>}
+            {watching && <span>, watching</span>}
+            {planned && <span>, want to watch</span>}
             {unsure && <span>, don't recall</span>}
           </p>
           {episodeTotal > 0 && (

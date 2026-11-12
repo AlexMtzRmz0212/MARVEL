@@ -188,6 +188,9 @@ export function TimelinePage() {
   // fits the screen, and this is the answer to "I cannot read it", not the
   // starting point.
   const [spread, setSpread] = useState(false)
+  // The numbered columns behind the graph. On by default: left to right *is*
+  // dependency depth, and without the numbers the layout looks arbitrary.
+  const [showAxis, setShowAxis] = useState(true)
   // Held here rather than in the canvas because Reset is here: the button and
   // the state it clears belong together.
   const [pinned, setPinned] = useState(() => new Set())
@@ -349,6 +352,7 @@ export function TimelinePage() {
             onPinned={setPinned}
             command={command}
             showAllLabels={zoom >= LABEL_ZOOM}
+            showAxis={showAxis}
             onZoom={setZoom}
           />
         ) : (
@@ -392,6 +396,17 @@ export function TimelinePage() {
               Spread
             </Control>
             <Control
+              active={showAxis}
+              onClick={() => setShowAxis((value) => !value)}
+              title={
+                showAxis
+                  ? 'Hide the numbered depth columns'
+                  : 'Show the numbered depth columns: left to right is how many prerequisites deep a title is'
+              }
+            >
+              Depth
+            </Control>
+            <Control
               onClick={() => {
                 engine?.simulation.release()
                 engine?.simulation.setSpread(1)
@@ -408,6 +423,13 @@ export function TimelinePage() {
             </Control>
           </div>
         </div>
+
+        {showAxis && graph && (
+          <p className="pointer-events-none absolute top-3 left-3 max-w-56 border-2 border-ink bg-surface px-2 py-1 text-[11px] leading-snug font-semibold text-ink">
+            Columns = dependency depth, 0 to {graph.maxDepth}. 0 needs nothing first; each step right
+            is one more prerequisite deep.
+          </p>
+        )}
 
         <Legend open={legendOpen} onToggle={() => setLegendOpen((value) => !value)} />
       </div>

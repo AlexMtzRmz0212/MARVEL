@@ -227,6 +227,26 @@
     box-shadow: 2px 2px 0 var(--color-panel-shadow);
   }
 
+  /*
+   * The "continue watching" deck (WatchingDeck). Each card carries its place in
+   * the hand as --i (0..n-1) and --o (its offset from the middle card). Shut,
+   * the cards are a tipped stack tucked against the left edge; open, they fan
+   * out from a pivot well below them, so the row curves like a hand of cards.
+   */
+  .deck-card {
+    transform-origin: bottom left;
+    transform: translate(calc(var(--hide) + var(--i) * 0.35rem), -50%)
+      rotate(calc(-14deg + var(--i) * 3deg));
+  }
+  .group\/deck:hover .deck-card {
+    transform: translate(calc(var(--hide) + 14% + var(--i) * 0.35rem), -50%)
+      rotate(calc(-12deg + var(--i) * 3deg));
+  }
+  .group\/deck[data-open='true'] .deck-card {
+    transform-origin: 50% 170%;
+    transform: translate(calc(3rem + var(--i) * var(--step) + var(--g, 0) * var(--gap)), -45%) rotate(calc(var(--o) * 7deg));
+  }
+
   /* Anything that floats above the page. */
   .floating {
     border: 3px solid var(--color-ink);
@@ -658,6 +678,18 @@
     opacity: 0;
     transform: translate(0, 0.5rem) scale(0.94);
   }
+}
+
+/* A title already seen, sliding in from the right edge and settling with a
+ * small overshoot, the way a card is slid across a table. */
+@keyframes seen-peek {
+  0% { transform: translateX(105%) rotate(3deg); }
+  65% { transform: translateX(-6%) rotate(-1deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+.animate-seen-peek {
+  animation: seen-peek 0.34s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
 
 /* Three held frames over a fifth of a second: animated on twos, the way a

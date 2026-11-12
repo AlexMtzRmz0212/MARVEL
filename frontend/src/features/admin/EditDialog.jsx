@@ -46,10 +46,12 @@ function clean(draft) {
   const blank = (value) => (typeof value === 'string' ? value.trim() || null : value || null)
   // Left out entirely, not written as null, when nobody has checked -- the same
   // way the file spells it, so a save does not add a key to every title.
-  const { credit_scenes: credits, ...rest } = draft
+  const { credit_scenes: credits, in_universe_date: earthDate, ...rest } = draft
   const scenes = cleanCredits(credits, draft.media_type === 'series')
+  const placed = blank(earthDate)
   return {
     ...rest,
+    ...(placed && { in_universe_date: placed }),
     ...(scenes && { credit_scenes: scenes }),
     id: draft.id.trim(),
     title: draft.title.trim(),
@@ -287,6 +289,14 @@ function TitleForm({
             options={enums.universes}
             value={draft.universe}
             onChange={(event) => set({ universe: event.target.value })}
+          />
+        </Field>
+        <Field label="Earth date" hint="When it is set, e.g. 2012 or 1943-1945">
+          <TextInput
+            value={draft.in_universe_date ?? ''}
+            maxLength={40}
+            placeholder="in-universe year"
+            onChange={(event) => set({ in_universe_date: event.target.value })}
           />
         </Field>
       </div>

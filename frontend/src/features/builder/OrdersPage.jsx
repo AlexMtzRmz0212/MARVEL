@@ -4,10 +4,12 @@ import { Link } from 'react-router'
 import { useMovies, useRecommendedOrders } from '../../api/catalog'
 import { useDeleteOrder, useOrders } from '../../api/userOrders'
 import { useAuth } from '../../auth/AuthContext'
+import { TitleLocator } from '../../components/TitleLocator'
 import { ProgressBar } from '../../components/WatchToggle'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { formatDate, formatTotalRuntime } from '../../lib/format'
+import { useSearchClaim } from '../../lib/useSearchClaim'
 import { orderStats } from './recommendedStats'
 
 /**
@@ -126,10 +128,43 @@ function Recommended() {
   )
 }
 
+/** Every order a title is in, recommended first, with its place in each. */
+function orderLines(movieId, recommended, own) {
+  const lines = []
+  const add = (group, order, to) => {
+    const at = order.movie_ids.indexOf(movieId)
+    if (at < 0) return
+    lines.push({
+      key: `${group}-${order.id}`,
+      group,
+      label: order.name,
+      detail: `#${at + 1} of ${order.movie_ids.length}`,
+      to,
+    })
+  }
+  for (const order of recommended) add('Recommended', order, `/orders/recommended/${order.id}`)
+  for (const order of own) add('Yours', order, `/orders/${order.id}`)
+  return lines
+}
+
 export function OrdersPage() {
   const { user } = useAuth()
   const { data: orders, isPending, error } = useOrders()
+  const { data: recommended } = useRecommendedOrders()
   const deleteOrder = useDeleteOrder()
+
+  // Ctrl-F asks where a title is: the bubble shows its poster and its place in
+  // every order, recommended and your own, and the poster opens the title.
+  useSearchClaim({
+    renderPicked: (movie, { close }) => (
+      <TitleLocator
+        movie={movie}
+        lines={orderLines(movie.id, recommended ?? [], orders ?? [])}
+        empty="Not in any order yet."
+        onNavigate={close}
+      />
+    ),
+  })
 
   return (
     <div className="py-8">

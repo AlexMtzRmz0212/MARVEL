@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 
 import { useMovies } from '../../api/catalog'
@@ -415,6 +415,23 @@ export function FriendsPage() {
   const friends = useFriends()
   const { data: movies } = useMovies({ order: 'release' })
   const [selected, setSelected] = useState([])
+  const [filter, setFilter] = useState('')
+
+  // Ctrl/Cmd-F searches the friends list rather than the page: the names are
+  // the only thing here worth finding. With no friends yet there is no field to
+  // go to, and the browser's own find is left alone.
+  useEffect(() => {
+    const onFind = (event) => {
+      if (event.key !== 'f' || !(event.ctrlKey || event.metaKey) || event.altKey) return
+      const field = document.getElementById('friend-search')
+      if (!field) return
+      event.preventDefault()
+      field.focus()
+      field.select()
+    }
+    document.addEventListener('keydown', onFind)
+    return () => document.removeEventListener('keydown', onFind)
+  }, [])
 
   if (!user) return <SignInWall />
 
@@ -423,6 +440,12 @@ export function FriendsPage() {
   const known = new Set((friends.data ?? []).map((friend) => friend.user_id))
   // A friend removed while selected must not keep occupying a slot.
   const live = selected.filter((id) => known.has(id))
+  // Only what is shown is filtered; a ticked friend who is filtered out stays
+  // ticked, so searching never quietly changes who is being compared.
+  const needle = filter.trim().toLowerCase()
+  const shown = (friends.data ?? []).filter((friend) =>
+    nameOf(friend).toLowerCase().includes(needle),
+  )
 
   return (
     <div className="py-8">
@@ -461,8 +484,26 @@ export function FriendsPage() {
 
         {friends.data?.length > 0 && (
           <>
+            <input
+              id="friend-search"
+              type="search"
+              name="friend_search"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') setFilter('')
+              }}
+              placeholder="Find a friend…  (Ctrl+F)"
+              aria-label="Find a friend"
+              autoComplete="off"
+              spellCheck={false}
+              className="field mb-3 max-w-sm"
+            />
+            {shown.length === 0 && (
+              <p className="py-4 text-sm text-ink-dim">No friend matches “{filter.trim()}”.</p>
+            )}
             <ul className="mb-4">
-              {friends.data.map((friend) => (
+              {shown.map((friend) => (
                 <FriendRow
                   key={friend.user_id}
                   friend={friend}

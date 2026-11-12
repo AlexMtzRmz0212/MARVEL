@@ -5,6 +5,7 @@ import { useMovie } from '../api/catalog'
 import { BackLink } from '../components/BackLink'
 import { LineBullet } from '../components/LineBullet'
 import { EpisodeList } from '../components/EpisodeList'
+import { StatusPicker } from '../components/StatusPicker'
 import { WatchToggle } from '../components/WatchToggle'
 import { ErrorState, LoadingState } from '../components/states'
 import { useWatchProgress } from '../hooks/useWatchProgress'
@@ -305,6 +306,7 @@ export function MovieDetailPage() {
     runtime && ['Runtime', runtime],
     ['Tier', TIER_LABEL[movie.tier]],
     ['Universe', movie.universe],
+    movie.in_universe_date && ['Set in', movie.in_universe_date],
     creditScenes && ['Credits', creditScenes],
     ['By release', `No. ${movie.release_order + 1}`],
   ].filter(Boolean)
@@ -349,6 +351,12 @@ export function MovieDetailPage() {
               />
             </div>
           </div>
+
+          <StatusPicker
+            movieId={movie.id}
+            episodeCount={movie.episodes?.length ?? 0}
+            className="mt-4"
+          />
 
           {movie.synopsis && (
             <p className="mt-5 max-w-prose text-base leading-relaxed text-ink-dim">

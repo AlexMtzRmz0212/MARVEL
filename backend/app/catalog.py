@@ -103,6 +103,7 @@ class Title:
 
     # None is "nobody has checked", 0 is "checked, there is nothing". Kept flat
     # rather than nested so the API schemas validate straight off this record.
+    in_universe_date: str | None = None
     credit_scenes: int | None = None
     credit_scene_note: str | None = None
     credit_scene_episodes: tuple[CreditSceneEpisode, ...] = ()
@@ -201,6 +202,7 @@ def build_catalog_from(validated: ValidatedCatalog) -> Catalog:
             tmdb_id=movie.tmdb_id,
             release_order=validated.release_order[movie.id],
             chrono_order=validated.chrono_order[movie.id],
+            in_universe_date=movie.in_universe_date,
             credit_scenes=movie.credit_scenes.total if movie.credit_scenes else None,
             credit_scene_note=movie.credit_scenes.note if movie.credit_scenes else None,
             credit_scene_episodes=tuple(

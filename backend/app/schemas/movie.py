@@ -53,6 +53,10 @@ class MovieSummary(BaseModel):
     # a mark for a positive number, so the two are never conflated on screen.
     credit_scenes: int | None = None
 
+    # When it is set, on its own Earth ("2012", "1943-1945"). Free text, may be
+    # an estimate, and null when nobody has placed it.
+    in_universe_date: str | None = None
+
     # How many episodes there are to tick off. 0 for anything that is not a
     # series with a fetched episode list; the list itself is detail-only.
     episode_count: int = 0

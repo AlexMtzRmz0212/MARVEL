@@ -371,6 +371,10 @@ export function createSimulation(graph, options = {}) {
     get spread() {
       return spread
     },
+    /** The distance between two dependency depths right now, spread included. */
+    get levelGap() {
+      return config.levelGap * spread
+    },
     /**
      * Hold the layout further apart, as a multiple of its settled spacing.
      *

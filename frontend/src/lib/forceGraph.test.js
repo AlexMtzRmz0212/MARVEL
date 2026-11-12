@@ -24,6 +24,17 @@ function settled(movies, edges, options) {
 
 const depthOf = (graph) => new Map(graph.nodes.map((node) => [node.id, node.depth]))
 
+describe('createSimulation levelGap', () => {
+  it('reports the gap between depths, spread included, for the depth axis', () => {
+    const graph = buildGraph(catalog(2), [edge(0, 1)])
+    const simulation = createSimulation(graph)
+    expect(simulation.levelGap).toBe(DEFAULTS.levelGap)
+
+    simulation.setSpread(2)
+    expect(simulation.levelGap).toBe(DEFAULTS.levelGap * 2)
+  })
+})
+
 describe('buildGraph', () => {
   it('measures depth by the longest path, not the shortest', () => {
     // t0 reaches t3 directly and also the long way round, through t1 and t2.

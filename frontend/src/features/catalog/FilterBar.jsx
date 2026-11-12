@@ -64,6 +64,7 @@ export function FilterBar({
   totalCount,
   watchedDisplayMode,
   setWatchedDisplayMode,
+  onSearchEnter,
 }) {
   const hasFilters = Object.values(filters).some(Boolean)
 
@@ -80,7 +81,15 @@ export function FilterBar({
             name="q"
             value={filters.q ?? ''}
             onChange={(event) => setFilter('q', event.target.value || null)}
-            placeholder="Iron Man, Loki, Wakanda…"
+            onKeyDown={(event) => {
+              // Enter opens the first match in the side panel, rather than
+              // leaving a grid to be scrolled for it.
+              if (event.key === 'Enter' && onSearchEnter) {
+                event.preventDefault()
+                onSearchEnter()
+              }
+            }}
+            placeholder="Iron Man, Loki, Wakanda…  (Ctrl+F)"
             autoComplete="off"
             spellCheck={false}
             className="field"
@@ -146,6 +155,9 @@ export function FilterBar({
 
         <Group label="Sorted as">
           {[
+            ['watching', 'Watching'],
+            ['planned', 'Want to watch'],
+            ['rewatch', 'Need to rewatch'],
             ['unseen', 'Not seen'],
             ['unsure', "Don't recall"],
             ['unsorted', 'Unsorted'],

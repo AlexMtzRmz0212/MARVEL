@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
@@ -104,6 +104,10 @@ class SeedMovie(BaseModel):
     poster_url: str | None = Field(default=None, max_length=500)
     synopsis: str | None = None
     tmdb_id: int | None = None
+    # When it happens on its own Earth, as free text because the honest answer is
+    # often a span or an estimate ("1943-1945", "2025-2027"). Display only: no
+    # ordering is derived from it -- array position is the chronological order.
+    in_universe_date: str | None = Field(default=None, max_length=40)
     credit_scenes: SeedCreditScenes | None = None
     prerequisites: list[SeedPrerequisite] = Field(default_factory=list)
 
@@ -162,6 +166,9 @@ class ValidatedCatalog:
     release_order: dict[str, int]
     warnings: list[str] = field(default_factory=list)
     episodes: dict[str, list[SeedEpisode]] = field(default_factory=dict)
+    # The redundant edges behind the redundancy warnings, as data: the editor
+    # needs to know *which* edge to offer to remove, not just a sentence about it.
+    redundant_edges: list[dict[str, Any]] = field(default_factory=list)
 
 
 def validate_catalog(seed: SeedFile, episodes: EpisodesFile | None = None) -> ValidatedCatalog:
@@ -281,7 +288,8 @@ def validate_catalog(seed: SeedFile, episodes: EpisodesFile | None = None) -> Va
     if problems:
         raise SeedValidationError(problems)
 
-    warnings.extend(_redundancy_warnings(graph, titles))
+    redundant = find_redundant_edges(graph)
+    warnings.extend(_redundancy_warnings(redundant, titles))
     warnings.extend(_orphan_warnings(graph, titles))
 
     return ValidatedCatalog(
@@ -292,10 +300,58 @@ def validate_catalog(seed: SeedFile, episodes: EpisodesFile | None = None) -> Va
         release_order=release_order,
         warnings=warnings,
         episodes=dict(episode_lists),
+        redundant_edges=redundant,
     )
 
 
-def _redundancy_warnings(graph: Graph, titles: dict[str, str]) -> list[str]:
+def find_redundant_edges(graph: Graph) -> list[dict[str, Any]]:
+    """Every edge already implied by another path, as ``{owner_id, prerequisite_id,
+    strength, note, via}`` dicts (``owner_id`` is the title that holds the edge).
+
+    ``via`` is one prerequisite of the owner whose own ancestry reaches the
+    prerequisite -- the first step of the path that makes the edge redundant.
+
+    Redundancy is **strength-aware**, and this is the whole subtlety. An
+    essential edge is only implied if there is an alternate path whose every
+    link is also essential -- if any link along the way is merely recommended,
+    dropping the direct edge would silently downgrade the prerequisite from
+    "you will be lost" to "nice to have". Comparing reachability alone reports a
+    pile of false positives, most of them on exactly the edges that matter most.
+    """
+    essential_only = graph.essential_only()
+    notes = {(edge.prerequisite_id, edge.movie_id): edge.note for edge in graph.edges}
+
+    found: list[dict[str, Any]] = []
+    for movie_id in sorted(graph.nodes):
+        for candidate in graph.predecessors(movie_id):
+            # An essential edge may only be justified away by an all-essential
+            # path; a recommended one may be justified by any path at all.
+            strength = graph.strength(candidate, movie_id)
+            scope = essential_only if strength == "essential" else graph
+
+            via: str | None = None
+            for other in scope.predecessors(movie_id):
+                if other == candidate:
+                    continue
+                if candidate in ancestors(scope, other):
+                    via = other
+                    break
+
+            if via is None:
+                continue
+            found.append(
+                {
+                    "owner_id": movie_id,
+                    "prerequisite_id": candidate,
+                    "strength": strength,
+                    "note": notes.get((candidate, movie_id)),
+                    "via": via,
+                }
+            )
+    return found
+
+
+def _redundancy_warnings(redundant: list[dict[str, Any]], titles: dict[str, str]) -> list[str]:
     """Flag edges already implied by another path.
 
     Redundancy is **strength-aware**, and this is the whole subtlety. An
@@ -312,40 +368,22 @@ def _redundancy_warnings(graph: Graph, titles: dict[str, str]) -> list[str]:
     individually, and annotated ones are named individually too -- "kept
     deliberately" is only useful to read if it says which edges it means.
     """
-    essential_only = graph.essential_only()
-    notes = {(edge.prerequisite_id, edge.movie_id): edge.note for edge in graph.edges}
-
     unexplained: list[str] = []
     annotated: list[str] = []
 
-    for movie_id in sorted(graph.nodes):
-        for candidate in graph.predecessors(movie_id):
-            # An essential edge may only be justified away by an all-essential
-            # path; a recommended one may be justified by any path at all.
-            scope = essential_only if graph.strength(candidate, movie_id) == "essential" else graph
-
-            reachable: set[str] = set()
-            for other in scope.predecessors(movie_id):
-                if other == candidate:
-                    continue
-                reachable.add(other)
-                reachable |= ancestors(scope, other)
-
-            if candidate not in reachable:
-                continue
-
-            note = notes.get((candidate, movie_id))
-            label = f"{titles.get(candidate, candidate)} -> {titles.get(movie_id, movie_id)}"
-            if note:
-                annotated.append(
-                    f'Redundant edge kept deliberately: {label} is already implied by another '
-                    f'path, but the note ("{note}") marks it as a direct prerequisite in the UI.'
-                )
-            else:
-                unexplained.append(
-                    f"Redundant edge with no note: {label} is already implied by another path, "
-                    f"and adds no explanation. Remove it or give it a note."
-                )
+    for item in redundant:
+        candidate, movie_id, note = item["prerequisite_id"], item["owner_id"], item["note"]
+        label = f"{titles.get(candidate, candidate)} -> {titles.get(movie_id, movie_id)}"
+        if note:
+            annotated.append(
+                f'Redundant edge kept deliberately: {label} is already implied by another '
+                f'path, but the note ("{note}") marks it as a direct prerequisite in the UI.'
+            )
+        else:
+            unexplained.append(
+                f"Redundant edge with no note: {label} is already implied by another path, "
+                f"and adds no explanation. Remove it or give it a note."
+            )
 
     return unexplained + annotated
 

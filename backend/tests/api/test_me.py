@@ -218,6 +218,52 @@ def test_watching_clears_the_status(api, registered):
     assert response.json()["status"] is None
 
 
+def test_watching_is_a_status_of_a_title_not_yet_watched(api, registered):
+    api.put("/api/me/watch-progress/thor", json={"status": "watching"})
+    entry = api.get("/api/me/watch-progress").json()["thor"]
+    assert entry["status"] == "watching"
+    assert entry["watched_at"] is None
+
+
+def test_planned_is_a_status_of_a_title_not_yet_watched(api, registered):
+    api.put("/api/me/watch-progress/thor", json={"status": "planned"})
+    entry = api.get("/api/me/watch-progress").json()["thor"]
+    assert entry["status"] == "planned"
+    assert entry["watched_at"] is None
+
+
+def test_a_watched_title_loses_a_planned_status(api, registered):
+    response = api.put(
+        "/api/me/watch-progress/iron-man",
+        json={"watched_at": "2026-01-01T00:00:00Z", "status": "planned"},
+    )
+    assert response.json()["status"] is None
+
+
+def test_rewatch_sits_alongside_watched(api, registered):
+    response = api.put(
+        "/api/me/watch-progress/iron-man",
+        json={"watched_at": "2026-01-01T00:00:00Z", "status": "rewatch"},
+    )
+    assert response.status_code == 200, response.text
+    entry = api.get("/api/me/watch-progress").json()["iron-man"]
+    assert entry["status"] == "rewatch"
+    assert entry["watched_at"] is not None
+
+
+def test_rewatch_without_watching_it_first_is_dropped(api, registered):
+    response = api.put("/api/me/watch-progress/iron-man", json={"status": "rewatch"})
+    assert response.json()["status"] is None
+
+
+def test_a_watched_title_loses_a_watching_status(api, registered):
+    response = api.put(
+        "/api/me/watch-progress/iron-man",
+        json={"watched_at": "2026-01-01T00:00:00Z", "status": "watching"},
+    )
+    assert response.json()["status"] is None
+
+
 def test_episodes_round_trip_sorted_and_deduplicated(api, registered):
     response = api.put("/api/me/watch-progress/loki", json={"episodes": [3, 1, 3, 2]})
     assert response.status_code == 200, response.text
