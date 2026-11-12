@@ -19,11 +19,12 @@ import { ComparePage } from './ComparePage'
 // Delta is a series: `runtime_min` is null for every one of them in the real
 // catalog, which is what the running total has to cope with.
 const RELEASE = [
-  { id: 'a', title: 'Alpha', saga: 'Infinity Saga', release_date: '2008-05-02', runtime_min: 126 },
-  { id: 'b', title: 'Bravo', saga: 'Infinity Saga', release_date: '2011-07-22', runtime_min: 124 },
+  { id: 'a', title: 'Alpha', universe: 'One', saga: 'Infinity Saga', release_date: '2008-05-02', runtime_min: 126 },
+  { id: 'b', title: 'Bravo', universe: 'Two', saga: 'Infinity Saga', release_date: '2011-07-22', runtime_min: 124 },
   {
     id: 'c',
     title: 'Charlie',
+    universe: 'Three',
     saga: 'Multiverse Saga',
     release_date: '2019-03-08',
     runtime_min: 130,
@@ -31,6 +32,7 @@ const RELEASE = [
   {
     id: 'd',
     title: 'Delta',
+    universe: 'One',
     saga: 'Multiverse Saga',
     release_date: '2021-07-09',
     runtime_min: null,
@@ -158,5 +160,34 @@ describe('ComparePage filters', () => {
     ])
     expect(container.querySelectorAll('path')).toHaveLength(2)
     expect(screen.getByRole('button', { name: 'Filter · 1' })).toBeInTheDocument()
+  })
+})
+
+describe('ComparePage universe filter', () => {
+  it('takes several universes at once', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/compare?universe=One&universe=Three']}>
+        <ComparePage />
+      </MemoryRouter>,
+    )
+
+    expect(columns(container)).toEqual([
+      ['a', 'c', 'd'],
+      ['c', 'a', 'd'],
+    ])
+    expect(screen.getByRole('button', { name: 'Filter · 1' })).toBeInTheDocument()
+  })
+
+  it('adds a universe from the list', () => {
+    const { container } = show()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Filter' }))
+    fireEvent.click(screen.getByLabelText('One'))
+    fireEvent.click(screen.getByLabelText('Two'))
+
+    expect(columns(container)).toEqual([
+      ['a', 'b', 'd'],
+      ['a', 'd', 'b'],
+    ])
   })
 })

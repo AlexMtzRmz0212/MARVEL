@@ -1,6 +1,6 @@
 import { MEDIA_LABEL, SAGA_LABEL, TIER_LABEL } from '../../lib/format'
 
-import { COMPARE_FILTER_KEYS } from './filters'
+import { activeCount } from './filters'
 
 function Choice({ id, label, value, values, format = (option) => option, onChange }) {
   // Keep a value the URL asked for even if the catalog does not offer it, so
@@ -25,6 +25,38 @@ function Choice({ id, label, value, values, format = (option) => option, onChang
         ))}
       </select>
     </div>
+  )
+}
+
+/**
+ * Universes are many and several can be wanted together, so a native select
+ * will not do. A short scrolling checklist keeps the popover the size it was.
+ */
+function Checklist({ label, values, selected, onToggle }) {
+  // Keep a universe the URL asked for even if the catalog does not offer it.
+  const all = [...selected.filter((value) => !values.includes(value)), ...values]
+  return (
+    <fieldset className="flex min-w-0 flex-col gap-1">
+      <legend className="label mb-1 text-ink-dim">
+        {selected.length ? `${label} · ${selected.length}` : label}
+      </legend>
+      <div className="max-h-28 overflow-y-auto border-2 border-ink">
+        {all.map((value) => (
+          <label
+            key={value}
+            className="flex cursor-pointer items-center gap-2 px-2 py-1 text-sm text-ink hover:bg-hairline"
+          >
+            <input
+              type="checkbox"
+              checked={selected.includes(value)}
+              onChange={() => onToggle(value)}
+              className="size-3.5 shrink-0 accent-[var(--color-ink)]"
+            />
+            <span className="truncate">{value}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   )
 }
 
@@ -63,11 +95,12 @@ export function FilterMenu({
   filters,
   options,
   setFilter,
+  toggleUniverse,
   reset,
   resultCount,
   totalCount,
 }) {
-  const active = COMPARE_FILTER_KEYS.filter((key) => filters[key]).length
+  const active = activeCount(filters)
 
   return (
     <div className="relative shrink-0">
@@ -86,12 +119,11 @@ export function FilterMenu({
               format={(saga) => SAGA_LABEL[saga] ?? saga}
               onChange={(saga) => setFilter('saga', saga)}
             />
-            <Choice
-              id="compare-universe"
+            <Checklist
               label="Universe"
-              value={filters.universe}
               values={options.universes}
-              onChange={(universe) => setFilter('universe', universe)}
+              selected={filters.universe}
+              onToggle={toggleUniverse}
             />
             <Chips
               label="Format"

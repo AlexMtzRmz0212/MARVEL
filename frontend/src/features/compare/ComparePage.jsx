@@ -10,7 +10,7 @@ import { accentFor, formatDate, formatTotalRuntime } from '../../lib/format'
 import { claimSearch } from '../../lib/searchTarget'
 import { isWatched } from '../../lib/watchStorage'
 import { FilterMenu } from './CompareFilters'
-import { COMPARE_FILTER_KEYS, matchesFilters } from './filters'
+import { COMPARE_FILTER_KEYS, matchesFilters, readFilters } from './filters'
 import { OrderColumn } from './OrderColumn'
 import { ShiftLinks } from './ShiftLinks'
 
@@ -239,9 +239,24 @@ export function ComparePage() {
   const [keyOpen, setKeyOpen] = useState(false)
   const [filterOpen, setFilterOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
-  const filters = Object.fromEntries(
-    COMPARE_FILTER_KEYS.map((key) => [key, searchParams.get(key) ?? null]),
-  )
+  const filters = readFilters(searchParams)
+
+  /** Add the universe if it is not selected, drop it if it is. */
+  function toggleUniverse(universe) {
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous)
+        const chosen = next.getAll('universe')
+        next.delete('universe')
+        const updated = chosen.includes(universe)
+          ? chosen.filter((value) => value !== universe)
+          : [...chosen, universe]
+        updated.forEach((value) => next.append('universe', value))
+        return next
+      },
+      { replace: true },
+    )
+  }
 
   function setFilter(key, value) {
     setSearchParams(
@@ -292,7 +307,7 @@ export function ComparePage() {
   // The same filter is applied to both lists, so each column still holds the
   // same titles and the join below needs no change -- positions are simply
   // within the subset, and so are the running hours.
-  const filterKey = COMPARE_FILTER_KEYS.map((key) => filters[key] ?? '').join('|')
+  const filterKey = JSON.stringify(filters)
   const allRelease = releaseQuery.data
   const release = useMemo(
     () => allRelease?.filter((movie) => matchesFilters(movie, filters)),
@@ -468,6 +483,7 @@ export function ComparePage() {
               filters={filters}
               options={options}
               setFilter={setFilter}
+              toggleUniverse={toggleUniverse}
               reset={resetFilters}
               resultCount={release?.length ?? 0}
               totalCount={allRelease?.length ?? 0}
