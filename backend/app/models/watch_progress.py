@@ -35,8 +35,9 @@ class WatchProgress(Base):
 
     `status` is the verdict on a title that is *not* watched -- "unseen" or
     "unsure" (the quick-sort deck's left and down swipes), "watching" (started,
-    not finished) or "planned" ("want to watch": not started, but wanted). Those are never set alongside `watched_at`; "watched" is not
-    one of its values because `watched_at` already says so.
+    not finished) or "planned" ("want to watch": not started, but wanted). Those
+    are never set alongside `watched_at`; "watched" is not one of its values
+    because `watched_at` already says so.
 
     "rewatch" is the one exception: it is set *with* `watched_at`, because a
     title you want to see again is still a title you have seen.

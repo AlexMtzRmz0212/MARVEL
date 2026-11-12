@@ -50,7 +50,10 @@ def main(argv: list[str]) -> int:
                 movie[field] = wanted[movie["id"]]
                 changed.append(movie["id"])
 
-        print(f"{len(changed)} title(s) would get `{field}`; the rest already have one or have none.")
+        print(
+            f"{len(changed)} title(s) would get `{field}`; "
+            "the rest already have one or have none."
+        )
         if not changed:
             return 0
         if not apply:
