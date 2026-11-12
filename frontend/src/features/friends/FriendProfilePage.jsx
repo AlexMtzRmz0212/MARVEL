@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router'
 import { useMovies } from '../../api/catalog'
 import { useFriends, useFriendsProgress } from '../../api/friends'
 import { useAuth } from '../../auth/AuthContext'
+import { TitleLink } from '../../components/TitlePeek'
 import { ProgressBar } from '../../components/WatchToggle'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
@@ -272,12 +273,12 @@ export function FriendProfilePage() {
           <ul>
             {split.onlyTheirs.slice(0, 12).map((movie) => (
               <li key={movie.id}>
-                <Link
-                  to={`/movies/${movie.id}`}
+                <TitleLink
+                  movieId={movie.id}
                   className="block truncate py-1 text-sm font-medium text-ink hover:underline hover:underline-offset-2"
                 >
                   {movie.title}
-                </Link>
+                </TitleLink>
               </li>
             ))}
           </ul>

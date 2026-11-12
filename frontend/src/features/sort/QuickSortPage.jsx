@@ -24,7 +24,9 @@ import { useSwipeGesture } from './useSwipeGesture'
  * Marking 120 titles one check button at a time is the chore that stops people
  * setting this app up at all. Here every title costs one gesture -- right for
  * seen, left for not, down for "I can't remember" -- and arrow keys or the
- * three buttons do the same for anyone without a touch screen.
+ * three buttons do the same for anyone without a touch screen. Two more verdicts,
+ * "watching" and "want to watch", have no swipe (up is left alone, see
+ * `swipe.js`) and are a button each, or W and T.
  *
  * "Not seen" and "don't recall" are recorded, not skipped: the deck only deals
  * titles nobody has sorted, so a second visit picks up where the first left
@@ -77,8 +79,9 @@ export function QuickSortPage() {
         <p className="mt-1 text-sm text-ink-dim sm:mt-2 sm:text-base">
           <span className="font-semibold text-ink">Right</span> seen,{' '}
           <span className="font-semibold text-ink">left</span> not seen,{' '}
-          <span className="font-semibold text-ink">down</span> don't recall.
-          <span className="hidden sm:inline"> Arrow keys work too; Z takes the last one back.</span>
+          <span className="font-semibold text-ink">down</span> don't recall; the buttons add
+          watching and want to watch.
+          <span className="hidden sm:inline"> Arrow keys work too, W and T for the other two; Z takes the last one back.</span>
         </p>
       </div>
 
@@ -254,7 +257,8 @@ function Deck({ movies, filters, counts, onRevisit, onRestart }) {
         setPeek(null)
         return
       }
-      const direction = Object.keys(DIRECTIONS).find((key) => DIRECTIONS[key].key === event.key)
+      const pressed = event.key.length === 1 ? event.key.toLowerCase() : event.key
+      const direction = Object.keys(DIRECTIONS).find((key) => DIRECTIONS[key].key === pressed)
       if (direction && current) {
         event.preventDefault()
         commit(direction)
@@ -293,7 +297,7 @@ function Deck({ movies, filters, counts, onRevisit, onRestart }) {
           <div
             className="relative"
             // Sized so the card and the buttons under it fit one phone screen.
-            style={{ width: 'min(20rem, 76vw, calc((100dvh - 29.5rem) * 2 / 3))', aspectRatio: '2 / 3' }}
+            style={{ width: 'min(20rem, 76vw, calc((100dvh - 33rem) * 2 / 3))', aspectRatio: '2 / 3' }}
           >
             {next && <SwipeCard key={next.id} movie={next} behind />}
             <SwipeCard
@@ -320,12 +324,12 @@ function Deck({ movies, filters, counts, onRevisit, onRestart }) {
       {current && (
         // Laid out the way the swipes go: left on the left, right on the
         // right, down in the middle.
-        <div className="mt-5 grid w-full max-w-sm grid-cols-3 gap-2">
+        <div className="mt-5 grid w-full max-w-sm grid-cols-6 gap-2">
           {['left', 'down', 'right'].map((direction) => (
             <button
               key={direction}
               type="button"
-              className={`btn !h-auto flex-col !gap-0.5 !px-1 py-2 ${direction === 'right' ? 'btn-primary' : ''}`}
+              className={`btn col-span-2 !h-auto flex-col !gap-0.5 !px-1 py-2 ${direction === 'right' ? 'btn-primary' : ''}`}
               onClick={() => commit(direction)}
               disabled={Boolean(leaving)}
             >
@@ -333,6 +337,21 @@ function Deck({ movies, filters, counts, onRevisit, onRestart }) {
                 {{ left: '←', down: '↓', right: '→' }[direction]}
               </span>
               {DIRECTIONS[direction].label}
+            </button>
+          ))}
+          {/* No swipe for these two, so they sit beneath the three. */}
+          {['watching', 'planned'].map((direction) => (
+            <button
+              key={direction}
+              type="button"
+              className="btn col-span-3 !h-auto flex-col !gap-0.5 !px-1 py-2"
+              onClick={() => commit(direction)}
+              disabled={Boolean(leaving)}
+            >
+              {DIRECTIONS[direction].label}{' '}
+              <span className="meta hidden sm:inline" aria-hidden="true">
+                ({DIRECTIONS[direction].key.toUpperCase()})
+              </span>
             </button>
           ))}
         </div>
@@ -407,7 +426,10 @@ function Finished({ sortedNow, tally, emptyFromStart, mode, counts, onRevisit, o
       {sortedNow > 0 && (
         <p className="mt-3 text-sm text-ink-dim">
           {sortedNow} this round: {tally.right ?? 0} seen, {tally.left ?? 0} not seen,{' '}
-          {tally.down ?? 0} don't recall.
+          {tally.down ?? 0} don't recall
+          {(tally.watching ?? 0) + (tally.planned ?? 0) > 0 &&
+            `, ${tally.watching ?? 0} watching, ${tally.planned ?? 0} to watch`}
+          .
         </p>
       )}
       <div className="mt-5 flex flex-wrap justify-center gap-2">

@@ -5,6 +5,7 @@ import { clearSyncError, getSnapshot, subscribe } from '../lib/syncStatus'
 import { GlobalSearch } from './GlobalSearch'
 import { InstallLink, InstallPrompt } from './InstallPrompt'
 import { BottomTabBar, SectionLinks } from './navigation'
+import { TitlePeekProvider } from './TitlePeek'
 import { UpdateToast } from './UpdateToast'
 import { UserMenu } from './UserMenu'
 import { WatchingDeck } from './WatchingDeck'
@@ -75,8 +76,9 @@ function MisregisterFilter() {
 
 export function AppShell() {
   return (
-    // The side insets are the landscape notch on an installed iPhone; they are
-    // zero in a browser and on any screen without a notch.
+    <TitlePeekProvider>
+    {/* The side insets are the landscape notch on an installed iPhone; they are
+        zero in a browser and on any screen without a notch. */}
     <div className="flex min-h-dvh flex-col bg-paper pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
       <MisregisterFilter />
       <a
@@ -155,5 +157,6 @@ export function AppShell() {
       <BottomTabBar />
       <WatchingDeck />
     </div>
+    </TitlePeekProvider>
   )
 }

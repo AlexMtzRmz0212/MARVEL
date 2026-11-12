@@ -11,6 +11,7 @@ import {
   useSharedProgress,
 } from '../../api/share'
 import { useAuth } from '../../auth/AuthContext'
+import { TitleLink } from '../../components/TitlePeek'
 import { ProgressBar } from '../../components/WatchToggle'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
@@ -687,8 +688,8 @@ export function CompareProgressPage() {
                 <ol>
                   {visible.map(({ movie, index, yours, marks, bucket }) => (
                     <li key={movie.id} style={{ height: ROW }}>
-                      <Link
-                        to={`/movies/${movie.id}`}
+                      <TitleLink
+                        movieId={movie.id}
                         data-row={movie.id}
                         className="flex h-full w-full items-center gap-1.5 pl-3 transition-colors hover:bg-raised"
                       >
@@ -718,7 +719,7 @@ export function CompareProgressPage() {
                           {buckets[bucket].label}
                         </span>
                         <span className="sr-only sm:hidden">{buckets[bucket].label}</span>
-                      </Link>
+                      </TitleLink>
                     </li>
                   ))}
                 </ol>

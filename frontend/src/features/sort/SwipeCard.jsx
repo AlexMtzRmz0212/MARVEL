@@ -7,6 +7,8 @@ const STAMP = {
   right: { className: 'top-6 left-4 -rotate-12', color: 'var(--color-ok)' },
   left: { className: 'top-6 right-4 rotate-12', color: 'var(--color-danger)' },
   down: { className: 'bottom-24 left-1/2 -translate-x-1/2 -rotate-6', color: 'var(--color-ink)' },
+  watching: { className: 'top-6 left-1/2 -translate-x-1/2 -rotate-3', color: 'var(--color-multiverse)' },
+  planned: { className: 'top-6 left-1/2 -translate-x-1/2 rotate-3', color: 'var(--color-infinity)' },
 }
 
 /** Where a card goes when it leaves, from wherever it was let go. */
@@ -18,6 +20,10 @@ function flyOut(direction, offset) {
       return `translate(-150%, ${offset.y}px) rotate(-28deg)`
     case 'down':
       return `translate(${offset.x}px, 140%) rotate(${offset.x / 20}deg)`
+    // Up and away: these two are chosen with a button, so the card lifts off.
+    case 'watching':
+    case 'planned':
+      return `translate(${offset.x}px, -140%) rotate(${offset.x / 20}deg)`
     default:
       return ''
   }

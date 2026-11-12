@@ -4,7 +4,9 @@
  *
  * Three directions mean something -- right, left and down -- and up does not:
  * flicking a card up is what a thumb does by accident on the way to scrolling,
- * so it snaps back rather than recording a verdict nobody meant.
+ * so it snaps back rather than recording a verdict nobody meant. For the same
+ * reason the two verdicts that would have wanted that direction -- "watching"
+ * and "want to watch" -- are buttons and keys only, never a gesture.
  */
 
 /** What each direction records. Values are `watchStorage.setStatus` verdicts. */
@@ -12,6 +14,9 @@ export const VERDICT = {
   right: 'watched',
   left: 'unseen',
   down: 'unsure',
+  // Buttons and keys only: no swipe heads up, see the note at the top.
+  watching: 'watching',
+  planned: 'planned',
 }
 
 /** The stamp printed on the card as it travels, and the key that does the same. */
@@ -19,6 +24,8 @@ export const DIRECTIONS = {
   right: { stamp: 'Seen!', label: 'Seen it', key: 'ArrowRight' },
   left: { stamp: 'Nope', label: 'Not seen', key: 'ArrowLeft' },
   down: { stamp: 'Hmm?', label: "Don't recall", key: 'ArrowDown' },
+  watching: { stamp: 'Now!', label: 'Watching', key: 'w' },
+  planned: { stamp: 'Later', label: 'Want to watch', key: 't' },
 }
 
 /** A drag must travel this far, as a share of the card, to count on its own. */

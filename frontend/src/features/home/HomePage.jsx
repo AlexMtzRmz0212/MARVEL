@@ -1,7 +1,8 @@
-import { Link, useNavigate } from 'react-router'
+import { Link } from 'react-router'
 
 import { useEdges, useMovies } from '../../api/catalog'
 import { LineBullet } from '../../components/LineBullet'
+import { useTitlePeek } from '../../hooks/useTitlePeek'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { useSearchClaim } from '../../lib/useSearchClaim'
 import { progressFor } from '../../lib/watchStorage'
@@ -131,10 +132,10 @@ export function HomePage() {
   const moviesQuery = useMovies({ order: 'release' })
   const edgesQuery = useEdges()
   const progress = useWatchProgress()
-  const navigate = useNavigate()
 
   // Nothing on this page to search, so Ctrl-F is a jump: find a title, go to it.
-  useSearchClaim({ onPick: (movie) => navigate(`/movies/${movie.id}`) })
+  const { openTitle } = useTitlePeek()
+  useSearchClaim({ onPick: (movie) => openTitle(movie.id) })
 
   const movies = moviesQuery.data
   const edges = edgesQuery.data

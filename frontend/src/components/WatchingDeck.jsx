@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { useLocation } from 'react-router'
 
 import { useMovies } from '../api/catalog'
 import { useWatchProgress } from '../hooks/useWatchProgress'
 import { episodesWatched, isPlanned, isWatching } from '../lib/watchStorage'
 import { LineBullet } from './LineBullet'
+import { TitleLink } from './TitlePeek'
 import { ProgressBar } from './WatchToggle'
 
 /**
@@ -114,7 +115,7 @@ export function WatchingDeck() {
         aria-label="Watching and want to watch"
         data-open={open}
         // Vertically centred on the viewport, clear of the phone's tab bar.
-        className="group/deck pointer-events-none fixed top-[46%] left-0 z-50 h-0 w-0 [--hide:-68%] [--step:1.9rem] [--gap:1rem] sm:[--hide:-58%] sm:[--step:4rem] sm:[--gap:2.5rem]"
+        className={`group/deck pointer-events-none fixed top-[46%] left-0 ${open ? 'z-50' : 'z-[35]'} h-0 w-0 [--hide:-68%] [--step:1.9rem] [--gap:1rem] sm:[--hide:-58%] sm:[--step:4rem] sm:[--gap:2.5rem]`}
       >
         {/* The deck is one button: the whole stack is the hit target. */}
         <button
@@ -146,8 +147,10 @@ export function WatchingDeck() {
                   open ? 'pointer-events-auto' : 'pointer-events-none',
                 ].join(' ')}
               >
-                <Link
-                  to={`/movies/${movie.id}`}
+                <TitleLink
+                  movieId={movie.id}
+                  // The peek opens over the page, so the hand is put away.
+                  onClick={() => setOpenOn(null)}
                   className="group relative block transition-transform duration-150 hover:-translate-y-2"
                 >
                   <div className="relative aspect-[2/3] overflow-hidden border-[3px] border-ink bg-raised shadow-[5px_5px_0_var(--color-panel-shadow)]">
@@ -182,7 +185,7 @@ export function WatchingDeck() {
                   >
                     {movie.title}
                   </span>
-                </Link>
+                </TitleLink>
               </li>
             )
           })}

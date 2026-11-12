@@ -4,6 +4,7 @@ import { useMovies } from '../../api/catalog'
 import { useOrders } from '../../api/userOrders'
 import { useAuth } from '../../auth/AuthContext'
 import { TitleLocator } from '../../components/TitleLocator'
+import { TitleLink } from '../../components/TitlePeek'
 import { ProgressBar } from '../../components/WatchToggle'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
@@ -129,9 +130,9 @@ export function ProgressPage() {
               {midSeason.map((movie, index) => (
                 <span key={movie.id}>
                   {index > 0 && (index === midSeason.length - 1 ? ' and ' : ', ')}
-                  <Link to={`/movies/${movie.id}`} className="font-semibold text-ink underline underline-offset-4">
+                  <TitleLink movieId={movie.id} className="font-semibold text-ink underline underline-offset-4">
                     {movie.title}
-                  </Link>
+                  </TitleLink>
                 </span>
               ))}
               .

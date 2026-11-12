@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
-
 import { useWatchProgress } from '../hooks/useWatchProgress'
 import { MEDIA_LABEL, creditScenesLabel, formatRuntime, year } from '../lib/format'
 import { episodesWatched, isWatched, isWatching, needsRewatch, statusOf } from '../lib/watchStorage'
 import { EpisodeSheet, EpisodeTrack } from './EpisodeList'
 import { LineBullet } from './LineBullet'
+import { TitleLink } from './TitlePeek'
 import { WatchToggle } from './WatchToggle'
 
 /**
@@ -40,8 +39,8 @@ export function TitleCard({ movie }) {
 
   return (
     <>
-      <Link
-        to={`/movies/${movie.id}`}
+      <TitleLink
+        movieId={movie.id}
         className="group panel relative flex h-full flex-col overflow-hidden transition-colors hover:bg-raised"
       >
         <div className="relative flex aspect-[2/3] items-center justify-center overflow-hidden border-b-2 border-ink bg-raised">
@@ -182,7 +181,7 @@ export function TitleCard({ movie }) {
             </button>
           )}
         </div>
-      </Link>
+      </TitleLink>
       {sheetOpen && (
         <EpisodeSheet movieId={movie.id} title={movie.title} open onClose={() => setSheetOpen(false)} />
       )}

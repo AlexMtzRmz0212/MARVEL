@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
 
 import { useMovies } from '../../api/catalog'
+import { TitleLink } from '../../components/TitlePeek'
+import { useTitlePeek } from '../../hooks/useTitlePeek'
 import { EmptyState, ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { accentFor, formatDate, formatTotalRuntime } from '../../lib/format'
@@ -205,12 +206,12 @@ function Readout({ movie, releaseAt, chronoAt }) {
 
   return (
     <p className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-      <Link
-        to={`/movies/${movie.id}`}
+      <TitleLink
+        movieId={movie.id}
         className="truncate text-sm font-bold text-ink underline decoration-2 underline-offset-4 transition-colors hover:decoration-infinity"
       >
         {movie.title}
-      </Link>
+      </TitleLink>
       <span className="meta">
         {`#${releaseAt + 1} release / #${chronoAt + 1} chronological / ${gap}`}
       </span>
@@ -222,8 +223,7 @@ export function ComparePage() {
   const releaseQuery = useMovies({ order: 'release' })
   const chronoQuery = useMovies({ order: 'chronological' })
   const progress = useWatchProgress()
-  const navigate = useNavigate()
-  const openTitle = (id) => navigate(`/movies/${id}`)
+  const { openTitle } = useTitlePeek()
 
   const [show, setShow] = useState({
     release: true,

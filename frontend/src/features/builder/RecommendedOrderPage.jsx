@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router'
 import { useMovies, useRecommendedOrders } from '../../api/catalog'
 import { BackLink } from '../../components/BackLink'
 import { LineBullet } from '../../components/LineBullet'
+import { TitleLink } from '../../components/TitlePeek'
 import { ProgressBar, WatchToggle } from '../../components/WatchToggle'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
@@ -126,7 +127,7 @@ export function RecommendedOrderPage() {
                 <span className="h-[42px] w-7 shrink-0 border-2 border-ink bg-raised" />
               )}
               <LineBullet movie={movie} className="size-6 text-[11px]" />
-              <Link to={`/movies/${id}`} className="group min-w-0 flex-1">
+              <TitleLink movieId={id} className="group min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold text-ink group-hover:underline">
                   {movie.title}
                 </span>
@@ -134,7 +135,7 @@ export function RecommendedOrderPage() {
                   {details.join(', ')}
                   {id === stats.nextUp && <span className="font-semibold text-ink">, next up</span>}
                 </span>
-              </Link>
+              </TitleLink>
               <WatchToggle
                 movieId={id}
                 watched={watched}

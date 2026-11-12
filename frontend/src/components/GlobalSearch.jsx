@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router'
 import { useMovies } from '../api/catalog'
 import { getSnapshot, subscribe } from '../lib/searchTarget'
 import { FindBubble } from './FindBubble'
+import { useTitlePeek } from '../hooks/useTitlePeek'
 
 /**
  * Jump to any title from anywhere in the app.
@@ -45,6 +46,7 @@ function visible(element) {
 
 export function GlobalSearch() {
   const navigate = useNavigate()
+  const peek = useTitlePeek()
   const { data: movies } = useMovies()
   const onPage = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
   const [open, setOpen] = useState(false)
@@ -102,7 +104,8 @@ export function GlobalSearch() {
       onPage.onPick(movie)
       return
     }
-    navigate(`/movies/${movie.id}`)
+    if (peek) peek.openTitle(movie.id)
+    else navigate(`/movies/${movie.id}`)
   }
 
   return (

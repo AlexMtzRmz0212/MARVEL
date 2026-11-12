@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import { useMovies } from '../../api/catalog'
 import { TitleCard } from '../../components/TitleCard'
+import { useTitlePeek } from '../../hooks/useTitlePeek'
 import { EmptyState, ErrorState, LoadingState } from '../../components/states'
 import { useWatchedDisplayMode } from '../../hooks/useWatchedDisplayMode'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
@@ -10,7 +11,6 @@ import { useSearchClaim } from '../../lib/useSearchClaim'
 import { setWatchedDisplayMode } from '../../lib/watchDisplayPref'
 import { isWatching, isWatched, needsRewatch, statusOf } from '../../lib/watchStorage'
 import { FilterBar } from './FilterBar'
-import { TitleDrawer } from './TitleDrawer'
 
 const ORDERS = [
   {
@@ -111,9 +111,10 @@ export function CatalogPage() {
     return true
   })
 
-  // The title open in the side panel. Kept as an id so the panel survives a
-  // change of filters that would drop the title from the grid.
-  const [openId, setOpenId] = useState(null)
+  // The side peek is the app's own (see `TitlePeek`), so it survives a change of
+  // filters that would drop the title from the grid, and so does every other
+  // page's.
+  const { openTitle } = useTitlePeek()
   // Enter pressed in the search. Held as a request rather than acted on at once:
   // the results for what was just typed may still be on their way, and "open the
   // first match" has to mean the first match of *that* search, not of the last.
@@ -122,12 +123,8 @@ export function CatalogPage() {
   // which avoids a frame of the old panel between the results and the opening.
   if (wantFirst && !isPending && visibleMovies) {
     setWantFirst(false)
-    if (visibleMovies[0]) setOpenId(visibleMovies[0].id)
+    if (visibleMovies[0]) openTitle(visibleMovies[0].id)
   }
-  const closeDrawer = useCallback(() => {
-    setOpenId(null)
-    document.getElementById('catalog-search')?.focus()
-  }, [])
 
   // Ctrl/Cmd-F opens the search bubble rather than the browser's find: the grid
   // is lazily rendered, so browser find only sees what has scrolled past. The
@@ -138,7 +135,7 @@ export function CatalogPage() {
     origin: () => document.getElementById('catalog-search'),
     initialQuery: () => filters.q ?? '',
     onQuery: (text) => setParam('q', text.trim()),
-    onPick: (movie) => setOpenId(movie.id),
+    onPick: (movie) => openTitle(movie.id),
     refocus: () => document.getElementById('catalog-search')?.focus(),
   })
 
@@ -213,14 +210,6 @@ export function CatalogPage() {
             </li>
           ))}
         </ul>
-      )}
-
-      {openId && (
-        <TitleDrawer
-          movieId={openId}
-          summary={(allMovies ?? []).find((movie) => movie.id === openId)}
-          onClose={closeDrawer}
-        />
       )}
     </>
   )

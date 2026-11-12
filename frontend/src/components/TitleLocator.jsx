@@ -2,6 +2,7 @@ import { Link } from 'react-router'
 
 import { year } from '../lib/format'
 import { LineBullet } from './LineBullet'
+import { TitleLink } from './TitlePeek'
 
 /**
  * A title's poster, and the places it turns up.
@@ -20,8 +21,8 @@ import { LineBullet } from './LineBullet'
 export function TitleLocator({ movie, lines, note, empty, onNavigate }) {
   return (
     <div className="flex gap-3">
-      <Link
-        to={`/movies/${movie.id}`}
+      <TitleLink
+        movieId={movie.id}
         onClick={onNavigate}
         aria-label={`Open ${movie.title}`}
         title="Open this title"
@@ -40,7 +41,7 @@ export function TitleLocator({ movie, lines, note, empty, onNavigate }) {
           )}
           <LineBullet movie={movie} className="absolute top-1.5 left-1.5" />
         </div>
-      </Link>
+      </TitleLink>
 
       <div className="min-w-0 flex-1">
         <p className="text-lg leading-tight font-bold text-pretty text-ink">{movie.title}</p>

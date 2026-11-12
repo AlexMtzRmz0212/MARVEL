@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router'
 
 import { useEdges, useMovies } from '../../api/catalog'
+import { useTitlePeek } from '../../hooks/useTitlePeek'
 import { ErrorState, LoadingState } from '../../components/states'
 import { useWatchProgress } from '../../hooks/useWatchProgress'
 import { buildGraph, createSimulation, seedPositions } from '../../lib/forceGraph'
@@ -164,7 +164,7 @@ function Legend({ open, onToggle }) {
 }
 
 export function TimelinePage() {
-  const navigate = useNavigate()
+  const { openTitle } = useTitlePeek()
   const progress = useWatchProgress()
   // Chronological rather than release: the curated chronology is a valid
   // topological sort of the edges, which both the reading order and the seeding
@@ -345,7 +345,7 @@ export function TimelinePage() {
             related={related}
             onSelect={setSelectedId}
             onHover={setHoverId}
-            onOpen={(id) => navigate(`/movies/${id}`)}
+            onOpen={openTitle}
             onStep={step}
             onToggleWatched={toggleWatched}
             pinned={pinned}
